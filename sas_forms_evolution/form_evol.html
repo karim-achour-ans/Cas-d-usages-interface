@@ -1,0 +1,261 @@
+
+
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="../template_integration.css">
+    <link rel="stylesheet" href="form_evol_integration.css">
+</head>
+<body>
+    <header>
+        <div id="div_header">
+            <div class="state_logo">
+                <img src="../images\logo-ANS.svg" alt="logo-ANS">
+            </div>
+            <div class="state_logo">
+                <img src="../images/logo-min_sante_acces_soins.svg" alt="logo-ANS">
+            </div>
+            <div id="header_title">
+                <h1>Interface Plateforme numérique du SAS</h1>
+                <h2>Présentation des Cas d'usages</h2>
+            </div>
+        </div>
+        <div>
+            <div id="sas_form_container">
+                <div id="div_sas_inscription_init">
+                    <p class="p_div_title">Veuillez indiquer votre participation au SAS</p>
+                    <label>Je participe au SAS</label>
+                    <select id="slct_participation" onchange="sas_inscription()">
+                        <option value="none">Veuillez renseigner votre participation au SAS</option>
+                        <option value="sas_ok">Je participe au SAS à titre individuel</option>
+                        <option value="sas_ok">Je participe au SAS via mon association SOS Médecins ou mon association de visites à domicile</option>
+                        <option value="sas_ko">Je ne participe pas au SAS</option>
+                        </select>
+                    <p id="sas_participation_p">Vous n'avez pas renseigné votre participation au SAS</p>
+                </div>
+                <br>
+                <div id="div_sas_agenda_indiv">
+                    <p class="p_div_title">Partage des disponibilités à titre individuel via un éditeur en ligne</p>
+                    <div>
+                        <div>
+                            <form>
+                                <label>
+                                    <input type="checkbox" id="npt_editor_exist" onclick="sas_availabilities_choice()">
+                                    Je dispose d'un outil de prise de rendez-vous en ligne
+                                </label>
+                                <br>
+                                <label>
+                                    <input type="checkbox" id="npt_editor_engagement" onclick="sas_availabilities_choice()" disabled>
+                                    J'accepte de partager à la régulation mes créneaux d'agenda en ligne, grand publics, professionnels et SNP
+                                </label>
+                            </form>
+                            <div id="div_editor_list">
+                                <label>Veuillez indiquer votre/vos outils d'agenda</label>
+                                <p>Doctolib, MAIIA</p>
+                            </div>
+                        </div>
+                        <br>
+                        <div>
+                            <form>
+                                <label>
+                                    <input type="checkbox" id="npt_editor_not_exist" onclick="sas_schedule_engagment()">
+                                    Je ne dispose pas d'un outil de rendez-vous en ligne pour l'ensemble de mes lieux d'activités
+                                </label>
+                                <br>
+                                <label>
+                                    <input type="checkbox" id="npt_sas_schedule_engagement" onclick="sas_schedule_engagment()" disabled>
+                                    Je m'engage à renseigner à minima 2h de disponibilité par semaine dans l'agenda de la plateforme numérique SAS. 
+                                </label>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                <br>
+                <div id="div_sas_structure">
+                    <div>
+                        <p class="p_div_title">Participation via une ou des structure(s) de soins (CPTS, MSP)</p>
+                    </div>
+                    <div id="add_structure_container">
+                        <div class="div_add_structure_location">
+                            <div>
+                                <label>
+                                <input type="checkbox" class="chk_adress" id="location_a" onclick="sas_add_structure()"/>
+                                Adresse A Ville A
+                                </label>
+                            </div>
+                            <div class="div_add_structure_adress" id="div_add_structure_adress_a">
+                                <br>
+                                <div class="div_add_structure">
+                                    <label>
+                                        <input type="checkbox" id="cpts_location_a" class="cpts_location" onclick="cpts_location_inscription()">
+                                        Je participe au SAS via une/des CPTS* <br> <span>(Veuillez renseigner au moins 1 CPTS)</span></label>
+                                    <br>
+                                    <br>
+                                    <div class="add_cpts" id="div_add_cpts_location_a">
+                                        <div class="add_new_structure">
+                                            <label>
+                                                Renseigner votre CPTS :
+                                                <input type="text" placeholder="Renseigner votre CPTS" class="CPTS_location_a">
+                                            </lable>
+                                        </div>
+                                    </div>
+                                    <br>
+                                    <input type="button" value="Ajouter une CPTS" class="btn_form" id="btn_add_CPTS_location_a" onclick="create_div_sas_structure()">
+                                </div>
+                                <br>
+                                <div class="div_add_structure">
+                                    <label>
+                                        <input type="checkbox" id="msp_location_a" class="msp_location" onclick="msp_location_inscription()">
+                                        Je participe au SAS via une/des MSP* <br> <span>(Veuillez renseigner au moins 1 MSP)</span></label>
+                                            <br>
+                                            <br>
+                                            <div class="add_msp" id="div_add_msp_location_a">
+                                                <div class="add_new_structure">
+                                                    <label>
+                                                Renseigner votre MSP :
+                                                <input type="text" placeholder="Renseigner votre MSP" class="MSP_location_a">
+                                            </lable>
+                                        </div>
+                                    </div>
+                                    <br>
+                                    <input type="button" value="Ajouter une MSP" class="btn_form" id="btn_add_MSP_location_a" onclick="create_div_sas_structure()">
+                                </div>
+                            </div>
+                        </div>
+                            <div class="div_add_structure_location">
+                                <div>
+                                    <label>
+                                    <input type="checkbox" class="chk_adress" id="location_b" onclick="sas_add_structure()"/>
+                                    Adresse B Ville B
+                                    </label>
+                                                </div>
+                                                <div class="div_add_structure_adress" id="div_add_structure_adress_b">
+                                                    <br>
+                                                    <div class="div_add_structure">
+                                                        <label>
+                                                            <input type="checkbox" id="cpts_location_b" class="cpts_location" onclick="cpts_location_inscription()">
+                                                            Je participe au SAS via une/des CPTS* <br> <span>(Veuillez renseigner au moins 1 CPTS)</span></label>
+                                                        <br>
+                                                        <br>
+                                                        <div class="add_cpts" id="div_add_cpts_location_b">
+                                                            <div class="add_new_structure">
+                                                                <label>
+                                                    Renseigner votre CPTS :
+                                                    <input type="text" placeholder="Renseigner votre CPTS" class="CPTS_location_b">
+                                                </lable>
+                                            </div>
+                                        </div>
+                                        <br>
+                                        <input type="button" value="Ajouter une CPTS" class="btn_form" id="btn_add_CPTS_location_b" onclick="create_div_sas_structure()">
+                                    </div>
+                                    <br>
+                                    <div class="div_add_structure">
+                                        <label>
+                                            <input type="checkbox" id="msp_location_b" class="msp_location" onclick="msp_location_inscription()">
+                                            Je participe au SAS via une/des MSP* <br> <span>(Veuillez renseigner au moins 1 MSP)</span></label>
+                                                                <br>
+                                                                <br>
+                                                                <div class="add_msp" id="div_add_msp_location_b">
+                                                                    <div class="add_new_structure">
+                                                                        <label>
+                                                    Renseigner votre MSP :
+                                                    <input type="text" placeholder="Renseigner votre MSP" class="MSP_location_b">
+                                                </lable>
+                                            </div>
+                                        </div>
+                                        <br>
+                                        <input type="button" value="Ajouter une MSP" class="btn_form" id="btn_add_MSP_location_b" onclick="create_div_sas_structure()">
+                                    </div>
+                                </div>
+                            </div>
+                       
+                            <div class="div_add_structure_location">
+                                <div>
+                                    <label>
+                                    <input type="checkbox" class="chk_adress" id="location_c" onclick="sas_add_structure()"/>
+                                    Adresse C Ville C
+                                    </label>
+                                                                    </div>
+                                                                    <div class="div_add_structure_adress" id="div_add_structure_adress_c">
+                                                                        <br>
+                                                                        <div class="div_add_structure">
+                                                                            <label>
+                                        <input type="checkbox" id="cpts_location_c" class="cpts_location" onclick="cpts_location_inscription()">
+                                        Je participe au SAS via une/des CPTS* <br> <span>(Veuillez renseigner au moins 1 CPTS)</span></label>
+                                                                            <br>
+                                                                            <br>
+                                                                            <div class="add_cpts" id="div_add_cpts_location_c">
+                                                                                <div class="add_new_structure">
+                                                                                    <label>
+                                                     Renseigner votre CPTS :
+                                                    <input type="text" placeholder="Renseigner votre CPTS" class="CPTS_location_c">
+                                                </lable>
+                                            </div>
+                                        </div>
+                                        <br>
+                                        <input type="button" value="Ajouter une CPTS" class="btn_form" id="btn_add_CPTS_location_c" onclick="create_div_sas_structure()">
+                                    </div>
+                                    <br>
+                                    <div class="div_add_structure">
+                                        <label>
+                                            <input type="checkbox" id="msp_location_c" class="msp_location" onclick="msp_location_inscription()">
+                                            Je participe au SAS via une/des MSP* <br> <span>(Veuillez renseigner au moins 1 MSP)</span></label>
+                                                                                    <br>
+                                                                                    <br>
+                                                                                    <div class="add_msp" id="div_add_msp_location_c">
+                                                                                        <div class="add_new_structure">
+                                                                                            <label>
+                                                    Renseigner votre MSP :
+                                                    <input type="text" placeholder="Renseigner votre MSP" class="MSP_location_c">
+                                                </lable>
+                                            </div>
+                                        </div>
+                                        <br>
+                                        <input type="button" value="Ajouter une MSP" class="btn_form" id="btn_add_MSP_location_c" onclick="create_div_sas_structure()">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <br>
+                    </div>
+                </div>
+    
+                <div id="div_adress_container">
+                    <p>NOM PRENOM DU PS</p>
+                    <p id="adress_container_sas_description"></p>
+                    <p id="editor_interfaced_indiv_status"></p>
+                    <p id="sas_schedule_indiv_status"></p>
+                    <div class="adress_div" id="adress_div_a">
+                        <div class="ps_info">
+                            <div>
+                                <p class="p_div_title">Adresse A de la Ville A</p>
+                            </div>
+                            <div id="div_adress_a">
+                            </div>
+                        </div>
+                    </div>
+    
+                    <div class="adress_div" id="adress_div_b">
+                        <div class="ps_info">
+                            <p class="p_div_title">Adresse B de la Ville B</p>
+                        </div>
+                        <div id="div_adress_b">
+                                
+                        </div>
+                    </div>
+    
+                    <div class="adress_div" id="adress_div_c">
+                        <div class="ps_info">
+                            <p class="p_div_title">Adresse C de la Ville C</p>
+                        </div>
+                        <div id="div_adress_c">
+                                
+                        </div>
+                    </div>
+                </div>
+    </header>
+    <script src="form_evol_front.js"></script>
+</body>
+</html>

@@ -1,0 +1,103 @@
+body {
+    background-color: lightgrey;
+}
+
+select {
+    padding: 10px;
+}
+
+option {
+    padding: 10px;
+}
+
+input {
+    padding: 5px;
+}
+
+label span {
+    font-size: 14px;
+    font-style: italic;
+}
+
+.p_div_title {
+    font-weight: bold;
+}
+
+#div_adress_container {
+    background-color: white;
+    margin-right: 2%;
+    width: 40%;
+    float: right;
+    padding: 10px;
+}
+
+#sas_form_container {
+    background-color: white;
+    margin-left: 2%;
+    width: 40%;
+    float: left;
+    padding: 10px;
+}
+
+.adress_div {
+    margin-top: 3%;
+    height: 200px;
+    width: 500px;
+    border: 1px solid black;
+    padding: 10px;
+    font-size: 12px;
+}
+
+.btn_form {
+    margin-top: 10px;
+}
+
+#div_sas_inscription_init {
+    border: 1px solid black;
+    padding: 10px;
+}
+
+#div_sas_agenda_indiv {
+    border: 1px solid black;
+    padding: 10px;
+}
+
+#div_sas_structure {
+    border: 1px solid black;
+    padding: 10px;
+}
+
+#div_editor_list {
+    margin-top: 2%;
+    margin-left: 3%;
+    background-color: #f7f7f7;
+}
+
+#div_editor_list p {
+    margin-left: 10px;
+}
+
+#npt_editor_engagement {
+    margin-left: 10px;
+}
+
+#npt_sas_schedule_engagement {
+    margin-left: 10px;
+}
+
+#div_editor_list {
+    display: none;
+}
+
+.div_add_structure_adress {
+    margin-left: 10px;
+    display: none;
+}
+
+.div_add_structure_location {
+    margin-bottom: 2%;
+}
+
+.add_new_structure {
+    padding: 10px;
+}
