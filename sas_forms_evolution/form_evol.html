@@ -30,7 +30,7 @@
                     <select id="slct_participation" onchange="sas_inscription()">
                         <option value="none">Veuillez renseigner votre participation au SAS</option>
                         <option value="sas_ok">Je participe au SAS à titre individuel</option>
-                        <option value="sas_ok">Je participe au SAS via mon association SOS Médecins ou mon association de visites à domicile</option>
+                        <option value="sas_sos_med">Je participe au SAS via mon association SOS Médecins ou mon association de visites à domicile</option>
                         <option value="sas_ko">Je ne participe pas au SAS</option>
                         </select>
                     <p id="sas_participation_p">Vous n'avez pas renseigné votre participation au SAS</p>
@@ -98,7 +98,10 @@
                                             <label>
                                                 Renseigner votre CPTS :
                                                 <input type="text" placeholder="Renseigner votre CPTS" class="CPTS_location_a">
-                                            </lable>
+                                            </label>
+                                            <div class="div_editor_orga_list">
+                                                <p class="p_editor_orga_list">Proposer la liste des éditeurs interfacés des CPTS</p>
+                                            </div>
                                         </div>
                                     </div>
                                     <br>
@@ -113,10 +116,13 @@
                                             <br>
                                             <div class="add_msp" id="div_add_msp_location_a">
                                                 <div class="add_new_structure">
-                                                    <label>
+                                                <label>
                                                 Renseigner votre MSP :
                                                 <input type="text" placeholder="Renseigner votre MSP" class="MSP_location_a">
-                                            </lable>
+                                            </label>
+                                            <div class="div_editor_orga_list">
+                                                <p class="p_editor_orga_list">Proposer la liste des éditeurs interfacés des MSP</p>
+                                            </div>
                                         </div>
                                     </div>
                                     <br>

@@ -5,12 +5,26 @@ function sas_inscription() {
     if (selectValue === "sas_ko") {
         document.getElementById("sas_participation_p").innerHTML = "Je refuse d'être contacté en sus de mes disponibilités par la régulation SAMU / SAS";
         document.getElementById("adress_container_sas_description").innerHTML = "Le professionnel n'est pas inscrit au SAS";
+        document.getElementById('div_sas_agenda_indiv').style.display = "none"
+        document.getElementById('div_sas_structure').style.display = "none"
     } else if (selectValue === "sas_ok") {
         document.getElementById("sas_participation_p").innerHTML = "J'accepte d'être contacté en sus de mes disponibilités par la régulation SAMU / SAS";
         document.getElementById("adress_container_sas_description").innerHTML = "Le professionnel est inscrit au SAS, il peut être contacté en sus des disponibilités pour l'ensemble de ses lieux d'activité";
-    } else {
+        document.getElementById('div_sas_agenda_indiv').style.display = "block"
+        document.getElementById('div_sas_structure').style.display = "block"
+    } 
+    else if (selectValue === "sas_sos_med") {
+        document.getElementById("sas_participation_p").innerHTML = "Vous participez au SAS via votre association SOS Médecins ou de VAD";
+        document.getElementById("adress_container_sas_description").innerHTML = "Le professionnel participe via son association SOS Médecins, il n'a pas d'action supplémentaire à réaliser sur son formulaire";
+        document.getElementById('div_sas_agenda_indiv').style.display = "none"
+        document.getElementById('div_sas_structure').style.display = "none"
+
+    }
+    else {
         document.getElementById("sas_participation_p").innerHTML = "Vous n'avez pas renseigné votre participation au SAS";
         document.getElementById("adress_container_sas_description").innerHTML = "Le professionnel n'est pas inscrit au SAS";
+        document.getElementById('div_sas_agenda_indiv').style.display = "block"
+        document.getElementById('div_sas_structure').style.display = "block"
     }
 }
 
@@ -129,9 +143,18 @@ function create_div_sas_structure() {
                 inputStructure.placeholder = `Renseigner votre ${structureType}`;
                 inputStructure.className = `${structureType}_location_${structureLocation}`;
 
+                const divInterfacedSoftStruct = document.createElement("div")
+                divInterfacedSoftStruct.className = "div_editor_orga_list"
+
+                const pInterfacedSoftStruct = document.createElement("p")
+                pInterfacedSoftStruct.className = "p_editor_orga_list"
+                pInterfacedSoftStruct.innerHTML = `Proposer la liste des éditeurs interfacés des ${structureType}`
+                divInterfacedSoftStruct.appendChild(pInterfacedSoftStruct)
+
                 // Append the input to the label, and both to the new div
                 labelStructure.appendChild(inputStructure);
                 addNewStructure.appendChild(labelStructure);
+                addNewStructure.appendChild(divInterfacedSoftStruct);
 
                 // Append the new structure div to the target location
                 divAddStructureLocation.appendChild(addNewStructure);

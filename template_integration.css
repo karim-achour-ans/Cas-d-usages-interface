@@ -1,6 +1,8 @@
 body{
     margin: 0;
+    background-color: white;
 }
+
 .state_logo{
     width: 15%;
     height: 100px;
