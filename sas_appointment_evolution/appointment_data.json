@@ -1,0 +1,10 @@
+{
+  "drm_id": 1234,
+  "created_date": "15/02/2025",
+  "appointment_date": "16/02/2025",
+  "appointment_start_time": "19:00",
+  "practitioner": "Dr. Pierre Dupont",
+  "practitioner_specialty": "Médecine générale",
+  "appointment_address": "101 avenue Henri Barbusse, 92140 Clamart",
+  "appointment_status": "Confirmé"
+}
