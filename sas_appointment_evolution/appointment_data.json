@@ -1,10 +1,22 @@
-{
-  "drm_id": 1234,
-  "created_date": "15/02/2025",
-  "appointment_date": "16/02/2025",
-  "appointment_start_time": "19:00",
-  "practitioner": "Dr. Pierre Dupont",
-  "practitioner_specialty": "Médecine générale",
-  "appointment_address": "101 avenue Henri Barbusse, 92140 Clamart",
-  "appointment_status": "Confirmé"
-}
+[
+  {
+    "drm_id": 1234,
+    "created_date": "16/02/2025",
+    "appointment_date": "16/02/2025",
+    "appointment_start_time": "19:00",
+    "practitioner": "Dr. Pierre Dupont",
+    "practitioner_specialty": "Médecine générale",
+    "appointment_address": "101 avenue Henri Barbusse, 92140 Clamart",
+    "appointment_status": "Confirmé"
+  },
+  {
+    "drm_id": 5678,
+    "created_date": "17/02/2025",
+    "appointment_date": "18/02/2025",
+    "appointment_start_time": "16:30",
+    "practitioner": "Dr. Claude Moreau",
+    "practitioner_specialty": "Pédiatrie",
+    "appointment_address": "09 Rue Voltaire, 59000 Lille",
+    "appointment_status": "Annulé"
+  }
+]
