@@ -1,0 +1,32 @@
+[
+    {
+        "user_role":"admin",
+        "user_territory":"sas_75",
+        "user_nat_id":"none"
+    },
+
+    {
+        "user_role":"regulateur",
+        "user_territory":"sas_75",
+        "user_nat_id":"none"
+    },
+
+    {
+        "user_role":"gestionnaire_compte",
+        "user_territory":"sas_75",
+        "user_nat_id":"none"
+    },
+ 
+    {
+        "user_role":"effecteur",
+        "user_territory":"sas_75",
+        "user_nat_id":"22222222222"
+    },
+    
+    {
+        "user_role":"gestionnaire_structure",
+        "user_territory":"sas_75",
+        "user_nat_id":"none"
+    }
+
+]

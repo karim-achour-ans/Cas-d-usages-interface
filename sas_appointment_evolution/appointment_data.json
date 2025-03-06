@@ -38,6 +38,105 @@
     "appointment_address": "09 Rue Voltaire, 31000 Toulouse",
     "appointment_status": "Confirmé",
     "appointment_sas_territory": "SAS-31"
+  },
+
+  {
+    "appointment_id": 4,
+    "drm_id": 2824,
+    "created_date": "01/02/2025",
+    "appointment_date": "24/02/2025",
+    "appointment_start_time": "12:00",
+    "practitioner": "Dr. Bob Dupont",
+    "practitioner_nat_id": "2802754416809",
+    "practitioner_specialty": "Psychiatrie",
+    "appointment_address": "Rue de la Paix, 69000 Marseille",
+    "appointment_status": "Confirmé",
+    "appointment_sas_territory": "SAS-04"
+  },
+
+  {
+    "appointment_id": 5,
+    "drm_id": 2535,
+    "created_date": "07/02/2025",
+    "appointment_date": "08/02/2025",
+    "appointment_start_time": "16:00",
+    "practitioner": "Dr. Eve Dupont",
+    "practitioner_nat_id": "4875862324900",
+    "practitioner_specialty": "Gynécologie",
+    "appointment_address": "Boulevard Saint-Germain, 13000 Paris",
+    "appointment_status": "Confirmé",
+    "appointment_sas_territory": "SAS-90"
+  },
+
+  {
+    "appointment_id": 6,
+    "drm_id": 7924,
+    "created_date": "11/02/2025",
+    "appointment_date": "09/02/2025",
+    "appointment_start_time": "10:00",
+    "practitioner": "Dr. Charlie Martin",
+    "practitioner_nat_id": "7683367452945",
+    "practitioner_specialty": "Cardiologie",
+    "appointment_address": "Avenue des Champs-Élysées, 13000 Lyon",
+    "appointment_status": "Annulé",
+    "appointment_sas_territory": "SAS-06"
+  },
+
+  {
+    "appointment_id": 7,
+    "drm_id": 8527,
+    "created_date": "18/02/2025",
+    "appointment_date": "04/02/2025",
+    "appointment_start_time": "14:00",
+    "practitioner": "Dr. Eve Durand",
+    "practitioner_nat_id": "7364547568321",
+    "practitioner_specialty": "Psychiatrie",
+    "appointment_address": "Rue de la Paix, 69000 Paris",
+    "appointment_status": "Confirmé",
+    "appointment_sas_territory": "SAS-85"
+  },
+
+  {
+    "appointment_id": 8,
+    "drm_id": 4733,
+    "created_date": "25/02/2025",
+    "appointment_date": "10/02/2025",
+    "appointment_start_time": "09:00",
+    "practitioner": "Dr. Alice Bernard",
+    "practitioner_nat_id": "8976948156217",
+    "practitioner_specialty": "Ophtalmologie",
+    "appointment_address": "Rue de la Paix, 13000 Marseille",
+    "appointment_status": "Confirmé",
+    "appointment_sas_territory": "SAS-86"
+  },
+
+  {
+    "appointment_id": 9,
+    "drm_id": 5374,
+    "created_date": "23/02/2025",
+    "appointment_date": "22/02/2025",
+    "appointment_start_time": "18:00",
+    "practitioner": "Dr. Eve Dupont",
+    "practitioner_nat_id": "3874384575947",
+    "practitioner_specialty": "Gynécologie",
+    "appointment_address": "Avenue des Champs-Élysées, 13000 Lyon",
+    "appointment_status": "Reporté",
+    "appointment_sas_territory": "SAS-72"
+  },
+
+  {
+    "appointment_id": 10,
+    "drm_id": 4598,
+    "created_date": "22/02/2025",
+    "appointment_date": "11/02/2025",
+    "appointment_start_time": "08:00",
+    "practitioner": "Dr. Alice Durand",
+    "practitioner_nat_id": "5709007146075",
+    "practitioner_specialty": "Cardiologie",
+    "appointment_address": "Rue de la Paix, 69000 Lyon",
+    "appointment_status": "Annulé",
+    "appointment_sas_territory": "SAS-28"
   }
+
 
 ]
