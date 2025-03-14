@@ -40,6 +40,49 @@
     </div>
 
     <div id="div_main">
+        <div class="div_filters">
+            <div>
+                <label for="drm_id">Dossier de régulation médicale</label>
+                <input type="text" id="drm_id" name="drm_id">
+            </div>
+            <div>
+                <label for="appointment_date">Date du rendez-vous</label>
+                <input type="date" id="appointment_date" name="appointment_date">
+            </div>
+            <div>
+                <label for="practioner_nat_id">RPPS / FINESS / Siret</label>
+                <input type="text" id="practioner_nat_id" name="practioner_nat_id">
+            </div>
+            <div>
+                <label for="appointment_status">Statut du rendez-vous</label>
+                <select type="text" id="appointment_status" name="appointment_status">
+                    <option>Tous</option>
+                    <option>En attente</option>
+                    <option>Confirmé</option>
+                    <option>Annulé</option>
+                    <option>Terminé</option>
+                    <option>Non honoré</option>
+                </select>
+            </div>
+        </div>
+        <div class="div_filters">
+            <div>
+                <label for="practioner">Effecteur de soins</label>
+                <input type="text" id="practioner" name="practioner">
+            </div>
+            <div>
+                <label for="practioner_specialty">Spécialité</label>
+                <input type="text" id="practioner_specialty" name="practioner_specialty">
+            </div>
+            <div>
+                <label for="appointment_adress">Adresse de consultation</label>
+                <input type="text" id="appointment_adress" name="appointment_adress">
+            </div>
+            <div>
+                <label for="appointment_sas_territory">Territoire SAS</label>
+                <input type="text" id="appointment_sas_territory" name="appointment_sas_territory">
+            </div>
+        </div>
 
         <div id="div_table">
             <table>
