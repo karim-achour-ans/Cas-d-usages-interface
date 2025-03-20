@@ -17,18 +17,23 @@ document.addEventListener("DOMContentLoaded", function () {
                     return;
                 }
 
+                // Check if practitioner.practitioner is "NA", if so use organization.organization_title
+                let practitionerName = practitioner.practitioner === "NA" ? organization.organization_title : practitioner.practitioner;
+
+                // Check if practitioner.practitioner is "NA", if so use organization.organization_nat_id
+                let practitionerNatId = practitioner.practitioner === "NA" ? organization.organization_nat_id : practitioner.practitioner_nat_id;
+
                 let newRow = document.createElement("tr");
                 newRow.id = `appointment-${appointment.appointment_id}`; // Set unique ID
 
                 newRow.innerHTML = `
                     <td>${appointment.drm_id || "N/A"}</td>
+                    <td>${appointment.appointment_source || "N/A"}</td>
                     <td>${appointment.created_date || "N/A"}</td>
                     <td>${appointment.appointment_date || "N/A"}</td>
-                    <td>${appointment.appointment_start_time || "N/A"}</td>
-                    <td>${practitioner.practitioner || "N/A"}</td>
-                    <td>${practitioner.practitioner_nat_id || "N/A"}</td>
+                    <td>${practitionerName || "N/A"}</td>
+                    <td>${practitionerNatId || "N/A"}</td>
                     <td>${practitioner.practitioner_specialty || "N/A"}</td>
-                    <td>${appointment.appointment_address || "N/A"}</td>
                     <td>${appointment.appointment_status || "N/A"}</td>
                     <td>${appointment.appointment_sas_territory || "N/A"}</td>
                 `;
@@ -59,9 +64,8 @@ function openModal(appointment, operator, practitioner, organization) {
                 <tr><th>Référence</th><td>${appointment.appointment_reference_id || "N/A"}</td></tr>
                 <tr><th>Type</th><td>${appointment.appointment_type || "N/A"}</td></tr>
                 <tr><th>Source</th><td>${appointment.appointment_source || "N/A"}</td></tr>
-                <tr><th>Date Enregistrement</th><td>${appointment.created_date || "N/A"}</td></tr>
-                <tr><th>Date Rendez-vous</th><td>${appointment.appointment_date || "N/A"}</td></tr>
-                <tr><th>Heure Début</th><td>${appointment.appointment_start_time || "N/A"}</td></tr>
+                <tr><th>Date et heure d'enregistrement</th><td>${appointment.created_date || "N/A"}</td></tr>
+                <tr><th>Date et heure du rendez-vous</th><td>${appointment.appointment_date || "N/A"}</td></tr>
                 <tr><th>Adresse</th><td>${appointment.appointment_address || "N/A"}</td></tr>
                 <tr><th>Statut</th><td>${appointment.appointment_status || "N/A"}</td></tr>
                 <tr><th>Territoire SAS</th><td>${appointment.appointment_sas_territory || "N/A"}</td></tr>

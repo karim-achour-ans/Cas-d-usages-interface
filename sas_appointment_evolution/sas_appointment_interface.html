@@ -29,13 +29,13 @@
     <div id="div_use_case_per_user_role">
         <select id="roleSelector">
             <option value="all" data-scope="nation_wide">Vue d'ensemble</option>
-            <option value="osnp" data-scope="territory_wide">Régulateur OSNP</option>
-            <option value="su" data-scope="territory_wide">Régulateur SU</option>
+            <option value="osnp" data-scope="linked_territories">Régulateur OSNP</option>
+            <option value="su" data-scope="linked_territories">Régulateur SU</option>
             <option value="practioner" data-scope="user_wide">Professionnel de santé</option>
             <option value="organization_free" data-scope="user_wide">Gestionnaire de Structure effection libérale</option>
             <option value="organization_employee" data-scope="user_wide">Gestionnaire de Structure effection salarié</option>
             <option value="sas_national" data-scope="nation_wide">Administrateur National</option>
-            <option value="sas_account_manager" data-scope="region_wide">Gestionnaire de compte</option>
+            <option value="sas_account_manager" data-scope="linked_territories">Gestionnaire de compte</option>
         </select>
     </div>
 
@@ -54,31 +54,6 @@
                 <input type="text" id="practioner_nat_id" name="practioner_nat_id">
             </div>
             <div>
-                <label for="appointment_status">Statut du rendez-vous</label>
-                <select type="text" id="appointment_status" name="appointment_status">
-                    <option>Tous</option>
-                    <option>En attente</option>
-                    <option>Confirmé</option>
-                    <option>Annulé</option>
-                    <option>Terminé</option>
-                    <option>Non honoré</option>
-                </select>
-            </div>
-        </div>
-        <div class="div_filters">
-            <div>
-                <label for="practioner">Effecteur de soins</label>
-                <input type="text" id="practioner" name="practioner">
-            </div>
-            <div>
-                <label for="practioner_specialty">Spécialité</label>
-                <input type="text" id="practioner_specialty" name="practioner_specialty">
-            </div>
-            <div>
-                <label for="appointment_adress">Adresse de consultation</label>
-                <input type="text" id="appointment_adress" name="appointment_adress">
-            </div>
-            <div>
                 <label for="appointment_sas_territory">Territoire SAS</label>
                 <input type="text" id="appointment_sas_territory" name="appointment_sas_territory">
             </div>
@@ -89,13 +64,12 @@
                 <thead>
                     <tr>
                         <th class="drm_id">Dossier de régulation médicale</th>
-                        <th class="created_date">Date d'enregistrement</th>
-                        <th class="appointment_date">Date du rendez-vous</th>
-                        <th class="appointment_start_date">Heure de début du créneaux</th>
+                        <th class="appointment_source">Source du rendez-vous</th>
+                        <th class="created_date">Date et heure d'enregistrement</th>
+                        <th class="appointment_date">Date et heure du rendez-vous</th>
                         <th class="practioner">Effecteur de soins</th>
                         <th class="practioner_nat_id">Identifiant Nat.</th>
                         <th class="practioner_specialty">Spécialité</th>
-                        <th class="appointment_adress">Adresse de consultation</th>
                         <th class="appointment_status">Statut</th>
                         <th class="appointment_sas_territory">Territoire SAS</th>
                     </tr>
