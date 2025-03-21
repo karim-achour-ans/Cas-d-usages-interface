@@ -31,8 +31,8 @@ document.addEventListener("DOMContentLoaded", function () {
                     <td>${appointment.appointment_source || "N/A"}</td>
                     <td>${appointment.created_date || "N/A"}</td>
                     <td>${appointment.appointment_date || "N/A"}</td>
-                    <td>${practitionerName || "N/A"}</td>
-                    <td>${practitionerNatId || "N/A"}</td>
+                    <td>${appointment.appointment_location || "N/A"}</td>
+                    <td>${practitionerName + "<br> <br>" + organization.organization_title || "N/A"}</td>
                     <td>${practitioner.practitioner_specialty || "N/A"}</td>
                     <td>${appointment.appointment_status || "N/A"}</td>
                     <td>${appointment.appointment_sas_territory || "N/A"}</td>
