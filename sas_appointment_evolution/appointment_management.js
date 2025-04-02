@@ -19,9 +19,15 @@ document.addEventListener("DOMContentLoaded", function () {
 
                 // Check if practitioner.practitioner is "NA", if so use organization.organization_title
                 let practitionerName = practitioner.practitioner === "NA" ? organization.organization_title : practitioner.practitioner;
-
-                // Check if practitioner.practitioner is "NA", if so use organization.organization_nat_id
-                let practitionerNatId = practitioner.practitioner === "NA" ? organization.organization_nat_id : practitioner.practitioner_nat_id;
+                
+                if(organization.organization_title !== "NA" && practitionerName !== organization.organization_title) {
+                    practionerToDisplay = practitionerName + "<br> <br>" + organization.organization_title;
+                } else if (organization.organization_title === "NA") {
+                    practionerToDisplay = practitionerName;
+                }
+                else {
+                    practionerToDisplay = organization.organization_title;
+                }
 
                 let newRow = document.createElement("tr");
                 newRow.id = `appointment-${appointment.appointment_id}`; // Set unique ID
@@ -32,7 +38,7 @@ document.addEventListener("DOMContentLoaded", function () {
                     <td>${appointment.created_date || "N/A"}</td>
                     <td>${appointment.appointment_date || "N/A"}</td>
                     <td>${appointment.appointment_modality || "N/A"}</td>
-                    <td>${practitionerName + "<br> <br>" + organization.organization_title || "N/A"}</td>
+                    <td>${practionerToDisplay}</td>
                     <td>${practitioner.practitioner_specialty || "N/A"}</td>
                     <td>${appointment.appointment_status || "N/A"}</td>
                     <td>${appointment.appointment_sas_territory || "N/A"}</td>
