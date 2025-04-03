@@ -1,0 +1,78 @@
+{
+    "practitioners": [
+      {
+        "name": "Dr Jammeron Véronique",
+        "profession": "Médecin",
+        "convention": "Conventionné secteur 1",
+        "address": "61 Rue de la Grange aux Belles, 75010 Paris",
+        "patients_accepted": "Patient entre 18 ans et 60 ans",
+        "contact": "01 48 03 73 00",
+        "operational_activity": [
+          "Coordination de soins non-programmés",
+          "Médecine générale",
+          "Médecine générale à orientation Allergologie",
+          "Médecine générale à orientation Gynécologie médicale"
+        ],
+        "specific_acts": [
+          "Dermatologie",
+          "Diagnostic prénatal",
+          "ECG (électrocardiographie)"
+        ],
+        "equipment": [
+          "ECG portable",
+          "IRM obésité – bariatrique",
+          "Mammographe"
+        ],
+        "additional_info": "Information complémentaire"
+      },
+      {
+        "name": "Dr Martin Dupont",
+        "profession": "Chirurgien",
+        "convention": "Conventionné secteur 2",
+        "address": "12 Avenue des Champs, 75008 Paris",
+        "patients_accepted": "Tous patients acceptés",
+        "contact": "01 44 55 66 77",
+        "operational_activity": [
+          "Chirurgie générale",
+          "Chirurgie digestive",
+          "Chirurgie oncologique"
+        ],
+        "specific_acts": [
+          "Appendicectomie",
+          "Chirurgie bariatrique",
+          "Laparoscopie"
+        ],
+        "equipment": [
+          "Scanner médical",
+          "Robot chirurgical",
+          "Échographe"
+        ],
+        "additional_info": "Interventions programmées sur rendez-vous"
+      },
+      {
+        "name": "Dr Sophie Bernard",
+        "profession": "Dentiste",
+        "convention": "Conventionné secteur 1",
+        "address": "5 Rue Lafayette, 75009 Paris",
+        "patients_accepted": "Enfants et adultes",
+        "contact": "01 33 44 55 66",
+        "operational_activity": [
+          "Soins dentaires",
+          "Orthodontie",
+          "Implantologie"
+        ],
+        "specific_acts": [
+          "Détartrage",
+          "Pose de couronnes",
+          "Blanchiment dentaire"
+        ],
+        "equipment": [
+          "Radio panoramique",
+          "Scanner 3D",
+          "Laser dentaire"
+        ],
+        "additional_info": "Traitement des urgences dentaires"
+      }
+    ]
+  }
+  

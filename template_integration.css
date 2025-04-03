@@ -3,6 +3,11 @@ body{
     background-color: white;
 }
 
+.main{
+    margin: 0 2%;
+    font-size: 14px;
+}
+
 .state_logo{
     width: 15%;
     height: 100px;
