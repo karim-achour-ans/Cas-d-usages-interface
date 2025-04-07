@@ -37,7 +37,6 @@ document.addEventListener("DOMContentLoaded", function () {
                     <td>${appointment.appointment_source || "N/A"}</td>
                     <td>${appointment.created_date || "N/A"}</td>
                     <td>${appointment.appointment_date || "N/A"}</td>
-                    <td>${appointment.appointment_modality || "N/A"}</td>
                     <td>${practionerToDisplay}</td>
                     <td>${practitioner.practitioner_specialty || "N/A"}</td>
                     <td>${appointment.appointment_status || "N/A"}</td>
@@ -104,3 +103,35 @@ function openModal(appointment, operator, practitioner, organization) {
 function closeModal() {
     document.getElementById("appointmentModal").style.display = "none";
 }
+
+document.getElementById('search_filter').addEventListener('click', function () {
+    const drmInput = document.getElementById('drm_id').value.trim().toLowerCase();
+    const practitionerInput = document.getElementById('practioner_nat_id').value.trim().toLowerCase();
+
+    const rows = document.querySelectorAll('table tbody tr'); // Adjust selector if needed
+
+    rows.forEach(row => {
+        const drmCell = row.children[0].textContent.trim().toLowerCase(); // appointment.drm_id
+        const practitionerCell = row.children[4].textContent.trim().toLowerCase(); // practionerToDisplay
+
+        const matchDrm = !drmInput || drmCell.includes(drmInput);
+        const matchPractitioner = !practitionerInput || practitionerCell.includes(practitionerInput);
+
+        if (matchDrm && matchPractitioner) {
+            row.style.display = '';
+        } else {
+            row.style.display = 'none';
+        }
+    });
+});
+
+document.getElementById('reset_filter').addEventListener('click', function () {
+    document.getElementById('drm_id').value = '';
+    document.getElementById('practioner_nat_id').value = '';
+    document.getElementById('appointment_date').value = ''; // Optional: also reset date
+
+    const rows = document.querySelectorAll('table tbody tr');
+    rows.forEach(row => {
+        row.style.display = '';
+    });
+});

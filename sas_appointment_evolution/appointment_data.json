@@ -6,7 +6,6 @@
       "appointment_reference_id":"3456780581/11242343",
       "appointment_type":"Orientation SAS",
       "appointment_source":"Agenda Interfacé",
-      "appointment_modality":"Cabinet",
       "created_date": "16/02/2025 à 15h00",
       "appointment_date": "17/02/2025 à 18h00",
       "appointment_address": "NA",
@@ -25,9 +24,9 @@
       "practitioner_sas_modality":"Participe au SAS"
     },
     "organization":{
-      "organization_nat_id":"1241938413",
-      "organization_type": "Maison de Santé",
-      "organization_title": "Maison de santé de la table ronde",
+      "organization_nat_id":"NA",
+      "organization_type": "NA",
+      "organization_title": "NA",
       "organization_sas_modality":"NA"
     }
   },
@@ -39,7 +38,6 @@
       "appointment_reference_id":"3456780581/11242343",
       "appointment_type":"Orientation SAS",
       "appointment_source":"Agenda SAS",
-      "appointment_modality":"Cabinet",
       "created_date": "20/03/2025 à 14h00",
       "appointment_date": "22/03/2025 à 09h00",
       "appointment_address": "101 avenue Henri Barbusse, 92140 Clamart",
@@ -72,7 +70,6 @@
       "appointment_reference_id":"3456780581/11242343",
       "appointment_type":"Orientation SAS",
       "appointment_source":"Surnuméraire",
-      "appointment_modality":"Cabinet",
       "created_date": "09/03/2025 à 10h00",
       "appointment_date": "09/03/2025 à 13h00",
       "appointment_address": "101 avenue Henri Barbusse, 92140 Clamart",
@@ -97,15 +94,13 @@
       "organization_sas_modality":"NA"
     }
   },
-
   {
     "appointment": {
       "appointment_id": 4,
-      "drm_id": 9101,
+      "drm_id": 9102,
       "appointment_reference_id":"3456780581/11242343",
       "appointment_type":"Orientation SAS",
       "appointment_source":"Agenda Interfacé",
-      "appointment_modality":"SOS Médecins ou VAD",
       "created_date": "19/03/2025 à 11h00",
       "appointment_date": "19/03/2025 à 13h00",
       "appointment_address": "101 avenue Henri Barbusse, 94140 Bretigny-Sur-Orge",
@@ -129,7 +124,40 @@
       "organization_title": "SOS Médecins Bretigny-Sur-Orge",
       "organization_sas_modality":"Participe au SAS"
     }
-  },
+  }
+  ,
+  {
+    "appointment": {
+      "appointment_id": 13,
+      "drm_id": 2526,
+      "appointment_reference_id":"3456780581/11242343",
+      "appointment_type":"Orientation SAS",
+      "appointment_source":"Agenda Interfacé",
+      "created_date": "19/03/2025 à 11h00",
+      "appointment_date": "19/03/2025 à 13h00",
+      "appointment_address": "101 avenue Henri Barbusse, 94140 Bretigny-Sur-Orge",
+      "appointment_status": "RDV pris et confirmé",
+      "appointment_sas_territory": "SAS-91"
+    },
+    "operator": {
+      "email": "cccc@sas.com",
+      "operator_fullname": "Laurent Blanc",
+      "operator_sas_territory": "SAS-91"
+    },
+    "practitioner": {
+      "practitioner": "NA",
+      "practitioner_nat_id": "NA",
+      "practitioner_specialty": "NA",
+      "practitioner_sas_modality":"NA"
+    },
+    "organization":{
+      "organization_nat_id":"141307283752",
+      "organization_type": "SOS Médecins ou Visite à domicile",
+      "organization_title": "SOS Médecins Bretigny-Sur-Orge",
+      "organization_sas_modality":"Participe au SAS"
+    }
+  }
+  ,
   
   {
     "appointment": {
@@ -138,7 +166,6 @@
       "appointment_reference_id":"3456780581/11242343",
       "appointment_type":"Orientation SAS",
       "appointment_source":"Agenda Interfacé",
-      "appointment_modality":"SOS Médecins ou VAD",
       "created_date": "21/03/2025 à 12h00",
       "appointment_date": "22/03/2025 à 16h00",
       "appointment_address": "101 avenue Henri Barbusse, 94140 Bretigny-Sur-Orge",
@@ -170,7 +197,6 @@
       "appointment_reference_id":"3456780581/11242343",
       "appointment_type":"Orientation SAS",
       "appointment_source":"Agenda SAS",
-      "appointment_modality":"Centre de Santé",
       "created_date": "19/03/2025 à 11h00",
       "appointment_date": "19/03/2025 à 13h00",
       "appointment_address": "12 rue Voltaire, 01 000 Bourg-en-Bresse",
@@ -202,7 +228,6 @@
       "appointment_reference_id":"3456780581/11242343",
       "appointment_type":"Orientation SAS",
       "appointment_source":"Surnuméraire",
-      "appointment_modality":"Maison de Santé",
       "created_date": "19/03/2025 à 11h00",
       "appointment_date": "19/03/2025 à 13h00",
       "appointment_address": "12 rue Voltaire, 01 000 Bourg-en-Bresse",
@@ -234,7 +259,6 @@
       "appointment_reference_id":"3456780581/11242343",
       "appointment_type":"Orientation SAS",
       "appointment_source":"Agenda Interfacé",
-      "appointment_modality":"CPTS",
       "created_date": "19/03/2025 à 11h00",
       "appointment_date": "19/03/2025 à 13h00",
       "appointment_address": "12 rue Voltaire, 01 000 Bourg-en-Bresse",
@@ -253,10 +277,10 @@
       "practitioner_sas_modality":"Participe au SAS"
     },
     "organization":{
-      "organization_nat_id":"(3)98709134017326",
-      "organization_type": "Communauté Professionnelle Territoriale de Santé",
-      "organization_title": "CPTS de Bourg-en-Bresse",
-      "organization_sas_modality":"Participe au SAS"
+      "organization_nat_id":"NA",
+      "organization_type": "NA",
+      "organization_title": "NA",
+      "organization_sas_modality":"NA"
     }
   },
   {
@@ -266,7 +290,6 @@
       "appointment_reference_id":"3456780581/11242343",
       "appointment_type":"Orientation SAS",
       "appointment_source":"Surnuméraire",
-      "appointment_modality":"SOS Médecins ou VAD",
       "created_date": "19/03/2025 à 11h00",
       "appointment_date": "19/03/2025 à 13h00",
       "appointment_address": "12 rue Voltaire, 01 000 Bourg-en-Bresse",
@@ -290,15 +313,47 @@
       "organization_title": "SOS Médecins Bourg-en-Bresse",
       "organization_sas_modality":"Participe au SAS"
     }
-  },
+  }
+  ,
   {
     "appointment": {
-      "appointment_id": 9,
+      "appointment_id": 12,
+      "drm_id": 2324,
+      "appointment_reference_id":"3456780581/11242343",
+      "appointment_type":"Orientation SAS",
+      "appointment_source":"Agenda SAS",
+      "created_date": "19/03/2025 à 11h00",
+      "appointment_date": "19/03/2025 à 13h00",
+      "appointment_address": "12 rue Voltaire, 02000 deux",
+      "appointment_status": "RDV pris et confirmé",
+      "appointment_sas_territory": "SAS-02"
+    },
+    "operator": {
+      "email": "dddd@sas.com",
+      "operator_fullname": "Youri Djorkaeff",
+      "operator_sas_territory": "SAS-02"
+    },
+    "practitioner": {
+      "practitioner": "NA",
+      "practitioner_nat_id": "NA",
+      "practitioner_specialty": "NA",
+      "practitioner_sas_modality":"NA"
+    },
+    "organization":{
+      "organization_nat_id":"(3)98709134017326",
+      "organization_type": "SOS Médecins ou Visite à domicile",
+      "organization_title": "SOS Médecins Bourg-en-Bresse",
+      "organization_sas_modality":"Participe au SAS"
+    }
+  }
+  ,
+  {
+    "appointment": {
+      "appointment_id": 11,
       "drm_id": 9202,
       "appointment_reference_id":"3456780581/11242343",
       "appointment_type":"Orientation SAS",
       "appointment_source":"Surnuméraire",
-      "appointment_modality":"Centre de Santé",
       "created_date": "29/03/2025 à 11h00",
       "appointment_date": "30/03/2025 à 13h00",
       "appointment_address": "12 rue Voltaire, 01 000 Bourg-en-Bresse",
@@ -331,7 +386,6 @@
       "appointment_reference_id":"3456780581/11242343",
       "appointment_type":"Orientation SAS",
       "appointment_source":"Place de marché",
-      "appointment_modality":"Cabinet",
       "created_date": "09/03/2025 à 10h00",
       "appointment_date": "09/03/2025 à 13h00",
       "appointment_address": "101 avenue Henri Barbusse, 92140 Clamart",
