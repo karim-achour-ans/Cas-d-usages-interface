@@ -59,13 +59,40 @@ function openModal(appointment, operator, practitioner, organization) {
     let modal = document.getElementById("appointmentModal");
     let modalContent = document.getElementById("modalContent");
 
+    // Split the territory string into an array if it contains commas
+    let territories = appointment.appointment_sas_territory
+        ? appointment.appointment_sas_territory.split(',').map(t => t.trim())
+        : [];
+
+    let territoryFieldHTML = "";
+
+    if (territories.length > 1) {
+        // Create a select dropdown if multiple territories
+        territoryFieldHTML = `
+            <select id="territorySelect">
+                ${territories.map(t => `<option value="${t}">${t}</option>`).join("")}
+            </select>
+        `;
+    } else {
+        // Otherwise, just display the single value
+        territoryFieldHTML = territories[0] || "N/A";
+    }
+
+    let drmFieldHTML = "";
+
+    if (!appointment.drm_id || appointment.drm_id === "N/A") {
+        drmFieldHTML = `<input type="text" id="drmInput" placeholder="Entrer ID DRM" />`;
+    } else {
+        drmFieldHTML = appointment.drm_id;
+    }
+
     modalContent.innerHTML = `
         <h2>Détails du Rendez-vous</h2>
         <table class="modal-table">
             <tbody>
                 <tr><th colspan="2">📅 Information Rendez-vous</th></tr>
                 <tr><th>ID Rendez-vous</th><td>${appointment.appointment_id || "N/A"}</td></tr>
-                <tr><th>ID DRM</th><td>${appointment.drm_id || "N/A"}</td></tr>
+                <tr><th>ID DRM</th><td>${drmFieldHTML}</td></tr>
                 <tr><th>Référence</th><td>${appointment.appointment_reference_id || "N/A"}</td></tr>
                 <tr><th>Type</th><td>${appointment.appointment_type || "N/A"}</td></tr>
                 <tr><th>Source</th><td>${appointment.appointment_source || "N/A"}</td></tr>
@@ -73,7 +100,7 @@ function openModal(appointment, operator, practitioner, organization) {
                 <tr><th>Date et heure du rendez-vous</th><td>${appointment.appointment_date || "N/A"}</td></tr>
                 <tr><th>Adresse</th><td>${appointment.appointment_address || "N/A"}</td></tr>
                 <tr><th>Statut</th><td>${appointment.appointment_status || "N/A"}</td></tr>
-                <tr><th>Territoire SAS</th><td>${appointment.appointment_sas_territory || "N/A"}</td></tr>
+                <tr><th>Territoire SAS</th><td>${territoryFieldHTML}</td></tr>
 
                 <tr><th colspan="2">👨‍⚕️ Information Effecteur</th></tr>
                 <tr><th>Praticien</th><td>${practitioner.practitioner || "N/A"}</td></tr>

@@ -2,7 +2,7 @@
   {
     "appointment": {
       "appointment_id": 1,
-      "drm_id": 1234,
+      "drm_id": null,
       "appointment_reference_id":"3456780581/11242343",
       "appointment_type":"Orientation SAS",
       "appointment_source":"Agenda Interfacé",
@@ -34,7 +34,7 @@
   {
     "appointment": {
       "appointment_id": 2,
-      "drm_id": 5678,
+      "drm_id": null,
       "appointment_reference_id":"3456780581/11242343",
       "appointment_type":"Orientation SAS",
       "appointment_source":"Agenda SAS",
