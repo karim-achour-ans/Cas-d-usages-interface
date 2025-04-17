@@ -53,3 +53,17 @@ ul{
     list-style-type: none;
     padding: 0;
 }
+
+.agenda_grid {
+    width: 80%;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 5px; /* Optional spacing between items */
+  }
+  
+  .agenda_slot {
+    background-color: #2596be;
+    padding: 5px;
+    border-radius: 4px;
+    text-align: center;
+  }

@@ -153,7 +153,7 @@
     "organization":{
       "organization_nat_id":"141307283752",
       "organization_type": "SOS Médecins ou Visite à domicile",
-      "organization_title": "SOS Médecins Bretigny-Sur-Orge",
+      "organization_title": "SOS Médecins",
       "organization_sas_modality":"Participe au SAS"
     }
   }
@@ -378,7 +378,6 @@
       "organization_sas_modality":"Participe au SAS"
     }
   },
-
   {
     "appointment": {
       "appointment_id": 10,
@@ -402,6 +401,71 @@
       "practitioner_nat_id": "(8)3333333333333",
       "practitioner_specialty": "Pédiatrie",
       "practitioner_sas_modality":"Participe au SAS"
+    },
+    "organization":{
+      "organization_nat_id":"NA",
+      "organization_type": "NA",
+      "organization_title": "NA",
+      "organization_sas_modality":"NA"
+    }
+  },
+
+  {
+    "appointment": {
+      "appointment_id": 13,
+      "drm_id": 2728,
+      "appointment_reference_id":"3456780581/11242343",
+      "appointment_type":"Orientation SAS",
+      "appointment_source":"Place de marché",
+      "created_date": "19/04/2025 à 10h00",
+      "appointment_date": "19/04/2025 à 13h00",
+      "appointment_address": "101 avenue Henri Barbusse, 92140 Clamart",
+      "appointment_status": "RDV en attente",
+      "appointment_sas_territory": "SAS-94"
+    },
+    "operator": {
+      "email": "cccc@sas.com",
+      "operator_fullname": "Laurent Blanc",
+      "operator_sas_territory": "SAS-94"
+    },
+    "practitioner": {
+      "practitioner": "NA",
+      "practitioner_nat_id": "NA",
+      "practitioner_specialty": "NA",
+      "practitioner_sas_modality":"NA"
+    },
+    "organization":{
+      "organization_nat_id":"NA",
+      "organization_type": "NA",
+      "organization_title": "NA",
+      "organization_sas_modality":"NA"
+    }
+  }
+  ,
+
+  {
+    "appointment": {
+      "appointment_id": 13,
+      "drm_id": 2930,
+      "appointment_reference_id":"3456780581/11242343",
+      "appointment_type":"Orientation SAS",
+      "appointment_source":"Place de marché",
+      "created_date": "19/04/2025 à 12h00",
+      "appointment_date": "19/04/2025 à 15h00",
+      "appointment_address": "101 avenue Henri Barbusse, 92140 Clamart",
+      "appointment_status": "RDV annulé",
+      "appointment_sas_territory": "SAS-94"
+    },
+    "operator": {
+      "email": "cccc@sas.com",
+      "operator_fullname": "Laurent Blanc",
+      "operator_sas_territory": "SAS-94"
+    },
+    "practitioner": {
+      "practitioner": "NA",
+      "practitioner_nat_id": "NA",
+      "practitioner_specialty": "NA",
+      "practitioner_sas_modality":"NA"
     },
     "organization":{
       "organization_nat_id":"NA",

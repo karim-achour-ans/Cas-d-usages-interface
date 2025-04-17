@@ -29,7 +29,23 @@ function displayPractitioners(practitioners) {
             <p>${practitioner.patients_accepted}</p>
         `;
 
+        const divAgendaPractitioner = document.createElement("div");
+        divAgendaPractitioner.classList.add("div_agenda_practitioner");
+
+        divAgendaPractitioner.innerHTML = `
+        <h2 class="health_offer_title">Agenda</h2>
+        <div class="agenda_grid">
+          <p class="agenda_slot">11h</p>
+          <p class="agenda_slot">12h</p>
+          <p class="agenda_slot">13h</p>
+          <p class="agenda_slot">14h</p>
+          <p class="agenda_slot">15h</p>
+          <p class="agenda_slot">16h</p>
+        </div>
+      `;
+
         colOne.appendChild(divHealthOfferTitleOne);
+        colOne.appendChild(divAgendaPractitioner);
 
         // Right column (col_two_elements)
         const colTwo = document.createElement("div");
