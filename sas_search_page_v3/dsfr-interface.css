@@ -1,19 +1,26 @@
 /* sas-custom.css - À charger APRÈS le DSFR */
+/* ========================================================================== */
 
-/* --- Structure compacte verticale --- */
+/* ── Structure compacte verticale ── */
 .fr-card {
   min-height: auto !important;
   height: fit-content !important;
   display: flex;
   flex-direction: column;
   border-radius: 0.5rem;
+  transition: background-color 0.15s ease, transform 0.15s ease;
+}
+
+.fr-card:hover {
+  background-color: var(--background-alt-grey-hover);
+  transform: translateY(-1px);
 }
 
 .fr-card__body {
   flex: 1;
   display: flex;
   flex-direction: column;
-  padding: 0.5rem 0.75rem !important; /* Padding unifié et réduit */
+  padding: clamp(0.4rem, 0.6vw, 0.75rem) !important;
 }
 
 .fr-card__content {
@@ -21,12 +28,12 @@
   padding: 0 !important;
 }
 
-/* --- Typographie & Espacement dense --- */
+/* ── Typographie & Espacement ── */
 .fr-card__title {
   order: 0 !important;
   line-height: 1.25 !important;
   margin-bottom: 0.25rem !important;
-  font-size: 1rem !important;
+  font-size: clamp(0.9rem, 1.2vw, 1.05rem) !important;
 }
 
 .fr-card__desc,
@@ -39,30 +46,338 @@
 }
 
 .fr-badge + .fr-badge {
-  margin-left: 0 !important; /* Annule la marge par défaut du DSFR */
+  margin-left: 0 !important;
 }
 
 .fr-card__detail,
 .fr-text--default-grey {
   margin-bottom: 0.25rem !important;
   line-height: 1.35;
+  font-size: clamp(0.75rem, 0.9vw, 0.85rem);
 }
 
-/* --- Hover unifié (plus de conflit) --- */
-.fr-card {
-  transition: background-color 0.15s ease, transform 0.15s ease;
+/* ─────────────────────────────────────────────────────────────────────────────
+   Organisation cards — left accent border
+   ───────────────────────────────────────────────────────────────────────────── */
+.fr-card--org {
+  border-left: 4px solid var(--border-action-high-blue-france);
 }
 
-.fr-card:hover {
-  background-color: var(--background-alt-grey-hover);
-  transform: translateY(-1px); /* Effet subtil sans casser le layout */
+.fr-card--org[data-org-type="SOS Médecins"] {
+  border-left-color: #6a0dad;
 }
 
-/* --- Responsive : pleine largeur sur mobile --- */
+.fr-card--org[data-org-type="Centre de santé"] {
+  border-left-color: #009081;
+}
+
+.fr-card--org[data-org-type="Maison médicale de garde"] {
+  border-left-color: #003189;
+  background-color: var(--background-alt-blue-france);
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   FILTERS - Look "Select Natif / DSFR Dropdown" (SANS ESPACE)
+   ───────────────────────────────────────────────────────────────────────────── */
+
+/* 1. Parents doivent être positionnés et ne pas clipper le contenu absolu */
+#filters-section .fr-col-12,
+#filters-section [class*="fr-col-md-"],
+#filters-section .fr-grid-row {
+  position: relative !important;
+  overflow: visible !important;
+}
+
+/* 2. Panel dropdown */
+.filter-panel {
+  position: absolute !important;
+  top: 100% !important;
+  margin-top: -1px !important; /* Remonte de 1px pour fusionner avec la bordure du bouton */
+  left: 0 !important;
+  right: auto !important;
+  width: max-content !important;
+  min-width: 100% !important;
+  max-width: 280px !important;
+  z-index: 1100 !important;
+
+  display: none;
+  background: var(--background-default-grey, #ffffff) !important;
+  border: 1px solid var(--border-default-grey, #e5e5e5) !important;
+  border-top: none !important; /* Supprime la bordure sup. pour un raccord invisible */
+  border-bottom-left-radius: 0.25rem !important;
+  border-bottom-right-radius: 0.25rem !important;
+  border-top-left-radius: 0 !important;
+  border-top-right-radius: 0 !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1) !important;
+  padding: 0.75rem !important;
+  margin-bottom: 0 !important;
+}
+
+/* 3. État ouvert : le bouton perd sa bordure inférieure pour un effet "select unifié" */
+#filters-section .fr-select--multiple[aria-expanded="true"] {
+  border-bottom-color: transparent !important;
+  border-bottom-left-radius: 0 !important;
+  border-bottom-right-radius: 0 !important;
+}
+
+/* 4. Affichage + animation subtile (opacité uniquement pour éviter les sauts) */
+.filter-panel[style*="display: block"],
+.filter-panel[style*="display:block"] {
+  display: block !important;
+  animation: panelFadeIn 0.12s ease-out forwards;
+}
+
+@keyframes panelFadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+/* Espacement interne des checkboxes */
+.filter-panel .fr-checkbox-group {
+  margin-bottom: 0.5rem;
+}
+.filter-panel .fr-checkbox-group:last-child {
+  margin-bottom: 0;
+}
+.filter-panel .fr-label {
+  cursor: pointer;
+  padding-left: 0.25rem;
+  user-select: none;
+}
+
+/* Responsive : panel pleine largeur sur mobile */
 @media (max-width: 767px) {
+  .filter-panel {
+    left: 0 !important;
+    right: 0 !important;
+    width: auto !important;
+    min-width: auto !important;
+    max-width: none !important;
+  }
+}
+
+/* ── 3-day slot grid ── */
+.sas-slots-grid {
+  display: flex;
+  flex-direction: row;
+  gap: 0.5rem;
+  align-items: flex-start;
+  width: 100%;
+}
+
+.sas-slot-day {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.3rem;
+  min-width: 0;
+}
+
+.sas-slot-day-label {
+  font-size: clamp(0.65rem, 0.8vw, 0.75rem);
+  font-weight: 600;
+  text-transform: capitalize;
+  color: var(--text-mention-grey);
+  margin: 0 0 0.25rem 0;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.sas-slot-day-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  width: 100%;
+  align-items: stretch;
+}
+
+.sas-slot-day-list .sas-slot-btn {
+  width: 100% !important;
+  justify-content: center !important;
+  font-size: clamp(0.65rem, 0.85vw, 0.75rem) !important;
+  padding: clamp(0.2rem, 0.3vw, 0.3rem) clamp(0.3rem, 0.4vw, 0.4rem) !important;
+  white-space: nowrap;
+}
+
+.sas-btn-full {
+  width: 100% !important;
+  justify-content: center !important;
+}
+
+/* ── Card layout columns ── */
+.sas-card-info {
+  max-width: 25%;
+}
+
+.sas-card-slots {
+  flex-shrink: 0;
+  width: 40%;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  border-left: 1px solid var(--border-default-grey);
+  padding-left: clamp(0.5rem, 1vw, 1rem);
+}
+
+.sas-card-comment {
+  flex-shrink: 0;
+  max-width: 30% !important;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  border-left: 1px solid var(--border-default-grey);
+  padding-left: 0.75rem;
+  font-size: clamp(0.75rem, 0.9vw, 0.85rem);
+}
+
+/* ── Quote ── */
+.fr-quote {
+  display: flex;
+  padding: 0 !important;
+  background: none !important;
+}
+
+.fr-quote p {
+  font-size: clamp(0.8rem, 1vw, 0.9rem) !important;
+}
+
+.fr-quote:after,
+.fr-quote:before {
+  --icon-size: 1.4rem !important;
+}
+
+/* ── Results counter ── */
+#results-count {
+  font-weight: 700;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   RESPONSIVE / MOBILE
+   ───────────────────────────────────────────────────────────────────────────── */
+@media (max-width: 768px) {
   .fr-col-md-5 {
     width: 100% !important;
     flex: 0 0 100% !important;
     max-width: 100% !important;
   }
+
+  .sas-card-layout {
+    flex-direction: column;
+  }
+
+  .sas-card-comment,
+  .sas-card-slots {
+    width: 100%;
+    border-left: none;
+    border-top: 1px solid var(--border-default-grey);
+    padding-left: 0;
+    padding-top: 0.75rem;
+  }
+
+  .sas-slots-grid {
+    justify-content: space-between;
+  }
+
+  .sas-card-info {
+    max-width: 100%;
+  }
+}
+
+.fr-checkbox-group input[type=checkbox]+label{
+  margin-left: 3rem !important;
+}
+
+.filter-panel{
+  padding: 15px !important;
+}
+
+.fr-p-2w, .fr-p-4v{
+  padding: 0rem !important;
+}
+
+/* ── Slot buttons : background color by column only ── */
+
+/* Column 1 (D) : Fond Bleu DSFR */
+.sas-slot-day:first-child .sas-slot-btn.fr-btn--secondary {
+  background-color: var(--background-action-low-blue-france) !important;
+}
+
+.sas-slot-day:first-child .sas-slot-btn.fr-btn--secondary:hover {
+  background-color: var(--background-action-high-blue-france) !important;
+  color: var(--text-white) !important; /* Texte blanc au hover/active pour lisibilité */
+}
+
+.sas-slot-day:first-child .sas-slot-btn.fr-btn--secondary:active {
+  background-color: var(--background-action-high-blue-france) !important;
+}
+
+/* Columns 2 & 3 (D+1, D+2) : Fond Vert DSFR */
+.sas-slot-day:nth-child(2) .sas-slot-btn.fr-btn--secondary,
+.sas-slot-day:nth-child(3) .sas-slot-btn.fr-btn--secondary {
+  background-color: var(--background-action-low-green-emeraude) !important;
+}
+
+.sas-slot-day:nth-child(2) .sas-slot-btn.fr-btn--secondary:hover,
+.sas-slot-day:nth-child(3) .sas-slot-btn.fr-btn--secondary:hover {
+  background-color: var(--background-action-high-green-emeraude) !important;
+  color: var(--text-white) !important;
+}
+
+.sas-slot-day:nth-child(2) .sas-slot-btn.fr-btn--secondary:active,
+.sas-slot-day:nth-child(3) .sas-slot-btn.fr-btn--secondary:active {
+  background-color: var(--background-action-high-green-emeraude) !important;
+}
+
+/* Focus state : conserve le focus DSFR par défaut */
+.sas-slot-day .sas-slot-btn.fr-btn--secondary:focus-visible {
+  outline: 2px solid var(--border-action-high-blue-france);
+  outline-offset: 2px;
+}
+
+/* ── Badge de comptage : positionné à droite du bouton ── */
+
+/* Le bouton devient un flex container */
+.fr-select.fr-select--multiple {
+  display: flex !important;
+  align-items: center;
+  justify-content: space-between; /* ← Pousse le badge à droite */
+  gap: 0.5rem;
+  padding-right: 0.75rem !important; /* Espace pour le badge */
+}
+
+/* Le texte du bouton (par défaut dans le button) */
+.fr-select.fr-select--multiple::before {
+  content: attr(aria-label); /* Fallback si pas de texte direct */
+}
+
+/* Alternative : envelopper le texte dans un span si besoin */
+.fr-select.fr-select--multiple .btn-label {
+  flex: 1;
+  text-align: left;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Le badge : fixé à droite */
+.fr-select.fr-select--multiple .fr-badge {
+  flex-shrink: 0; /* Ne se réduit pas */
+  margin-left: auto; /* Pousse à droite en secours */
+  font-size: 0.75rem !important;
+  min-width: 1.25rem;
+  height: 1.25rem;
+  padding: 0 0.35rem !important;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  order: 2; /* S'assure qu'il vient après le texte */
+}
+
+.fr-card__title.js-open-panel{
+  font-size: 16px !important;
+}
+
+.fr-select.fr-select--multiple{
+  justify-content: normal !important;
 }

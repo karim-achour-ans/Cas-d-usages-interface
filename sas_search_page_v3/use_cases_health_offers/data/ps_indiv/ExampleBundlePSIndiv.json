@@ -25,6 +25,38 @@
         "mode": "match"
       }
     },
+        {
+      "fullUrl": "https://exemple.com/ans-sas/Slot/ExampleSlotPSIndiv1",
+      "resource": {
+        "resourceType": "Slot",
+        "id": "ExampleSlotPSIndiv11",
+        "schedule": {
+          "reference": "Schedule/ExampleSchedule1"
+        },
+        "status": "free",
+        "start": "2021-11-06T08:15:00.000+00:00",
+        "end": "2021-11-06T08:30:00.000+00:00"
+      },
+      "search": {
+        "mode": "match"
+      }
+    },
+            {
+      "fullUrl": "https://exemple.com/ans-sas/Slot/ExampleSlotPSIndiv1",
+      "resource": {
+        "resourceType": "Slot",
+        "id": "ExampleSlotPSIndiv13",
+        "schedule": {
+          "reference": "Schedule/ExampleSchedule1"
+        },
+        "status": "free",
+        "start": "2021-11-07T10:45:00.000+00:00",
+        "end": "2021-11-07T10:45:00.000+00:00"
+      },
+      "search": {
+        "mode": "match"
+      }
+    },
     {
       "fullUrl": "https://exemple.com/ans-sas/Schedule/ExampleSchedule1",
       "resource": {
@@ -182,8 +214,8 @@
             "coding": [
               {
                 "system": "https://mos.esante.gouv.fr/NOS/JDV_J17-ActiviteOperationnelle-ROR/FHIR/JDV-J17-ActiviteOperationnelle-ROR",
-                "code": "190",
-                "display": "Médecine générale"
+                "code": "483",
+                "display": " Médecine générale à orientation Diabétologie"
               }
             ]
           }
@@ -324,14 +356,14 @@
         "meta": {
           "lastUpdated": "2021-11-01T00:00:00Z"
         },
-        "comment": "Deuxième cabinet du Dr Thomas. Consultations sur rendez-vous uniquement.",
+        "comment": "",
         "specialty": [
           {
             "coding": [
               {
                 "system": "https://mos.esante.gouv.fr/NOS/JDV_J17-ActiviteOperationnelle-ROR/FHIR/JDV-J17-ActiviteOperationnelle-ROR",
-                "code": "190",
-                "display": "Médecine générale"
+                "code": "488",
+                "display": "Médecine générale à orientation Médecine vasculaire (Angiologie, Phlébologie)"
               }
             ]
           }
@@ -499,8 +531,8 @@
             "coding": [
               {
                 "system": "https://mos.esante.gouv.fr/NOS/TRE_R38-SpecialiteOrdinale/FHIR/TRE-R38-SpecialiteOrdinale",
-                "code": "SM41",
-                "display": "Pneumologie"
+                "code": "SM54",
+                "display": "Médecine générale"
               }
             ]
           }
@@ -531,14 +563,14 @@
         "meta": {
           "lastUpdated": "2021-11-01T00:00:00Z"
         },
-        "comment": "Spécialiste en pneumologie interventionnelle. Urgences respiratoires acceptées.",
+        "comment": "secrétariat 0146051532 pour annulation de rendez-vous pas de vaccin pour les moins de 15 anspas de sutures au cabinet",
         "specialty": [
           {
             "coding": [
               {
                 "system": "https://mos.esante.gouv.fr/NOS/JDV_J17-ActiviteOperationnelle-ROR/FHIR/JDV-J17-ActiviteOperationnelle-ROR",
                 "code": "246",
-                "display": "Pneumologie"
+                "display": "Médecine vasculaire (Angiologie, Phlébologie)"
               }
             ]
           }
@@ -632,6 +664,54 @@
         "mode": "match"
       }
     },
+        {
+      "fullUrl": "https://exemple.com/ans-sas/Slot/ExampleSlotPSIndiv7",
+      "resource": {
+        "resourceType": "Slot",
+        "id": "ExampleSlotPSIndi8",
+        "schedule": {
+          "reference": "Schedule/ExampleSchedule4"
+        },
+        "status": "free",
+        "start": "2021-11-06T15:00:00.000+00:00",
+        "end": "2021-11-06T15:30:00.000+00:00"
+      },
+      "search": {
+        "mode": "match"
+      }
+    },
+    {
+      "fullUrl": "https://exemple.com/ans-sas/Slot/ExampleSlotPSIndiv7",
+      "resource": {
+        "resourceType": "Slot",
+        "id": "ExampleSlotPSIndi9",
+        "schedule": {
+          "reference": "Schedule/ExampleSchedule4"
+        },
+        "status": "free",
+        "start": "2021-11-06T16:00:00.000+00:00",
+        "end": "2021-11-06T16:30:00.000+00:00"
+      },
+      "search": {
+        "mode": "match"
+      }
+    },
+    {
+      "fullUrl": "https://exemple.com/ans-sas/Slot/ExampleSlotPSIndiv7",
+      "resource": {
+        "resourceType": "Slot",
+        "id": "ExampleSlotPSIndi10",
+        "schedule": {
+          "reference": "Schedule/ExampleSchedule4"
+        },
+        "status": "free",
+        "start": "2021-11-07T16:00:00.000+00:00",
+        "end": "2021-11-07T16:30:00.000+00:00"
+      },
+      "search": {
+        "mode": "match"
+      }
+    },
     {
       "fullUrl": "https://exemple.com/ans-sas/Schedule/ExampleSchedule4",
       "resource": {
@@ -718,8 +798,8 @@
                   "coding": [
                     {
                       "system": "https://annuaire.sante.fr/fhir/CodeSystem/sas-participation-type",
-                      "code": "cabinet",
-                      "display": "Cabinet"
+                      "code": "msp",
+                      "display": "msp"
                     }
                   ]
                 }
@@ -751,8 +831,8 @@
             "coding": [
               {
                 "system": "https://mos.esante.gouv.fr/NOS/TRE_R38-SpecialiteOrdinale/FHIR/TRE-R38-SpecialiteOrdinale",
-                "code": "SI01",
-                "display": "Soins infirmiers"
+                "code": "",
+                "display": ""
               }
             ]
           }
@@ -783,14 +863,14 @@
         "meta": {
           "lastUpdated": "2021-11-01T00:00:00Z"
         },
-        "comment": "Infirmière libérale, soins à domicile et en cabinet. Prise en charge plaies chroniques.",
+        "comment": "Soins infirmiers au cabinet de 17h30 à 18h sauf dimanches et jours fériés",
         "specialty": [
           {
             "coding": [
               {
                 "system": "https://mos.esante.gouv.fr/NOS/JDV_J17-ActiviteOperationnelle-ROR/FHIR/JDV-J17-ActiviteOperationnelle-ROR",
-                "code": "320",
-                "display": "Soins infirmiers"
+                "code": "573",
+                "display": "Soins infirmiers orientation Diabète"
               }
             ]
           }
@@ -801,7 +881,7 @@
               {
                 "system": "https://mos.esante.gouv.fr/NOS/JDV_J16-ActeSpecifique-ROR/FHIR/JDV-J16-ActeSpecifique-ROR",
                 "code": "0021",
-                "display": "Soins à domicile"
+                "display": "Rédaction de certificat de décès"
               }
             ]
           },
@@ -809,8 +889,8 @@
             "coding": [
               {
                 "system": "https://mos.esante.gouv.fr/NOS/JDV_J16-ActeSpecifique-ROR/FHIR/JDV-J16-ActeSpecifique-ROR",
-                "code": "0015",
-                "display": "Prise en charge des plaies"
+                "code": "220",
+                "display": "ECG portable"
               }
             ]
           }
@@ -1046,8 +1126,8 @@
                   "coding": [
                     {
                       "system": "https://annuaire.sante.fr/fhir/CodeSystem/sas-participation-type",
-                      "code": "teleconsultation",
-                      "display": "Téléconsultation"
+                      "code": "cpts",
+                      "display": "cpts"
                     }
                   ]
                 }
@@ -1130,6 +1210,161 @@
       "search": {
         "mode": "include"
       }
+    },
+    
+    {
+      "fullUrl": "https://exemple.com/ans-sas/Practitioner/ExamplePractitioner6",
+      "resource": {
+        "resourceType": "Practitioner",
+        "id": "ExamplePractitioner7",
+        "identifier": [
+          {
+            "type": {
+              "coding": [
+                {
+                  "system": "http://interopsante.org/fhir/CodeSystem/fr-v2-0203",
+                  "code": "IDNPS"
+                }
+              ]
+            },
+            "system": "urn:oid:1.2.250.1.71.4.2.1",
+            "value": "[Numéro RPPS]"
+          }
+        ],
+        "name": [
+          {
+            "use": "official",
+            "family": "[Nom]",
+            "given": [
+              "[Prénom]"
+            ],
+            "prefix": [
+              "[Titre du PS]"
+            ]
+          }
+        ]
+      },
+      "search": {
+        "mode": "include"
+      }
+    },
+    {
+      "fullUrl": "https://exemple.com/ans-sas/PractitionerRole/ExamplePractitionerRoleAgregateur7",
+      "resource": {
+        "resourceType": "PractitionerRole",
+        "id": "ExamplePractitionerRoleAgregateur_",
+        "contained": [
+          {
+            "resourceType": "Location",
+            "id": "ExampleLocation8",
+            "address": {
+              "line": [
+                "[Adresse du lieu d'exercice]"
+              ],
+              "city": "[Ville]",
+              "postalCode": "[Code postal]"
+            }
+          }
+        ],
+        "extension": [
+          {
+            "url": "https://annuaire.sante.fr/fhir/StructureDefinition/practitioner-sas-participation",
+            "extension": [
+              {
+                "url": "sasParticipation",
+                "valueBoolean": true
+              },
+              {
+                "url": "sasParticipationType",
+                "valueCodeableConcept": {
+                  "coding": [
+                    {
+                      "system": "https://annuaire.sante.fr/fhir/CodeSystem/sas-participation-type",
+                      "code": "cpts",
+                      "display": "cpts"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        ],
+        "practitioner": {
+          "reference": "Practitioner/ExamplePractitioner7"
+        },
+        "healthcareService": [
+          {
+            "reference": "HealthcareService/ExampleHS7"
+          }
+        ],
+        "code": [
+          {
+            "coding": [
+              {
+                "system": "https://mos.esante.gouv.fr/NOS/TRE_G15-ProfessionSante/FHIR/TRE-G15-ProfessionSante",
+                "code": "10",
+                "display": "[Profession TRE-G15]"
+              }
+            ]
+          }
+        ],
+        "specialty": [
+          {
+            "coding": [
+              {
+                "system": "https://mos.esante.gouv.fr/NOS/TRE_R38-SpecialiteOrdinale/FHIR/TRE-R38-SpecialiteOrdinale",
+                "code": "SM09",
+                "display": "[Spécialité TRE-R38]"
+              }
+            ]
+          }
+        ],
+        "location": [
+          {
+            "reference": "#ExampleLocation8"
+          }
+        ]
+      },
+      "search": {
+        "mode": "include"
+      }
+    },
+    {
+      "fullUrl": "https://exemple.com/ans-sas/HealthcareService/ExampleHS6",
+      "resource": {
+        "resourceType": "HealthcareService",
+        "id": "ExampleHS7",
+        "meta": {
+          "lastUpdated": "2021-11-01T00:00:00Z"
+        },
+        "comment": "[Informations complémentaires]",
+        "specialty": [
+          {
+            "coding": [
+              {
+                "system": "https://mos.esante.gouv.fr/NOS/JDV_J17-ActiviteOperationnelle-ROR/FHIR/JDV-J17-ActiviteOperationnelle-ROR",
+                "code": "226",
+                "display": "[Activité opérationnelle ROR JDV-J17]"
+              }
+            ]
+          }
+        ],
+        "characteristic": [
+          {
+            "coding": [
+              {
+                "system": "https://mos.esante.gouv.fr/NOS/JDV_J16-ActeSpecifique-ROR/FHIR/JDV-J16-ActeSpecifique-ROR",
+                "code": "0009",
+                "display": "[Acte Spécifique ROR JDV-J16]"
+              }
+            ]
+          }
+        ]
+      },
+      "search": {
+        "mode": "include"
+      }
     }
+    
   ]
 }

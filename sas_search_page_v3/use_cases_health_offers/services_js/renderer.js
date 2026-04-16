@@ -31,16 +31,99 @@ function formatAddress(address) {
 }
 
 /**
- * Format an ISO 8601 datetime string into a readable French date/time.
+ * Format an ISO 8601 datetime string to "HHhMM".
  *
  * @param {string} isoString
- * @returns {string} e.g. "05/11/2021 à 09h00"
+ * @returns {string} e.g. "09h00"
  */
 function formatSlotTime(isoString) {
-  const date = new Date(isoString);
+  const date  = new Date(isoString);
   const hours = String(date.getHours()).padStart(2, '0');
   const mins  = String(date.getMinutes()).padStart(2, '0');
   return `${hours}h${mins}`;
+}
+
+/**
+ * Format a Date object to a "YYYY-MM-DD" key for grouping.
+ *
+ * @param {Date} date
+ * @returns {string}
+ */
+function toDateKey(date) {
+  return date.toISOString().slice(0, 10);
+}
+
+/**
+ * Format a Date object to a short French label "jeu. 04/11".
+ *
+ * @param {Date} date
+ * @returns {string}
+ */
+function formatDayLabel(date) {
+  return date.toLocaleDateString('fr-FR', { weekday: 'short', day: '2-digit', month: '2-digit' });
+}
+
+/**
+ * Build the 3-column slot structure from an array of ISO slot starts.
+ * The reference day is the date of the earliest slot found (D).
+ * Columns: D, D+1, D+2.
+ * If no slots exist, all three columns are empty.
+ *
+ * @param {string[]} slotStarts - Sorted ISO 8601 datetime strings
+ * @returns {{ label: string, key: string, slots: string[] }[]} Array of 3 day columns
+ */
+function buildSlotColumns(slotStarts) {
+  if (!slotStarts?.length) {
+    // No slots: return 3 empty placeholder columns with generic labels
+    const today = new Date();
+    return [0, 1, 2].map(offset => {
+      const d = new Date(today);
+      d.setDate(d.getDate() + offset);
+      return { label: formatDayLabel(d), key: toDateKey(d), slots: [] };
+    });
+  }
+
+  // Use the earliest slot's date as D
+  const earliest = new Date(slotStarts[0]);
+  const columns  = [0, 1, 2].map(offset => {
+    const d = new Date(earliest);
+    d.setDate(d.getDate() + offset);
+    return { label: formatDayLabel(d), key: toDateKey(d), slots: [] };
+  });
+
+  // Distribute slots into their matching column
+  for (const iso of slotStarts) {
+    const key = toDateKey(new Date(iso));
+    const col = columns.find(c => c.key === key);
+    if (col) col.slots.push(iso);
+  }
+
+  return columns;
+}
+
+/**
+ * Render the 3-day slot columns HTML for a card.
+ *
+ * @param {string[]} slotStarts
+ * @returns {string} HTML string
+ */
+function renderSlotColumns(slotStarts) {
+  const columns = buildSlotColumns(slotStarts);
+
+  return columns.map(col => `
+    <div class="sas-slot-day">
+      <p class="sas-slot-day-label">${col.label}</p>
+      <div class="sas-slot-day-list">
+        ${col.slots.length
+          ? col.slots.map(iso => `
+              <button class="fr-btn fr-btn--sm fr-btn--secondary sas-slot-btn js-open-panel">
+                ${formatSlotTime(iso)}
+              </button>`).join('')
+          : `<p class="fr-text--xs fr-text--mention-grey fr-mb-0">—</p>`
+        }
+      </div>
+    </div>
+  `).join('');
 }
 
 /**
@@ -53,64 +136,58 @@ function formatSlotTime(isoString) {
 function renderCard(offer) {
   const displayName = formatDisplayName(offer);
   const addressLine = formatAddress(offer.address);
-  const hasSlots    = offer.slotStarts?.length > 0;
-  
-  // Données pour le panneau latéral
+
+  // Panel data
   const panelData = {
-    name: displayName,
-    specialty: [offer.profession, offer.specialty].filter(Boolean).join(' — '),
-    phone: offer.phone,
-    address: addressLine,
-    slots: offer.slotStarts?.map(formatSlotTime) || [],
-    sasOk: offer.sasOk,
-    sasTypes: offer.sasTypes ?? [],
-    comment: offer.comment,
+    name:                displayName,
+    specialty:           [offer.profession, offer.specialty].filter(Boolean).join(' — '),
+    phone:               offer.phone,
+    address:             addressLine,
+    slots:               offer.slotStarts?.map(formatSlotTime) || [],
+    sasOk:               offer.sasOk,
+    sasTypes:            offer.sasTypes ?? [],
+    comment:             offer.comment,
     operationalActivity: offer.operationalActivity,
-    specificActs: offer.specificActs ?? [],
-    ps: offer.notes || "Aucune information complémentaire.",
-    access: offer.accessibility || "Accessible PMR",
-    tariffs: offer.tariffInfo || "Tarif conventionné Sécurité Sociale",
-    languages: offer.languages || [],
+    specificActs:        offer.specificActs ?? [],
+    ps:                  offer.notes || "Aucune information complémentaire.",
+    access:              offer.accessibility || "Accessible PMR",
+    tariffs:             offer.tariffInfo || "Tarif conventionné Sécurité Sociale",
+    languages:           offer.languages || [],
   };
 
-  // Badge SAS OK/KO
-  const sasBadge = offer.sasOk === true
-    ? `<span class="fr-badge fr-badge--success fr-badge--sm fr-ml-1w">Participe au SAS</span>`
-    : offer.sasOk === false
-    ? `<span class="fr-badge fr-badge--error fr-badge--sm fr-ml-1w">Ne participe pas au SAS</span>`
+  // SAS badge — sasTypes is an array
+  const SAS_LABEL_MAP = {
+    'Cabinet':          'Participe au SAS',
+    'cpts':             'Participe au SAS via CPTS',
+    'msp':              'Participe au SAS via MSP',
+    'Téléconsultation': 'Participe au SAS (téléconsultation)',
+  };
+
+  const matchedType = offer.sasTypes?.find(t => t in SAS_LABEL_MAP);
+  const sasBadge = offer.sasOk === true && matchedType
+    ? `<span class="fr-badge fr-badge--success fr-badge--sm">${SAS_LABEL_MAP[matchedType]}</span>`
     : '';
 
   return `
     <article class="fr-col-12 js-practitioner-card"
+             data-sas="${offer.sasOk === true ? 'true' : 'false'}"
+             data-pdsa="false"
+             data-orgtype="ps-indiv"
              data-panel='${JSON.stringify(panelData).replace(/'/g, "&apos;")}'>
       <div class="fr-card">
         <div class="fr-card__body">
           <div class="fr-card__content sas-card-layout">
 
-            <!-- Left column: practitioner info -->
+            <!-- Col 1: practitioner identity -->
             <div class="sas-card-info">
-
               <h3 class="fr-card__title fr-mb-0 js-open-panel"
                   title="Voir les détails de ${displayName || 'ce professionnel'}"
                   tabindex="0" role="button"
                   aria-label="Ouvrir les détails de ${displayName || 'ce professionnel'}">
-                ${displayName || '—'} ${sasBadge}
+                ${displayName || '—'}
               </h3>
 
-              ${offer.profession || offer.specialty ? `
-              <p class="fr-card__detail fr-mb-0">
-                ${[offer.profession, offer.specialty].filter(Boolean).join(' — ')}
-              </p>` : ''}
-
-              ${offer.operationalActivity ? `
-              <p class="fr-text--sm fr-text--default-grey fr-mb-0">
-                Activité : ${offer.operationalActivity}
-              </p>` : ''}
-
-              ${offer.specificActs?.length ? `
-              <p class="fr-text--sm fr-text--default-grey fr-mb-0">
-                ${offer.specificActs.map(a => `<span class="fr-badge fr-badge--sm fr-mr-1v">${a}</span>`).join('')}
-              </p>` : ''}
+              ${sasBadge}
 
               ${offer.phone ? `
               <p class="fr-text--sm fr-text--default-grey fr-mb-0">
@@ -121,28 +198,44 @@ function renderCard(offer) {
               <p class="fr-text--sm fr-text--default-grey fr-mb-0">
                 ${addressLine}
               </p>` : ''}
-
-              ${offer.comment ? `
-              <p class="fr-text--sm fr-text--default-grey fr-mb-0 sas-comment">
-                <em>${offer.comment}</em>
-              </p>` : ''}
-
-              <button class="fr-btn fr-btn--sm fr-mt-1w">
-                Orientation hors disponibilité
-              </button>
             </div>
 
-            <!-- Right column: available slots -->
+            <!-- Col 2: phone + comment -->
+            <div class="sas-card-comment">
+
+              ${(offer.profession !== "Médecin" || offer.specialty) ? `
+                <p class="fr-text--sm fr-text--default-grey fr-mb-0">
+                  <strong>${[
+                    offer.profession !== "Médecin" ? offer.profession : null,
+                    offer.specialty
+                  ].filter(Boolean).join(' — ')}</strong>
+                </p>` : ''}
+              
+              ${offer.operationalActivity ? `
+              <p class="fr-text--sm fr-text--default-grey fr-mb-0 sas-comment">
+                ${offer.operationalActivity}
+              </p>` : ''}
+
+              ${offer.comment ? `
+                <figure class="fr-quote">
+              <p class="fr-text--md">  
+              <em>${offer.comment}</em>
+              </p>
+               </figure>
+               ` : ''}
+            </div>
+
+            <!-- Col 3: 3-day slot columns + action button -->
             <div class="sas-card-slots">
-              ${hasSlots
-                ? offer.slotStarts.map(start => `
-                    <button class="fr-btn fr-btn--sm fr-btn--secondary sas-slot-btn js-open-panel">
-                      ${formatSlotTime(start)}
-                    </button>`).join('')
-                : `<p class="fr-text--sm fr-text--mention-grey fr-mb-0">
-                     Aucun créneau disponible
-                   </p>`
-              }
+              <div class="sas-slots-grid">
+                ${renderSlotColumns(offer.slotStarts)}
+              </div>
+              <button class="fr-btn fr-btn--sm fr-mt-1w sas-btn-full">
+                Orientation hors disponibilité
+              </button>
+                <button class="fr-btn--secondary fr-btn--sm fr-mt-1w sas-btn-full ">
+                Demande de prise en charge
+              </button>
             </div>
 
           </div>

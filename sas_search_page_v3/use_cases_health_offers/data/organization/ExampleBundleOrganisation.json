@@ -1,0 +1,1043 @@
+{
+  "resourceType": "Bundle",
+  "id": "ExampleBundleOrganisation",
+  "meta": {
+    "profile": [
+      "https://interop.esante.gouv.fr/ig/fhir/sas/StructureDefinition/sas-sos-bundle-aggregator"
+    ]
+  },
+  "type": "searchset",
+  "total": 21,
+  "entry": [
+    {
+      "fullUrl": "https://exemple.com/ans-sas/Slot/SlotOrg1a",
+      "resource": {
+        "resourceType": "Slot",
+        "id": "SlotOrg1a",
+        "meta": {
+          "profile": [
+            "https://interop.esante.gouv.fr/ig/fhir/sas/StructureDefinition/sas-sos-slot-aggregator"
+          ],
+          "security": [
+            {
+              "system": "https://mos.esante.gouv.fr/NOS/TRE_R314-TypeCreneau/FHIR/TRE-R314-TypeCreneau",
+              "code": "PUBLIC"
+            },
+            {
+              "system": "https://mos.esante.gouv.fr/NOS/TRE_R314-TypeCreneau/FHIR/TRE-R314-TypeCreneau",
+              "code": "SNP"
+            }
+          ]
+        },
+        "serviceType": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+                "code": "AMB",
+                "display": "ambulatory"
+              }
+            ]
+          }
+        ],
+        "appointmentType": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/v2-0276",
+              "code": "ROUTINE"
+            }
+          ]
+        },
+        "schedule": {
+          "reference": "Schedule/ScheduleOrg1"
+        },
+        "status": "free",
+        "start": "2026-04-15T09:00:00.000+02:00",
+        "end": "2026-04-15T09:30:00.000+02:00",
+        "comment": "http://www.editeur.com/pfg/creneau1"
+      },
+      "search": {
+        "mode": "include"
+      }
+    },
+    {
+      "fullUrl": "https://exemple.com/ans-sas/Slot/SlotOrg1b",
+      "resource": {
+        "resourceType": "Slot",
+        "id": "SlotOrg1b",
+        "meta": {
+          "profile": [
+            "https://interop.esante.gouv.fr/ig/fhir/sas/StructureDefinition/sas-sos-slot-aggregator"
+          ],
+          "security": [
+            {
+              "system": "https://mos.esante.gouv.fr/NOS/TRE_R314-TypeCreneau/FHIR/TRE-R314-TypeCreneau",
+              "code": "PUBLIC"
+            }
+          ]
+        },
+        "serviceType": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+                "code": "AMB"
+              }
+            ]
+          }
+        ],
+        "appointmentType": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/v2-0276",
+              "code": "ROUTINE"
+            }
+          ]
+        },
+        "schedule": {
+          "reference": "Schedule/ScheduleOrg1"
+        },
+        "status": "free",
+        "start": "2026-04-15T10:30:00.000+02:00",
+        "end": "2026-04-15T11:00:00.000+02:00",
+        "comment": "http://www.editeur.com/pfg/creneau1b"
+      },
+      "search": {
+        "mode": "include"
+      }
+    },
+    {
+      "fullUrl": "https://exemple.com/ans-sas/Slot/SlotOrg1c",
+      "resource": {
+        "resourceType": "Slot",
+        "id": "SlotOrg1c",
+        "meta": {
+          "profile": [
+            "https://interop.esante.gouv.fr/ig/fhir/sas/StructureDefinition/sas-sos-slot-aggregator"
+          ],
+          "security": [
+            {
+              "system": "https://mos.esante.gouv.fr/NOS/TRE_R314-TypeCreneau/FHIR/TRE-R314-TypeCreneau",
+              "code": "SNP"
+            }
+          ]
+        },
+        "serviceType": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+                "code": "VR",
+                "display": "virtual"
+              }
+            ]
+          }
+        ],
+        "appointmentType": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/v2-0276",
+              "code": "ROUTINE"
+            }
+          ]
+        },
+        "schedule": {
+          "reference": "Schedule/ScheduleOrg1"
+        },
+        "status": "free",
+        "start": "2026-04-16T08:00:00.000+02:00",
+        "end": "2026-04-16T08:30:00.000+02:00",
+        "comment": "http://www.editeur.com/pfg/creneau1c"
+      },
+      "search": {
+        "mode": "include"
+      }
+    },
+    {
+      "fullUrl": "https://exemple.com/ans-sas/Schedule/ScheduleOrg1",
+      "resource": {
+        "resourceType": "Schedule",
+        "id": "ScheduleOrg1",
+        "meta": {
+          "profile": [
+            "https://interop.esante.gouv.fr/ig/fhir/sas/StructureDefinition/sas-sos-schedule-aggregator"
+          ]
+        },
+        "actor": [
+          {
+            "reference": "Location/LocationOrg1"
+          }
+        ],
+        "comment": "Agenda PFG SOS Médecins Marseille Centre"
+      },
+      "search": {
+        "mode": "match"
+      }
+    },
+    {
+      "fullUrl": "https://exemple.com/ans-sas/Location/LocationOrg1",
+      "resource": {
+        "resourceType": "Location",
+        "id": "LocationOrg1",
+        "meta": {
+          "profile": [
+            "https://interop.esante.gouv.fr/ig/fhir/sas/StructureDefinition/sas-sos-location-aggregator"
+          ]
+        },
+        "identifier": [
+          {
+            "type": {
+              "coding": [
+                {
+                  "system": "http://interopsante.org/fhir/CodeSystem/fr-location-identifier-type",
+                  "code": "IDNST"
+                }
+              ]
+            },
+            "system": "urn:oid:1.2.250.1.71.4.2.2",
+            "value": "399012345600011"
+          }
+        ],
+        "name": "SOS Médecins Marseille — Point Fixe de Garde Centre",
+        "description": "Point Fixe de Garde (PFG) du centre-ville, consultations sans rendez-vous 24h/24.",
+        "telecom": [
+          {
+            "system": "phone",
+            "value": "+33491234567",
+            "rank": 1
+          }
+        ],
+        "address": {
+          "line": [
+            "12 rue de la République"
+          ],
+          "city": "MARSEILLE",
+          "postalCode": "13001"
+        },
+        "position": {
+          "longitude": 5.3698,
+          "latitude": 43.2965
+        },
+        "managingOrganization": {
+          "reference": "Organization/OrgSOS1"
+        },
+        "hoursOfOperation": [
+          {
+            "daysOfWeek": [
+              "mon",
+              "tue",
+              "wed",
+              "thu",
+              "fri",
+              "sat",
+              "sun"
+            ],
+            "allDay": true
+          }
+        ],
+        "extension": [
+          {
+            "url": "https://sas.esante.gouv.fr/fhir/StructureDefinition/sos-location-subtype",
+            "valueCode": "PFG"
+          }
+        ]
+      },
+      "search": {
+        "mode": "include"
+      }
+    },
+    {
+      "fullUrl": "https://exemple.com/ans-sas/Organization/OrgSOS1",
+      "resource": {
+        "resourceType": "Organization",
+        "id": "OrgSOS1",
+        "meta": {
+          "profile": [
+            "https://interop.esante.gouv.fr/ig/fhir/sas/StructureDefinition/sas-sos-organization-aggregator"
+          ]
+        },
+        "extension": [
+          {
+            "url": "https://annuaire.sante.fr/fhir/StructureDefinition/practitioner-sas-participation",
+            "extension": [
+              {
+                "url": "sasParticipation",
+                "valueBoolean": true
+              },
+              {
+                "url": "sasParticipationType",
+                "valueCodeableConcept": {
+                  "coding": [
+                    {
+                      "display": "Cabinet"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        ],
+        "identifier": [
+          {
+            "type": {
+              "coding": [
+                {
+                  "system": "http://interopsante.org/fhir/CodeSystem/fr-location-identifier-type",
+                  "code": "IDNST"
+                }
+              ]
+            },
+            "system": "urn:oid:1.2.250.1.71.4.2.2",
+            "value": "399012345600011"
+          }
+        ],
+        "type": [
+          {
+            "coding": [
+              {
+                "system": "https://mos.esante.gouv.fr/NOS/TRE_R66-CategorieEtablissement/FHIR/TRE-R66-CategorieEtablissement",
+                "code": "SOS_MEDECINS",
+                "display": "SOS Médecins"
+              }
+            ]
+          }
+        ],
+        "name": "SOS Médecins Marseille",
+        "telecom": [
+          {
+            "system": "phone",
+            "value": "+33491234567"
+          }
+        ],
+        "address": [
+          {
+            "city": "MARSEILLE",
+            "postalCode": "13001"
+          }
+        ]
+      },
+      "search": {
+        "mode": "include"
+      }
+    },
+    {
+      "fullUrl": "https://exemple.com/ans-sas/Slot/SlotOrg2a",
+      "resource": {
+        "resourceType": "Slot",
+        "id": "SlotOrg2a",
+        "meta": {
+          "profile": [
+            "https://interop.esante.gouv.fr/ig/fhir/sas/StructureDefinition/sas-sos-slot-aggregator"
+          ],
+          "security": [
+            {
+              "system": "https://mos.esante.gouv.fr/NOS/TRE_R314-TypeCreneau/FHIR/TRE-R314-TypeCreneau",
+              "code": "PUBLIC"
+            }
+          ]
+        },
+        "serviceType": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+                "code": "AMB"
+              }
+            ]
+          }
+        ],
+        "appointmentType": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/v2-0276",
+              "code": "ROUTINE"
+            }
+          ]
+        },
+        "schedule": {
+          "reference": "Schedule/ScheduleOrg2"
+        },
+        "status": "free",
+        "start": "2026-04-15T14:00:00.000+02:00",
+        "end": "2026-04-15T14:30:00.000+02:00",
+        "comment": "http://www.editeur.com/cds/creneau1"
+      },
+      "search": {
+        "mode": "include"
+      }
+    },
+    {
+      "fullUrl": "https://exemple.com/ans-sas/Slot/SlotOrg2b",
+      "resource": {
+        "resourceType": "Slot",
+        "id": "SlotOrg2b",
+        "meta": {
+          "profile": [
+            "https://interop.esante.gouv.fr/ig/fhir/sas/StructureDefinition/sas-sos-slot-aggregator"
+          ],
+          "security": [
+            {
+              "system": "https://mos.esante.gouv.fr/NOS/TRE_R314-TypeCreneau/FHIR/TRE-R314-TypeCreneau",
+              "code": "PUBLIC"
+            }
+          ]
+        },
+        "serviceType": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+                "code": "VR"
+              }
+            ]
+          }
+        ],
+        "appointmentType": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/v2-0276",
+              "code": "ROUTINE"
+            }
+          ]
+        },
+        "schedule": {
+          "reference": "Schedule/ScheduleOrg2"
+        },
+        "status": "free",
+        "start": "2026-04-15T15:00:00.000+02:00",
+        "end": "2026-04-15T15:20:00.000+02:00",
+        "comment": "http://www.editeur.com/cds/creneau2"
+      },
+      "search": {
+        "mode": "include"
+      }
+    },
+    {
+      "fullUrl": "https://exemple.com/ans-sas/Schedule/ScheduleOrg2",
+      "resource": {
+        "resourceType": "Schedule",
+        "id": "ScheduleOrg2",
+        "meta": {
+          "profile": [
+            "https://interop.esante.gouv.fr/ig/fhir/sas/StructureDefinition/sas-sos-schedule-aggregator"
+          ]
+        },
+        "actor": [
+          {
+            "reference": "Location/LocationOrg2"
+          }
+        ],
+        "comment": "Agenda Centre de santé polyvalent Belsunce"
+      },
+      "search": {
+        "mode": "match"
+      }
+    },
+    {
+      "fullUrl": "https://exemple.com/ans-sas/Location/LocationOrg2",
+      "resource": {
+        "resourceType": "Location",
+        "id": "LocationOrg2",
+        "meta": {
+          "profile": [
+            "https://interop.esante.gouv.fr/ig/fhir/sas/StructureDefinition/sas-sos-location-aggregator"
+          ]
+        },
+        "identifier": [
+          {
+            "type": {
+              "coding": [
+                {
+                  "system": "http://interopsante.org/fhir/CodeSystem/fr-location-identifier-type",
+                  "code": "IDNST"
+                }
+              ]
+            },
+            "system": "urn:oid:1.2.250.1.71.4.2.2",
+            "value": "399087654300022"
+          }
+        ],
+        "name": "Centre de Santé Polyvalent Belsunce",
+        "description": "Centre de santé municipal, soins non programmés du lundi au vendredi.",
+        "telecom": [
+          {
+            "system": "phone",
+            "value": "+33491887766",
+            "rank": 1
+          }
+        ],
+        "address": {
+          "line": [
+            "45 cours Belsunce"
+          ],
+          "city": "MARSEILLE",
+          "postalCode": "13001"
+        },
+        "position": {
+          "longitude": 5.3745,
+          "latitude": 43.299
+        },
+        "managingOrganization": {
+          "reference": "Organization/OrgCDS1"
+        },
+        "hoursOfOperation": [
+          {
+            "daysOfWeek": [
+              "mon",
+              "tue",
+              "wed",
+              "thu",
+              "fri"
+            ],
+            "openingTime": "08:00:00",
+            "closingTime": "20:00:00"
+          },
+          {
+            "daysOfWeek": [
+              "sat"
+            ],
+            "openingTime": "09:00:00",
+            "closingTime": "13:00:00"
+          }
+        ]
+      },
+      "search": {
+        "mode": "include"
+      }
+    },
+    {
+      "fullUrl": "https://exemple.com/ans-sas/Organization/OrgCDS1",
+      "resource": {
+        "resourceType": "Organization",
+        "id": "OrgCDS1",
+        "meta": {
+          "profile": [
+            "https://interop.esante.gouv.fr/ig/fhir/sas/StructureDefinition/sas-sos-organization-aggregator"
+          ]
+        },
+        "extension": [
+          {
+            "url": "https://annuaire.sante.fr/fhir/StructureDefinition/practitioner-sas-participation",
+            "extension": [
+              {
+                "url": "sasParticipation",
+                "valueBoolean": true
+              },
+              {
+                "url": "sasParticipationType",
+                "valueCodeableConcept": {
+                  "coding": [
+                    {
+                      "display": "Cabinet"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        ],
+        "identifier": [
+          {
+            "type": {
+              "coding": [
+                {
+                  "system": "http://interopsante.org/fhir/CodeSystem/fr-location-identifier-type",
+                  "code": "IDNST"
+                }
+              ]
+            },
+            "system": "urn:oid:1.2.250.1.71.4.2.2",
+            "value": "399087654300022"
+          }
+        ],
+        "type": [
+          {
+            "coding": [
+              {
+                "system": "https://mos.esante.gouv.fr/NOS/TRE_R66-CategorieEtablissement/FHIR/TRE-R66-CategorieEtablissement",
+                "code": "CENTRE_SANTE",
+                "display": "Centre de santé"
+              }
+            ]
+          }
+        ],
+        "name": "Centre de Santé Polyvalent Belsunce",
+        "telecom": [
+          {
+            "system": "phone",
+            "value": "+33491887766"
+          }
+        ],
+        "address": [
+          {
+            "city": "MARSEILLE",
+            "postalCode": "13001"
+          }
+        ]
+      },
+      "search": {
+        "mode": "include"
+      }
+    },
+    {
+      "fullUrl": "https://exemple.com/ans-sas/Slot/SlotOrg3a",
+      "resource": {
+        "resourceType": "Slot",
+        "id": "SlotOrg3a",
+        "meta": {
+          "profile": [
+            "https://interop.esante.gouv.fr/ig/fhir/sas/StructureDefinition/sas-sos-slot-aggregator"
+          ],
+          "security": [
+            {
+              "system": "https://mos.esante.gouv.fr/NOS/TRE_R314-TypeCreneau/FHIR/TRE-R314-TypeCreneau",
+              "code": "SNP"
+            }
+          ]
+        },
+        "serviceType": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+                "code": "AMB"
+              }
+            ]
+          }
+        ],
+        "appointmentType": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/v2-0276",
+              "code": "ROUTINE"
+            }
+          ]
+        },
+        "schedule": {
+          "reference": "Schedule/ScheduleOrg3"
+        },
+        "status": "free",
+        "start": "2026-04-15T20:00:00.000+02:00",
+        "end": "2026-04-15T20:30:00.000+02:00",
+        "comment": "http://www.editeur.com/mmg/creneau1"
+      },
+      "search": {
+        "mode": "include"
+      }
+    },
+    {
+      "fullUrl": "https://exemple.com/ans-sas/Slot/SlotOrg3b",
+      "resource": {
+        "resourceType": "Slot",
+        "id": "SlotOrg3b",
+        "meta": {
+          "profile": [
+            "https://interop.esante.gouv.fr/ig/fhir/sas/StructureDefinition/sas-sos-slot-aggregator"
+          ],
+          "security": [
+            {
+              "system": "https://mos.esante.gouv.fr/NOS/TRE_R314-TypeCreneau/FHIR/TRE-R314-TypeCreneau",
+              "code": "SNP"
+            }
+          ]
+        },
+        "serviceType": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+                "code": "AMB"
+              }
+            ]
+          }
+        ],
+        "appointmentType": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/v2-0276",
+              "code": "ROUTINE"
+            }
+          ]
+        },
+        "schedule": {
+          "reference": "Schedule/ScheduleOrg3"
+        },
+        "status": "free",
+        "start": "2026-04-15T21:00:00.000+02:00",
+        "end": "2026-04-15T21:30:00.000+02:00",
+        "comment": "http://www.editeur.com/mmg/creneau2"
+      },
+      "search": {
+        "mode": "include"
+      }
+    },
+    {
+      "fullUrl": "https://exemple.com/ans-sas/Slot/SlotOrg3c",
+      "resource": {
+        "resourceType": "Slot",
+        "id": "SlotOrg3c",
+        "meta": {
+          "profile": [
+            "https://interop.esante.gouv.fr/ig/fhir/sas/StructureDefinition/sas-sos-slot-aggregator"
+          ],
+          "security": [
+            {
+              "system": "https://mos.esante.gouv.fr/NOS/TRE_R314-TypeCreneau/FHIR/TRE-R314-TypeCreneau",
+              "code": "SNP"
+            }
+          ]
+        },
+        "serviceType": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+                "code": "AMB"
+              }
+            ]
+          }
+        ],
+        "appointmentType": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/v2-0276",
+              "code": "ROUTINE"
+            }
+          ]
+        },
+        "schedule": {
+          "reference": "Schedule/ScheduleOrg3"
+        },
+        "status": "free",
+        "start": "2026-04-16T20:30:00.000+02:00",
+        "end": "2026-04-16T21:00:00.000+02:00",
+        "comment": "http://www.editeur.com/mmg/creneau3"
+      },
+      "search": {
+        "mode": "include"
+      }
+    },
+    {
+      "fullUrl": "https://exemple.com/ans-sas/Schedule/ScheduleOrg3",
+      "resource": {
+        "resourceType": "Schedule",
+        "id": "ScheduleOrg3",
+        "meta": {
+          "profile": [
+            "https://interop.esante.gouv.fr/ig/fhir/sas/StructureDefinition/sas-sos-schedule-aggregator"
+          ]
+        },
+        "actor": [
+          {
+            "reference": "Location/LocationOrg3"
+          }
+        ],
+        "comment": "Agenda Maison Médicale de Garde Aix-en-Provence"
+      },
+      "search": {
+        "mode": "match"
+      }
+    },
+    {
+      "fullUrl": "https://exemple.com/ans-sas/Location/LocationOrg3",
+      "resource": {
+        "resourceType": "Location",
+        "id": "LocationOrg3",
+        "meta": {
+          "profile": [
+            "https://interop.esante.gouv.fr/ig/fhir/sas/StructureDefinition/sas-sos-location-aggregator"
+          ]
+        },
+        "identifier": [
+          {
+            "type": {
+              "coding": [
+                {
+                  "system": "http://interopsante.org/fhir/CodeSystem/fr-location-identifier-type",
+                  "code": "IDNST"
+                }
+              ]
+            },
+            "system": "urn:oid:1.2.250.1.71.4.2.2",
+            "value": "399055512800033"
+          }
+        ],
+        "name": "Maison Médicale de Garde Aix-en-Provence",
+        "description": "Garde de nuit et week-end. Accès uniquement sur orientation du 15.",
+        "telecom": [
+          {
+            "system": "phone",
+            "value": "+33442556677",
+            "rank": 1
+          }
+        ],
+        "address": {
+          "line": [
+            "7 avenue des Belges"
+          ],
+          "city": "AIX-EN-PROVENCE",
+          "postalCode": "13100"
+        },
+        "position": {
+          "longitude": 5.4474,
+          "latitude": 43.5297
+        },
+        "managingOrganization": {
+          "reference": "Organization/OrgMMG1"
+        },
+        "hoursOfOperation": [
+          {
+            "daysOfWeek": [
+              "mon",
+              "tue",
+              "wed",
+              "thu",
+              "fri"
+            ],
+            "openingTime": "20:00:00",
+            "closingTime": "08:00:00"
+          },
+          {
+            "daysOfWeek": [
+              "sat"
+            ],
+            "openingTime": "12:00:00",
+            "closingTime": "08:00:00"
+          },
+          {
+            "daysOfWeek": [
+              "sun"
+            ],
+            "allDay": true
+          }
+        ]
+      },
+      "search": {
+        "mode": "include"
+      }
+    },
+    {
+      "fullUrl": "https://exemple.com/ans-sas/Organization/OrgMMG1",
+      "resource": {
+        "resourceType": "Organization",
+        "id": "OrgMMG1",
+        "meta": {
+          "profile": [
+            "https://interop.esante.gouv.fr/ig/fhir/sas/StructureDefinition/sas-sos-organization-aggregator"
+          ]
+        },
+        "extension": [
+          {
+            "url": "https://annuaire.sante.fr/fhir/StructureDefinition/practitioner-sas-participation",
+            "extension": [
+              {
+                "url": "sasParticipation",
+                "valueBoolean": false
+              }
+            ]
+          }
+        ],
+        "identifier": [
+          {
+            "type": {
+              "coding": [
+                {
+                  "system": "http://interopsante.org/fhir/CodeSystem/fr-location-identifier-type",
+                  "code": "IDNST"
+                }
+              ]
+            },
+            "system": "urn:oid:1.2.250.1.71.4.2.2",
+            "value": "399055512800033"
+          }
+        ],
+        "type": [
+          {
+            "coding": [
+              {
+                "system": "https://mos.esante.gouv.fr/NOS/TRE_R66-CategorieEtablissement/FHIR/TRE-R66-CategorieEtablissement",
+                "code": "MMG",
+                "display": "Maison médicale de garde"
+              }
+            ]
+          }
+        ],
+        "name": "MMG Aix-en-Provence CPTS Pays d'Aix",
+        "telecom": [
+          {
+            "system": "phone",
+            "value": "+33442556677"
+          }
+        ],
+        "address": [
+          {
+            "city": "AIX-EN-PROVENCE",
+            "postalCode": "13100"
+          }
+        ]
+      },
+      "search": {
+        "mode": "include"
+      }
+    },
+    {
+      "fullUrl": "https://exemple.com/ans-sas/Slot/SlotOrg4a",
+      "resource": {
+        "resourceType": "Slot",
+        "id": "SlotOrg4a",
+        "meta": {
+          "profile": [
+            "https://interop.esante.gouv.fr/ig/fhir/sas/StructureDefinition/sas-sos-slot-aggregator"
+          ],
+          "security": [
+            {
+              "system": "https://mos.esante.gouv.fr/NOS/TRE_R314-TypeCreneau/FHIR/TRE-R314-TypeCreneau",
+              "code": "PUBLIC"
+            }
+          ]
+        },
+        "serviceType": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+                "code": "AMB",
+                "display": "ambulatory"
+              }
+            ]
+          }
+        ],
+        "appointmentType": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/v2-0276",
+              "code": "ROUTINE"
+            }
+          ]
+        },
+        "schedule": {
+          "reference": "Schedule/ScheduleOrg4"
+        },
+        "status": "free",
+        "start": "2026-04-15T14:00:00.000+02:00",
+        "end": "2026-04-15T14:30:00.000+02:00"
+      },
+      "search": {
+        "mode": "include"
+      }
+    },
+    {
+      "fullUrl": "https://exemple.com/ans-sas/Slot/SlotOrg4b",
+      "resource": {
+        "resourceType": "Slot",
+        "id": "SlotOrg4b",
+        "meta": {
+          "profile": [
+            "https://interop.esante.gouv.fr/ig/fhir/sas/StructureDefinition/sas-sos-slot-aggregator"
+          ],
+          "security": [
+            {
+              "system": "https://mos.esante.gouv.fr/NOS/TRE_R314-TypeCreneau/FHIR/TRE-R314-TypeCreneau",
+              "code": "PUBLIC"
+            }
+          ]
+        },
+        "serviceType": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+                "code": "AMB"
+              }
+            ]
+          }
+        ],
+        "appointmentType": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/v2-0276",
+              "code": "ROUTINE"
+            }
+          ]
+        },
+        "schedule": {
+          "reference": "Schedule/ScheduleOrg4"
+        },
+        "status": "free",
+        "start": "2026-04-16T09:30:00.000+02:00",
+        "end": "2026-04-16T10:00:00.000+02:00"
+      },
+      "search": {
+        "mode": "include"
+      }
+    },
+    {
+      "fullUrl": "https://exemple.com/ans-sas/Schedule/ScheduleOrg4",
+      "resource": {
+        "resourceType": "Schedule",
+        "id": "ScheduleOrg4",
+        "meta": {
+          "profile": [
+            "https://interop.esante.gouv.fr/ig/fhir/sas/StructureDefinition/sas-sos-schedule-aggregator"
+          ]
+        },
+        "actor": [
+          {
+            "reference": "Location/LocationOrg4"
+          }
+        ]
+      },
+      "search": {
+        "mode": "match"
+      }
+    },
+    {
+      "fullUrl": "https://exemple.com/ans-sas/Location/LocationOrg4",
+      "resource": {
+        "resourceType": "Location",
+        "id": "LocationOrg4",
+        "extension": [
+          {
+            "url": "https://sas.esante.gouv.fr/fhir/StructureDefinition/sos-location-subtype",
+            "valueCode": "PFC"
+          }
+        ],
+        "name": "SOS Médecins Marseille — Point Fixe de Consultation Nord",
+        "description": "Point Fixe de Consultation (PFC) du quartier nord. Consultations sur rendez-vous uniquement.",
+        "telecom": [
+          {
+            "system": "phone",
+            "value": "+33491876543",
+            "rank": 1
+          }
+        ],
+        "address": {
+          "line": [
+            "45 boulevard National"
+          ],
+          "city": "MARSEILLE",
+          "postalCode": "13003"
+        },
+        "managingOrganization": {
+          "reference": "Organization/OrgSOS1"
+        },
+        "hoursOfOperation": [
+          {
+            "daysOfWeek": [
+              "mon",
+              "tue",
+              "wed",
+              "thu",
+              "fri"
+            ],
+            "openingTime": "08:00:00",
+            "closingTime": "18:00:00"
+          }
+        ]
+      },
+      "search": {
+        "mode": "include"
+      }
+    }
+  ]
+}
