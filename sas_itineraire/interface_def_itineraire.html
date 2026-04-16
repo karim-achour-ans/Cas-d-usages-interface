@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="../template_integration.css">
+</head>
+<body>
+    <header>
+        <div id="div_header">
+            <div class="state_logo">
+                <img src="../images\logo-ANS.svg" alt="logo-ANS">
+            </div>
+            <div class="state_logo">
+                <img src="../images/logo-min_sante_acces_soins.svg" alt="logo-ANS">
+            </div>
+            <div id="header_title">
+                <h1>Mock d'interface Plateforme numérique du SAS</h1>
+                <h2>Présentation des Cas d'usages</h2>
+                <p>Affichage de l'itinéraire dans les résultats de recherche du SAS</p>
+            </div>
+        </div>
+    </header>
+
+<head>
+    <title>Itinéraire avec IGN & Leaflet</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <style>
+        #map {
+            height: 300px;
+            width: 400px;
+            border: 1px solid #777;
+        }
+        #div_main_itinerary { margin-bottom: 10px; }
+        #itinerary_details { margin-top: 10px; padding: 10px; background:#f5f5f5; }
+        #btn_search_itinerary{
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 14px;
+            margin: 4px 2px;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+        input{
+            padding: 6px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        #itinerary_details{
+            width: fit-content;
+        }
+        .health-offer-name {
+            font-weight: bold;
+            color: #0078ff;
+            cursor: pointer;
+        }
+
+        .offer-card {
+            border: 1px solid #ccc;
+            padding: 10px;
+            margin-bottom: 10px;
+            width: 400px;
+        }
+    </style>
+</head>
+
+<body>
+<div id="div_search_bar" style="    margin-left: 5%;
+    border: lightgrey solid;
+    padding: 10px;
+    margin-bottom: 1%;
+    WIDTH: 900px;">
+
+<input type="text" id="search_input_specialty" placeholder="Spécialité" style="width:300px; margin-left: 5%; margin-top: 20px;">
+<input type="text" id="search_input_adress" placeholder="Adresse" style="width:300px; margin-left: 5%; margin-top: 20px;">
+<button id="btn_search_offers" style="background-color: #007bff; color: white; border: none; padding: 8px 16px; text-align: center; text-decoration: none; display: inline-block; font-size: 14px; margin: 4px 2px; cursor: pointer; border-radius: 4px;">Rechercher</button>
+</div>
+<div style="display: flex; margin-left: 5%;">
+    <div>
+        <h3>Liste des résultats de recherche</h3>
+        <div>
+        <div class="offer-card">
+                <span class="health-offer-name" data-address="102 Rue Gabriel Péri, 93200 Saint-Denis">
+                    Centre Médical Saint-Denis
+                </span><br><br>
+                102 Rue Gabriel Péri, 93200 Saint-Denis<br><br>
+                01 23 45 67 89<br>
+            </div>
+
+            <div class="offer-card">
+                <span class="health-offer-name" data-address="42 Boulevard d’Argenson, 92200 Neuilly-sur-Seine">
+                    Dr Exemple Sample
+                </span><br><br>
+                42 Boulevard d’Argenson, 92200 Neuilly-sur-Seine<br><br>
+                01 23 45 67 89<br>
+            </div>
+
+            <div class="offer-card">
+                <span class="health-offer-name" data-address="15 Avenue des Champs, 75008 Paris">
+                    Cabinet Médical Test
+                </span><br><br>
+                15 Avenue des Champs, 75008 Paris<br><br>
+                01 23 45 67 89<br>
+            </div>
+
+            <div class="offer-card">
+                <span class="health-offer-name" data-address="7 Rue de la République, 75011 Paris">
+                    Clinique Demo
+                </span><br><br>
+                7 Rue de la République, 75011 Paris<br><br>
+                01 23 45 67 89<br>
+            </div>
+        </div>
+    </div>
+
+    <div style="margin-left: 10%;
+    border: lightgrey solid;
+    padding: 20px;
+    height: 90vh;
+    overflow-y: auto;">
+        <p class="health_offer_details">[nom de l’offre de soins]</p>
+        <h3>Recherche d'itinéraire entre l'offre de soins et le patient</h3>
+        
+        <div id="div_main_itinerary">
+            <div>
+                <input value="102 Rue Gabriel Péri, 93200 Saint-Denis" type="text" id="adress_start" placeholder="Adresse offre de soins" style="width:300px;">
+            </div>
+            <br>
+            <div>
+                <input value="42 Boulevard d’Argenson, 92200 Neuilly-sur-Seine" type="text" id="address_input" placeholder="Adresse patient" style="width:300px;">
+                <br><br>
+                <select>
+                    <option value="car">Voiture</option>
+                    <option value="bike">Vélo</option>
+                    <option value="foot">À pied</option>
+                </select>
+                 <br><br>
+                <button id="btn_search_itinerary">Rechercher l'itinéraire</button>
+            </div>
+        </div>
+
+        <div id="map"></div>
+        <div id="itinerary_details">Détails de l'itinéraire</div>
+    </div>
+</div>
+
+<script>
+
+document.querySelectorAll('.health-offer-name').forEach(el => {
+
+    el.addEventListener('click', () => {
+
+        // 1) Update the details paragraph
+        document.querySelector('.health_offer_details').textContent = el.textContent;
+
+        // 2) Update the address input with the "data-address" value
+        const address = el.getAttribute('data-address');
+        document.getElementById('address_input').value = address;
+
+    });
+});
+
+// -----------------------------------------------------
+// 1. INITIALISATION DE LA CARTE LEAFLET
+// -----------------------------------------------------
+
+const map = L.map('map').setView([48.8566, 2.3522], 12);
+
+L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+    attribution: "© OpenStreetMap"
+}).addTo(map);
+
+let routeLayer = null;
+
+
+// -----------------------------------------------------
+// 2. GÉOCODAGE IGN (libre)
+// -----------------------------------------------------
+
+async function geocode(address) {
+    const url = `https://data.geopf.fr/geocodage/search?q=${encodeURIComponent(address)}&limit=1`;
+
+    const res = await fetch(url);
+    const data = await res.json();
+
+    if (!data.features || data.features.length === 0)
+        throw new Error("Adresse introuvable : " + address);
+
+    return data.features[0].geometry.coordinates; // [lon, lat]
+}
+
+
+// -----------------------------------------------------
+// 3. ITINÉRAIRE via API navigation (aucune clé)
+// -----------------------------------------------------
+
+async function getItinerary(startLon, startLat, endLon, endLat) {
+
+    const url = "https://data.geopf.fr/navigation/itineraire?" + 
+        new URLSearchParams({
+            resource: "bdtopo-osrm",
+            start: `${startLon},${startLat}`,
+            end: `${endLon},${endLat}`,
+            profile: "car",
+            optimization: "fastest",
+            getSteps: "true",
+            getBbox: "true",
+            distanceUnit: "kilometer",
+            timeUnit: "minute",
+            crs: "EPSG:4326"
+        });
+
+    const res = await fetch(url);
+    if (!res.ok) throw new Error("Erreur API navigation (code " + res.status + ")");
+
+    return await res.json();
+}
+
+
+// -----------------------------------------------------
+// 4. BOUTON : calculer l’itinéraire
+// -----------------------------------------------------
+
+document.getElementById("btn_search_itinerary").addEventListener("click", async () => {
+
+    const startAddress = document.getElementById("adress_start").value;
+    const endAddress = document.getElementById("address_input").value;
+
+    if (!startAddress || !endAddress) {
+        alert("Veuillez saisir les deux adresses.");
+        return;
+    }
+
+    try {
+        // Géocodage des adresses
+        const [startLon, startLat] = await geocode(startAddress);
+        const [endLon, endLat] = await geocode(endAddress);
+
+        // Appel API Navigation
+// Appel API Navigation
+const routeData = await getItinerary(startLon, startLat, endLon, endLat);
+console.log("API result:", routeData);
+
+// Vérification
+if (!routeData.geometry || !routeData.geometry.coordinates) {
+    alert("Aucun itinéraire trouvé.");
+    return;
+}
+
+// Extraction des coordonnées
+const coords = routeData.geometry.coordinates.map(c => [c[1], c[0]]);
+
+// Suppression ancienne route
+if (routeLayer) map.removeLayer(routeLayer);
+
+// Affichage nouvelle route
+routeLayer = L.polyline(coords, { color: "blue", weight: 4 }).addTo(map);
+map.fitBounds(routeLayer.getBounds());
+
+// Détails
+const distance = routeData.distance.toFixed(2); // km
+const duration = routeData.duration.toFixed(1); // minutes
+
+document.getElementById("itinerary_details").innerHTML =
+    `<b>Distance :</b> ${distance} km<br>
+     <b>Durée :</b> ${duration} minutes`;
+
+     // -------------------------------------------
+// Display itinerary steps (inside click event)
+// -------------------------------------------
+const portions = routeData.portions;
+let stepsHtml = "<h3>Étapes de l’itinéraire</h3>";
+
+if (portions && portions.length > 0 && portions[0].steps) {
+
+    const steps = portions[0].steps;
+
+    steps.forEach((step, i) => {
+
+        // Type d’instruction (ex: "turn", "continue", "arrive"…)
+        let instr = step.instruction?.type || "instruction";
+
+        // Traduction française des types
+        const traductionType = {
+            "depart": "Départ",
+            "turn": "Tourner",
+            "continue": "Continuer",
+            "end of road": "Fin de la route",
+            "new name": "Continuer (nouveau nom)",
+            "arrive": "Arrivée",
+            "fork slight right": "Tourner légèrement à droite",
+            "fork slight left": "Tourner légèrement à gauche",
+        };
+
+        if (traductionType[instr]) instr = traductionType[instr];
+
+        // Modificateur (left/right/straight…)
+        let mod = step.instruction?.modifier || "";
+
+        const traductionMod = {
+            "left": "à gauche",
+            "right": "à droite",
+            "straight": "tout droit"
+        };
+
+        if (traductionMod[mod]) mod = traductionMod[mod];
+        if (mod) mod = " " + mod;
+
+        // Nom de rue
+        const street =
+            step.attributes?.name?.nom_1_gauche ||
+            step.attributes?.name?.nom_1_droite ||
+            "Nom de rue inconnu";
+
+        // Conversion distance (API renvoie km → on convertit en mètres)
+        const distMeters = (step.distance * 1000).toFixed(0);
+
+        // Conversion durée (API renvoie heures → on convertit en minutes)
+        const durationMinutes = (step.duration * 60).toFixed(1);
+
+        stepsHtml += `
+            <div style="padding:6px 0;border-bottom:1px solid #ddd;">
+                <b>${i + 1}. ${instr}${mod}</b><br>
+                ➤ ${street}<br>
+                <i>${distMeters} m – ${durationMinutes} min</i>
+            </div>
+        `;
+    });
+
+} else {
+    stepsHtml += "<p>Aucune étape disponible.</p>";
+}
+
+// append steps under the summary (without erasing previous info)
+document.getElementById("itinerary_details").innerHTML += stepsHtml;
+
+    } catch (e) {
+        alert("Erreur : " + e.message);
+        console.error(e);
+    }
+});
+
+
+
+</script>
+
+</body>
+</html>

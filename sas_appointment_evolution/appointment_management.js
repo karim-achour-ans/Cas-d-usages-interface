@@ -81,7 +81,7 @@ function openModal(appointment, operator, practitioner, organization) {
     let drmFieldHTML = "";
 
     if (!appointment.drm_id || appointment.drm_id === "N/A") {
-        drmFieldHTML = `<input type="text" id="drmInput" placeholder="Entrer ID DRM" />`;
+        drmFieldHTML = `<input type="text" id="drmInput" placeholder="Entrer clé d'échange" />`;
     } else {
         drmFieldHTML = appointment.drm_id;
     }
@@ -92,8 +92,7 @@ function openModal(appointment, operator, practitioner, organization) {
             <tbody>
                 <tr><th colspan="2">📅 Information Rendez-vous</th></tr>
                 <tr><th>ID Rendez-vous</th><td>${appointment.appointment_id || "N/A"}</td></tr>
-                <tr><th>ID DRM</th><td>${drmFieldHTML}</td></tr>
-                <tr><th>Référence</th><td>${appointment.appointment_reference_id || "N/A"}</td></tr>
+                <tr><th>Clé d'échange ?</th><td>${drmFieldHTML}</td></tr>
                 <tr><th>Type</th><td>${appointment.appointment_type || "N/A"}</td></tr>
                 <tr><th>Source</th><td>${appointment.appointment_source || "N/A"}</td></tr>
                 <tr><th>Date et heure d'enregistrement</th><td>${appointment.created_date || "N/A"}</td></tr>
@@ -106,18 +105,19 @@ function openModal(appointment, operator, practitioner, organization) {
                 <tr><th>Praticien</th><td>${practitioner.practitioner || "N/A"}</td></tr>
                 <tr><th>RPPS</th><td>${practitioner.practitioner_nat_id || "N/A"}</td></tr>
                 <tr><th>Spécialité</th><td>${practitioner.practitioner_specialty || "N/A"}</td></tr>
-                <tr><th>Modality SAS</th><td>${practitioner.practitioner_sas_modality || "N/A"}</td></tr>
+                <tr><th>Participation SAS</th><td>${practitioner.practitioner_sas_modality || "N/A"}</td></tr>
 
                 <tr><th colspan="2">📍 Information Organisation</th></tr>
                 <tr><th>FINESS/SIRET</th><td>${organization.organization_nat_id || "N/A"}</td></tr>
                 <tr><th>Type</th><td>${organization.organization_type || "N/A"}</td></tr>
                 <tr><th>Nom</th><td>${organization.organization_title || "N/A"}</td></tr>
-                <tr><th>Modality SAS</th><td>${organization.organization_sas_modality || "N/A"}</td></tr>
+                <tr><th>Participation SAS</th><td>${organization.organization_sas_modality || "N/A"}</td></tr>
 
                 <tr><th colspan="2">📞 Information Régulateur</th></tr>
                 <tr><th>Nom</th><td>${operator.operator_fullname || "N/A"}</td></tr>
                 <tr><th>Email</th><td>${operator.email || "N/A"}</td></tr>
                 <tr><th>Territoire</th><td>${operator.operator_sas_territory || "N/A"}</td></tr>
+                <tr><th>Statut du Compte</th><td>Actif</td></tr>
             </tbody>
         </table>
         <button class="close-btn" onclick="closeModal()">Fermer</button>

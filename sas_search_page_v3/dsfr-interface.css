@@ -1,0 +1,68 @@
+/* sas-custom.css - À charger APRÈS le DSFR */
+
+/* --- Structure compacte verticale --- */
+.fr-card {
+  min-height: auto !important;
+  height: fit-content !important;
+  display: flex;
+  flex-direction: column;
+  border-radius: 0.5rem;
+}
+
+.fr-card__body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 0.5rem 0.75rem !important; /* Padding unifié et réduit */
+}
+
+.fr-card__content {
+  flex: 1;
+  padding: 0 !important;
+}
+
+/* --- Typographie & Espacement dense --- */
+.fr-card__title {
+  order: 0 !important;
+  line-height: 1.25 !important;
+  margin-bottom: 0.25rem !important;
+  font-size: 1rem !important;
+}
+
+.fr-card__desc,
+.fr-badge-group {
+  margin-bottom: 0.35rem !important;
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 0.35rem;
+  align-items: center;
+}
+
+.fr-badge + .fr-badge {
+  margin-left: 0 !important; /* Annule la marge par défaut du DSFR */
+}
+
+.fr-card__detail,
+.fr-text--default-grey {
+  margin-bottom: 0.25rem !important;
+  line-height: 1.35;
+}
+
+/* --- Hover unifié (plus de conflit) --- */
+.fr-card {
+  transition: background-color 0.15s ease, transform 0.15s ease;
+}
+
+.fr-card:hover {
+  background-color: var(--background-alt-grey-hover);
+  transform: translateY(-1px); /* Effet subtil sans casser le layout */
+}
+
+/* --- Responsive : pleine largeur sur mobile --- */
+@media (max-width: 767px) {
+  .fr-col-md-5 {
+    width: 100% !important;
+    flex: 0 0 100% !important;
+    max-width: 100% !important;
+  }
+}

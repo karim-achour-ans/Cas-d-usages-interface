@@ -148,7 +148,7 @@ function create_div_sas_structure() {
 
                 const pInterfacedSoftStruct = document.createElement("p")
                 pInterfacedSoftStruct.className = "p_editor_orga_list"
-                pInterfacedSoftStruct.innerHTML = `Proposer la liste des éditeurs interfacés des ${structureType}`
+                pInterfacedSoftStruct.innerHTML = `Informer de la liste des éditeurs interfacés des ${structureType}`
                 divInterfacedSoftStruct.appendChild(pInterfacedSoftStruct)
 
                 // Append the input to the label, and both to the new div

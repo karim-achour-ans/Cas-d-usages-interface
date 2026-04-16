@@ -1,0 +1,1135 @@
+{
+  "resourceType": "Bundle",
+  "id": "ExampleBundlePSIndiv",
+  "meta": {
+    "profile": [
+      "http://sas.fr/fhir/StructureDefinition/BundleAgregateur"
+    ]
+  },
+  "type": "searchset",
+  "total": 9,
+  "entry": [
+    {
+      "fullUrl": "https://exemple.com/ans-sas/Slot/ExampleSlotPSIndiv1",
+      "resource": {
+        "resourceType": "Slot",
+        "id": "ExampleSlotPSIndiv1",
+        "schedule": {
+          "reference": "Schedule/ExampleSchedule1"
+        },
+        "status": "free",
+        "start": "2021-11-05T09:00:00.000+00:00",
+        "end": "2021-11-05T09:30:00.000+00:00"
+      },
+      "search": {
+        "mode": "match"
+      }
+    },
+    {
+      "fullUrl": "https://exemple.com/ans-sas/Schedule/ExampleSchedule1",
+      "resource": {
+        "resourceType": "Schedule",
+        "id": "ExampleSchedule1",
+        "actor": [
+          {
+            "reference": "Practitioner/ExamplePractitioner2"
+          },
+          {
+            "reference": "PractitionerRole/ExamplePractitionerRoleAgregateur2"
+          }
+        ]
+      },
+      "search": {
+        "mode": "include"
+      }
+    },
+    {
+      "fullUrl": "https://exemple.com/ans-sas/Practitioner/ExamplePractitioner2",
+      "resource": {
+        "resourceType": "Practitioner",
+        "id": "ExamplePractitioner2",
+        "identifier": [
+          {
+            "type": {
+              "coding": [
+                {
+                  "system": "http://interopsante.org/fhir/CodeSystem/fr-v2-0203",
+                  "code": "IDNPS"
+                }
+              ]
+            },
+            "system": "urn:oid:1.2.250.1.71.4.2.1",
+            "value": "810100050075"
+          }
+        ],
+        "name": [
+          {
+            "use": "official",
+            "family": "THOMAS",
+            "given": [
+              "Sébastien"
+            ],
+            "prefix": [
+              "Dr."
+            ]
+          }
+        ]
+      },
+      "search": {
+        "mode": "include"
+      }
+    },
+    {
+      "fullUrl": "https://exemple.com/ans-sas/PractitionerRole/ExamplePractitionerRoleAgregateur2",
+      "resource": {
+        "resourceType": "PractitionerRole",
+        "id": "ExamplePractitionerRoleAgregateur2",
+        "contained": [
+          {
+            "resourceType": "Location",
+            "id": "ExampleLocation3",
+            "address": {
+              "line": [
+                "1 rue Mme DELMAS"
+              ],
+              "city": "AGEN",
+              "postalCode": "47000"
+            }
+          }
+        ],
+        "extension": [
+          {
+            "url": "https://annuaire.sante.fr/fhir/StructureDefinition/practitioner-sas-participation",
+            "extension": [
+              {
+                "url": "sasParticipation",
+                "valueBoolean": true
+              },
+              {
+                "url": "sasParticipationType",
+                "valueCodeableConcept": {
+                  "coding": [
+                    {
+                      "system": "https://annuaire.sante.fr/fhir/CodeSystem/sas-participation-type",
+                      "code": "cabinet",
+                      "display": "Cabinet"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        ],
+        "practitioner": {
+          "reference": "Practitioner/ExamplePractitioner2"
+        },
+        "healthcareService": [
+          {
+            "reference": "HealthcareService/ExampleHS1"
+          }
+        ],
+        "code": [
+          {
+            "coding": [
+              {
+                "system": "https://mos.esante.gouv.fr/NOS/TRE_G15-ProfessionSante/FHIR/TRE-G15-ProfessionSante",
+                "code": "10",
+                "display": "Médecin"
+              }
+            ]
+          }
+        ],
+        "specialty": [
+          {
+            "coding": [
+              {
+                "system": "https://mos.esante.gouv.fr/NOS/TRE_R38-SpecialiteOrdinale/FHIR/TRE-R38-SpecialiteOrdinale",
+                "code": "SM26",
+                "display": "Médecine générale"
+              }
+            ]
+          }
+        ],
+        "location": [
+          {
+            "reference": "#ExampleLocation3"
+          }
+        ],
+        "telecom": [
+          {
+            "system": "phone",
+            "value": "+33 1 23 45 67 89",
+            "use": "work",
+            "rank": 1
+          }
+        ]
+      },
+      "search": {
+        "mode": "include"
+      }
+    },
+    {
+      "fullUrl": "https://exemple.com/ans-sas/HealthcareService/ExampleHS1",
+      "resource": {
+        "resourceType": "HealthcareService",
+        "id": "ExampleHS1",
+        "meta": {
+          "lastUpdated": "2021-11-01T00:00:00Z"
+        },
+        "comment": "Cabinet accessible PMR. Consultations le matin uniquement.",
+        "specialty": [
+          {
+            "coding": [
+              {
+                "system": "https://mos.esante.gouv.fr/NOS/JDV_J17-ActiviteOperationnelle-ROR/FHIR/JDV-J17-ActiviteOperationnelle-ROR",
+                "code": "190",
+                "display": "Médecine générale"
+              }
+            ]
+          }
+        ],
+        "characteristic": [
+          {
+            "coding": [
+              {
+                "system": "https://mos.esante.gouv.fr/NOS/JDV_J16-ActeSpecifique-ROR/FHIR/JDV-J16-ActeSpecifique-ROR",
+                "code": "0009",
+                "display": "Téléconsultation"
+              }
+            ]
+          },
+          {
+            "coding": [
+              {
+                "system": "https://mos.esante.gouv.fr/NOS/JDV_J16-ActeSpecifique-ROR/FHIR/JDV-J16-ActeSpecifique-ROR",
+                "code": "0045",
+                "display": "Vaccination"
+              }
+            ]
+          }
+        ]
+      },
+      "search": {
+        "mode": "include"
+      }
+    },
+    {
+      "fullUrl": "https://exemple.com/ans-sas/Slot/ExampleSlotPSIndiv2",
+      "resource": {
+        "resourceType": "Slot",
+        "id": "ExampleSlotPSIndiv2",
+        "schedule": {
+          "reference": "Schedule/ExampleSchedule2"
+        },
+        "status": "free",
+        "start": "2021-11-05T11:00:00.000+00:00",
+        "end": "2021-11-05T11:30:00.000+00:00"
+      },
+      "search": {
+        "mode": "match"
+      }
+    },
+    {
+      "fullUrl": "https://exemple.com/ans-sas/Schedule/ExampleSchedule2",
+      "resource": {
+        "resourceType": "Schedule",
+        "id": "ExampleSchedule2",
+        "actor": [
+          {
+            "reference": "Practitioner/ExamplePractitioner2"
+          },
+          {
+            "reference": "PractitionerRole/ExamplePractitionerRoleAgregateur3"
+          }
+        ]
+      },
+      "search": {
+        "mode": "include"
+      }
+    },
+    {
+      "fullUrl": "https://exemple.com/ans-sas/PractitionerRole/ExamplePractitionerRoleAgregateur3",
+      "resource": {
+        "resourceType": "PractitionerRole",
+        "id": "ExamplePractitionerRoleAgregateur3",
+        "contained": [
+          {
+            "resourceType": "Location",
+            "id": "ExampleLocation2",
+            "address": {
+              "line": [
+                "30 rue Mme DELMAS"
+              ],
+              "city": "AGEN",
+              "postalCode": "47000"
+            }
+          }
+        ],
+        "extension": [
+          {
+            "url": "https://annuaire.sante.fr/fhir/StructureDefinition/practitioner-sas-participation",
+            "extension": [
+              {
+                "url": "sasParticipation",
+                "valueBoolean": false
+              }
+            ]
+          }
+        ],
+        "practitioner": {
+          "reference": "Practitioner/ExamplePractitioner2"
+        },
+        "healthcareService": [
+          {
+            "reference": "HealthcareService/ExampleHS2"
+          }
+        ],
+        "code": [
+          {
+            "coding": [
+              {
+                "system": "https://mos.esante.gouv.fr/NOS/TRE_G15-ProfessionSante/FHIR/TRE-G15-ProfessionSante",
+                "code": "10",
+                "display": "Médecin"
+              }
+            ]
+          }
+        ],
+        "specialty": [
+          {
+            "coding": [
+              {
+                "system": "https://mos.esante.gouv.fr/NOS/TRE_R38-SpecialiteOrdinale/FHIR/TRE-R38-SpecialiteOrdinale",
+                "code": "SM26",
+                "display": "Médecine générale"
+              }
+            ]
+          }
+        ],
+        "location": [
+          {
+            "reference": "#ExampleLocation2"
+          }
+        ]
+      },
+      "search": {
+        "mode": "include"
+      }
+    },
+    {
+      "fullUrl": "https://exemple.com/ans-sas/HealthcareService/ExampleHS2",
+      "resource": {
+        "resourceType": "HealthcareService",
+        "id": "ExampleHS2",
+        "meta": {
+          "lastUpdated": "2021-11-01T00:00:00Z"
+        },
+        "comment": "Deuxième cabinet du Dr Thomas. Consultations sur rendez-vous uniquement.",
+        "specialty": [
+          {
+            "coding": [
+              {
+                "system": "https://mos.esante.gouv.fr/NOS/JDV_J17-ActiviteOperationnelle-ROR/FHIR/JDV-J17-ActiviteOperationnelle-ROR",
+                "code": "190",
+                "display": "Médecine générale"
+              }
+            ]
+          }
+        ],
+        "characteristic": [
+          {
+            "coding": [
+              {
+                "system": "https://mos.esante.gouv.fr/NOS/JDV_J16-ActeSpecifique-ROR/FHIR/JDV-J16-ActeSpecifique-ROR",
+                "code": "0009",
+                "display": "Téléconsultation"
+              }
+            ]
+          }
+        ]
+      },
+      "search": {
+        "mode": "include"
+      }
+    },
+    {
+      "fullUrl": "https://exemple.com/ans-sas/Slot/ExampleSlotPSIndiv3",
+      "resource": {
+        "resourceType": "Slot",
+        "id": "ExampleSlotPSIndiv3",
+        "schedule": {
+          "reference": "Schedule/ExampleSchedule3"
+        },
+        "status": "free",
+        "start": "2021-11-04T14:20:00.000+00:00",
+        "end": "2021-11-04T14:40:00.000+00:00"
+      },
+      "search": {
+        "mode": "match"
+      }
+    },
+    {
+      "fullUrl": "https://exemple.com/ans-sas/Schedule/ExampleSchedule3",
+      "resource": {
+        "resourceType": "Schedule",
+        "id": "ExampleSchedule3",
+        "actor": [
+          {
+            "reference": "Practitioner/ExamplePractitioner3"
+          },
+          {
+            "reference": "PractitionerRole/ExamplePractitionerRoleAgregateur4"
+          }
+        ]
+      },
+      "search": {
+        "mode": "include"
+      }
+    },
+    {
+      "fullUrl": "https://exemple.com/ans-sas/Practitioner/ExamplePractitioner3",
+      "resource": {
+        "resourceType": "Practitioner",
+        "id": "ExamplePractitioner3",
+        "identifier": [
+          {
+            "type": {
+              "coding": [
+                {
+                  "system": "http://interopsante.org/fhir/CodeSystem/fr-v2-0203",
+                  "code": "IDNPS"
+                }
+              ]
+            },
+            "system": "urn:oid:1.2.250.1.71.4.2.1",
+            "value": "810002673899"
+          }
+        ],
+        "name": [
+          {
+            "use": "official",
+            "family": "MARCEL",
+            "given": [
+              "Guillaume"
+            ],
+            "prefix": [
+              "Dr."
+            ]
+          }
+        ]
+      },
+      "search": {
+        "mode": "include"
+      }
+    },
+    {
+      "fullUrl": "https://exemple.com/ans-sas/PractitionerRole/ExamplePractitionerRoleAgregateur4",
+      "resource": {
+        "resourceType": "PractitionerRole",
+        "id": "ExamplePractitionerRoleAgregateur4",
+        "contained": [
+          {
+            "resourceType": "Location",
+            "id": "ExampleLocation4",
+            "address": {
+              "line": [
+                "1 rue Mme DELMAS"
+              ],
+              "city": "AGEN",
+              "postalCode": "47000"
+            }
+          }
+        ],
+        "extension": [
+          {
+            "url": "https://annuaire.sante.fr/fhir/StructureDefinition/practitioner-sas-participation",
+            "extension": [
+              {
+                "url": "sasParticipation",
+                "valueBoolean": true
+              },
+              {
+                "url": "sasParticipationType",
+                "valueCodeableConcept": {
+                  "coding": [
+                    {
+                      "system": "https://annuaire.sante.fr/fhir/CodeSystem/sas-participation-type",
+                      "code": "cabinet",
+                      "display": "Cabinet"
+                    }
+                  ]
+                }
+              },
+              {
+                "url": "sasParticipationType",
+                "valueCodeableConcept": {
+                  "coding": [
+                    {
+                      "system": "https://annuaire.sante.fr/fhir/CodeSystem/sas-participation-type",
+                      "code": "teleconsultation",
+                      "display": "Téléconsultation"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        ],
+        "practitioner": {
+          "reference": "Practitioner/ExamplePractitioner3"
+        },
+        "healthcareService": [
+          {
+            "reference": "HealthcareService/ExampleHS3"
+          }
+        ],
+        "code": [
+          {
+            "coding": [
+              {
+                "system": "https://mos.esante.gouv.fr/NOS/TRE_G15-ProfessionSante/FHIR/TRE-G15-ProfessionSante",
+                "code": "10",
+                "display": "Médecin"
+              }
+            ]
+          }
+        ],
+        "specialty": [
+          {
+            "coding": [
+              {
+                "system": "https://mos.esante.gouv.fr/NOS/TRE_R38-SpecialiteOrdinale/FHIR/TRE-R38-SpecialiteOrdinale",
+                "code": "SM41",
+                "display": "Pneumologie"
+              }
+            ]
+          }
+        ],
+        "location": [
+          {
+            "reference": "#ExampleLocation4"
+          }
+        ],
+        "telecom": [
+          {
+            "system": "phone",
+            "value": "+33658913859",
+            "use": "work",
+            "rank": 1
+          }
+        ]
+      },
+      "search": {
+        "mode": "include"
+      }
+    },
+    {
+      "fullUrl": "https://exemple.com/ans-sas/HealthcareService/ExampleHS3",
+      "resource": {
+        "resourceType": "HealthcareService",
+        "id": "ExampleHS3",
+        "meta": {
+          "lastUpdated": "2021-11-01T00:00:00Z"
+        },
+        "comment": "Spécialiste en pneumologie interventionnelle. Urgences respiratoires acceptées.",
+        "specialty": [
+          {
+            "coding": [
+              {
+                "system": "https://mos.esante.gouv.fr/NOS/JDV_J17-ActiviteOperationnelle-ROR/FHIR/JDV-J17-ActiviteOperationnelle-ROR",
+                "code": "246",
+                "display": "Pneumologie"
+              }
+            ]
+          }
+        ],
+        "characteristic": [
+          {
+            "coding": [
+              {
+                "system": "https://mos.esante.gouv.fr/NOS/JDV_J16-ActeSpecifique-ROR/FHIR/JDV-J16-ActeSpecifique-ROR",
+                "code": "0009",
+                "display": "Téléconsultation"
+              }
+            ]
+          },
+          {
+            "coding": [
+              {
+                "system": "https://mos.esante.gouv.fr/NOS/JDV_J16-ActeSpecifique-ROR/FHIR/JDV-J16-ActeSpecifique-ROR",
+                "code": "0032",
+                "display": "Spirométrie"
+              }
+            ]
+          }
+        ]
+      },
+      "search": {
+        "mode": "include"
+      }
+    },
+    {
+      "fullUrl": "https://exemple.com/ans-sas/Slot/ExampleSlotPSIndiv4",
+      "resource": {
+        "resourceType": "Slot",
+        "id": "ExampleSlotPSIndiv4",
+        "schedule": {
+          "reference": "Schedule/ExampleSchedule4"
+        },
+        "status": "free",
+        "start": "2021-11-05T08:00:00.000+00:00",
+        "end": "2021-11-05T08:30:00.000+00:00"
+      },
+      "search": {
+        "mode": "match"
+      }
+    },
+    {
+      "fullUrl": "https://exemple.com/ans-sas/Slot/ExampleSlotPSIndiv5",
+      "resource": {
+        "resourceType": "Slot",
+        "id": "ExampleSlotPSIndiv5",
+        "schedule": {
+          "reference": "Schedule/ExampleSchedule4"
+        },
+        "status": "free",
+        "start": "2021-11-05T09:00:00.000+00:00",
+        "end": "2021-11-05T09:30:00.000+00:00"
+      },
+      "search": {
+        "mode": "match"
+      }
+    },
+    {
+      "fullUrl": "https://exemple.com/ans-sas/Slot/ExampleSlotPSIndiv6",
+      "resource": {
+        "resourceType": "Slot",
+        "id": "ExampleSlotPSIndiv6",
+        "schedule": {
+          "reference": "Schedule/ExampleSchedule4"
+        },
+        "status": "free",
+        "start": "2021-11-05T10:30:00.000+00:00",
+        "end": "2021-11-05T11:00:00.000+00:00"
+      },
+      "search": {
+        "mode": "match"
+      }
+    },
+    {
+      "fullUrl": "https://exemple.com/ans-sas/Slot/ExampleSlotPSIndiv7",
+      "resource": {
+        "resourceType": "Slot",
+        "id": "ExampleSlotPSIndiv7",
+        "schedule": {
+          "reference": "Schedule/ExampleSchedule4"
+        },
+        "status": "free",
+        "start": "2021-11-05T14:00:00.000+00:00",
+        "end": "2021-11-05T14:30:00.000+00:00"
+      },
+      "search": {
+        "mode": "match"
+      }
+    },
+    {
+      "fullUrl": "https://exemple.com/ans-sas/Schedule/ExampleSchedule4",
+      "resource": {
+        "resourceType": "Schedule",
+        "id": "ExampleSchedule4",
+        "actor": [
+          {
+            "reference": "Practitioner/ExamplePractitioner4"
+          },
+          {
+            "reference": "PractitionerRole/ExamplePractitionerRoleAgregateur5"
+          }
+        ]
+      },
+      "search": {
+        "mode": "include"
+      }
+    },
+    {
+      "fullUrl": "https://exemple.com/ans-sas/Practitioner/ExamplePractitioner4",
+      "resource": {
+        "resourceType": "Practitioner",
+        "id": "ExamplePractitioner4",
+        "identifier": [
+          {
+            "type": {
+              "coding": [
+                {
+                  "system": "http://interopsante.org/fhir/CodeSystem/fr-v2-0203",
+                  "code": "IDNPS"
+                }
+              ]
+            },
+            "system": "urn:oid:1.2.250.1.71.4.2.1",
+            "value": "810003334455"
+          }
+        ],
+        "name": [
+          {
+            "use": "official",
+            "family": "DUPUIS",
+            "given": [
+              "Marie"
+            ],
+            "prefix": [
+              "Mme"
+            ]
+          }
+        ]
+      },
+      "search": {
+        "mode": "include"
+      }
+    },
+    {
+      "fullUrl": "https://exemple.com/ans-sas/PractitionerRole/ExamplePractitionerRoleAgregateur5",
+      "resource": {
+        "resourceType": "PractitionerRole",
+        "id": "ExamplePractitionerRoleAgregateur5",
+        "contained": [
+          {
+            "resourceType": "Location",
+            "id": "ExampleLocation5",
+            "address": {
+              "line": [
+                "12 Avenue de la République"
+              ],
+              "city": "TOULOUSE",
+              "postalCode": "31000"
+            }
+          }
+        ],
+        "extension": [
+          {
+            "url": "https://annuaire.sante.fr/fhir/StructureDefinition/practitioner-sas-participation",
+            "extension": [
+              {
+                "url": "sasParticipation",
+                "valueBoolean": true
+              },
+              {
+                "url": "sasParticipationType",
+                "valueCodeableConcept": {
+                  "coding": [
+                    {
+                      "system": "https://annuaire.sante.fr/fhir/CodeSystem/sas-participation-type",
+                      "code": "cabinet",
+                      "display": "Cabinet"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        ],
+        "practitioner": {
+          "reference": "Practitioner/ExamplePractitioner4"
+        },
+        "healthcareService": [
+          {
+            "reference": "HealthcareService/ExampleHS4"
+          }
+        ],
+        "code": [
+          {
+            "coding": [
+              {
+                "system": "https://mos.esante.gouv.fr/NOS/TRE_G15-ProfessionSante/FHIR/TRE-G15-ProfessionSante",
+                "code": "60",
+                "display": "Infirmier"
+              }
+            ]
+          }
+        ],
+        "specialty": [
+          {
+            "coding": [
+              {
+                "system": "https://mos.esante.gouv.fr/NOS/TRE_R38-SpecialiteOrdinale/FHIR/TRE-R38-SpecialiteOrdinale",
+                "code": "SI01",
+                "display": "Soins infirmiers"
+              }
+            ]
+          }
+        ],
+        "location": [
+          {
+            "reference": "#ExampleLocation5"
+          }
+        ],
+        "telecom": [
+          {
+            "system": "phone",
+            "value": "+33 5 61 12 34 56",
+            "use": "work",
+            "rank": 1
+          }
+        ]
+      },
+      "search": {
+        "mode": "include"
+      }
+    },
+    {
+      "fullUrl": "https://exemple.com/ans-sas/HealthcareService/ExampleHS4",
+      "resource": {
+        "resourceType": "HealthcareService",
+        "id": "ExampleHS4",
+        "meta": {
+          "lastUpdated": "2021-11-01T00:00:00Z"
+        },
+        "comment": "Infirmière libérale, soins à domicile et en cabinet. Prise en charge plaies chroniques.",
+        "specialty": [
+          {
+            "coding": [
+              {
+                "system": "https://mos.esante.gouv.fr/NOS/JDV_J17-ActiviteOperationnelle-ROR/FHIR/JDV-J17-ActiviteOperationnelle-ROR",
+                "code": "320",
+                "display": "Soins infirmiers"
+              }
+            ]
+          }
+        ],
+        "characteristic": [
+          {
+            "coding": [
+              {
+                "system": "https://mos.esante.gouv.fr/NOS/JDV_J16-ActeSpecifique-ROR/FHIR/JDV-J16-ActeSpecifique-ROR",
+                "code": "0021",
+                "display": "Soins à domicile"
+              }
+            ]
+          },
+          {
+            "coding": [
+              {
+                "system": "https://mos.esante.gouv.fr/NOS/JDV_J16-ActeSpecifique-ROR/FHIR/JDV-J16-ActeSpecifique-ROR",
+                "code": "0015",
+                "display": "Prise en charge des plaies"
+              }
+            ]
+          }
+        ]
+      },
+      "search": {
+        "mode": "include"
+      }
+    },
+    {
+      "fullUrl": "https://exemple.com/ans-sas/Practitioner/ExamplePractitioner5",
+      "resource": {
+        "resourceType": "Practitioner",
+        "id": "ExamplePractitioner5",
+        "identifier": [
+          {
+            "type": {
+              "coding": [
+                {
+                  "system": "http://interopsante.org/fhir/CodeSystem/fr-v2-0203",
+                  "code": "IDNPS"
+                }
+              ]
+            },
+            "system": "urn:oid:1.2.250.1.71.4.2.1",
+            "value": "810007778899"
+          }
+        ],
+        "name": [
+          {
+            "use": "official",
+            "family": "BERNARD",
+            "given": [
+              "Claire"
+            ],
+            "prefix": [
+              "Dr."
+            ]
+          }
+        ]
+      },
+      "search": {
+        "mode": "include"
+      }
+    },
+    {
+      "fullUrl": "https://exemple.com/ans-sas/PractitionerRole/ExamplePractitionerRoleAgregateur6",
+      "resource": {
+        "resourceType": "PractitionerRole",
+        "id": "ExamplePractitionerRoleAgregateur6",
+        "contained": [
+          {
+            "resourceType": "Location",
+            "id": "ExampleLocation6",
+            "address": {
+              "line": [
+                "5 Rue du Faubourg Saint-Antoine"
+              ],
+              "city": "PARIS",
+              "postalCode": "75011"
+            }
+          }
+        ],
+        "extension": [
+          {
+            "url": "https://annuaire.sante.fr/fhir/StructureDefinition/practitioner-sas-participation",
+            "extension": [
+              {
+                "url": "sasParticipation",
+                "valueBoolean": false
+              }
+            ]
+          }
+        ],
+        "practitioner": {
+          "reference": "Practitioner/ExamplePractitioner5"
+        },
+        "healthcareService": [
+          {
+            "reference": "HealthcareService/ExampleHS5"
+          }
+        ],
+        "code": [
+          {
+            "coding": [
+              {
+                "system": "https://mos.esante.gouv.fr/NOS/TRE_G15-ProfessionSante/FHIR/TRE-G15-ProfessionSante",
+                "code": "10",
+                "display": "Médecin"
+              }
+            ]
+          }
+        ],
+        "specialty": [
+          {
+            "coding": [
+              {
+                "system": "https://mos.esante.gouv.fr/NOS/TRE_R38-SpecialiteOrdinale/FHIR/TRE-R38-SpecialiteOrdinale",
+                "code": "SM54",
+                "display": "Cardiologie"
+              }
+            ]
+          }
+        ],
+        "location": [
+          {
+            "reference": "#ExampleLocation6"
+          }
+        ],
+        "telecom": [
+          {
+            "system": "phone",
+            "value": "+33 1 44 55 66 77",
+            "use": "work",
+            "rank": 1
+          }
+        ]
+      },
+      "search": {
+        "mode": "include"
+      }
+    },
+    {
+      "fullUrl": "https://exemple.com/ans-sas/HealthcareService/ExampleHS5",
+      "resource": {
+        "resourceType": "HealthcareService",
+        "id": "ExampleHS5",
+        "meta": {
+          "lastUpdated": "2021-11-01T00:00:00Z"
+        },
+        "comment": "Cabinet non accessible PMR. Consultations uniquement sur référence d'un médecin traitant.",
+        "specialty": [
+          {
+            "coding": [
+              {
+                "system": "https://mos.esante.gouv.fr/NOS/JDV_J17-ActiviteOperationnelle-ROR/FHIR/JDV-J17-ActiviteOperationnelle-ROR",
+                "code": "101",
+                "display": "Cardiologie"
+              }
+            ]
+          }
+        ],
+        "characteristic": [
+          {
+            "coding": [
+              {
+                "system": "https://mos.esante.gouv.fr/NOS/JDV_J16-ActeSpecifique-ROR/FHIR/JDV-J16-ActeSpecifique-ROR",
+                "code": "0003",
+                "display": "ECG"
+              }
+            ]
+          },
+          {
+            "coding": [
+              {
+                "system": "https://mos.esante.gouv.fr/NOS/JDV_J16-ActeSpecifique-ROR/FHIR/JDV-J16-ActeSpecifique-ROR",
+                "code": "0007",
+                "display": "Échographie cardiaque"
+              }
+            ]
+          }
+        ]
+      },
+      "search": {
+        "mode": "include"
+      }
+    },
+    {
+      "fullUrl": "https://exemple.com/ans-sas/Practitioner/ExamplePractitioner6",
+      "resource": {
+        "resourceType": "Practitioner",
+        "id": "ExamplePractitioner6",
+        "identifier": [
+          {
+            "type": {
+              "coding": [
+                {
+                  "system": "http://interopsante.org/fhir/CodeSystem/fr-v2-0203",
+                  "code": "IDNPS"
+                }
+              ]
+            },
+            "system": "urn:oid:1.2.250.1.71.4.2.1",
+            "value": "810009990011"
+          }
+        ],
+        "name": [
+          {
+            "use": "official",
+            "family": "LEROY",
+            "given": [
+              "Pierre"
+            ],
+            "prefix": [
+              "Dr."
+            ]
+          }
+        ]
+      },
+      "search": {
+        "mode": "include"
+      }
+    },
+    {
+      "fullUrl": "https://exemple.com/ans-sas/PractitionerRole/ExamplePractitionerRoleAgregateur7",
+      "resource": {
+        "resourceType": "PractitionerRole",
+        "id": "ExamplePractitionerRoleAgregateur7",
+        "contained": [
+          {
+            "resourceType": "Location",
+            "id": "ExampleLocation7",
+            "address": {
+              "line": [
+                "18 Place Bellecour"
+              ],
+              "city": "LYON",
+              "postalCode": "69002"
+            }
+          }
+        ],
+        "extension": [
+          {
+            "url": "https://annuaire.sante.fr/fhir/StructureDefinition/practitioner-sas-participation",
+            "extension": [
+              {
+                "url": "sasParticipation",
+                "valueBoolean": true
+              },
+              {
+                "url": "sasParticipationType",
+                "valueCodeableConcept": {
+                  "coding": [
+                    {
+                      "system": "https://annuaire.sante.fr/fhir/CodeSystem/sas-participation-type",
+                      "code": "teleconsultation",
+                      "display": "Téléconsultation"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        ],
+        "practitioner": {
+          "reference": "Practitioner/ExamplePractitioner6"
+        },
+        "healthcareService": [
+          {
+            "reference": "HealthcareService/ExampleHS6"
+          }
+        ],
+        "code": [
+          {
+            "coding": [
+              {
+                "system": "https://mos.esante.gouv.fr/NOS/TRE_G15-ProfessionSante/FHIR/TRE-G15-ProfessionSante",
+                "code": "10",
+                "display": "Médecin"
+              }
+            ]
+          }
+        ],
+        "specialty": [
+          {
+            "coding": [
+              {
+                "system": "https://mos.esante.gouv.fr/NOS/TRE_R38-SpecialiteOrdinale/FHIR/TRE-R38-SpecialiteOrdinale",
+                "code": "SM09",
+                "display": "Psychiatrie"
+              }
+            ]
+          }
+        ],
+        "location": [
+          {
+            "reference": "#ExampleLocation7"
+          }
+        ]
+      },
+      "search": {
+        "mode": "include"
+      }
+    },
+    {
+      "fullUrl": "https://exemple.com/ans-sas/HealthcareService/ExampleHS6",
+      "resource": {
+        "resourceType": "HealthcareService",
+        "id": "ExampleHS6",
+        "meta": {
+          "lastUpdated": "2021-11-01T00:00:00Z"
+        },
+        "comment": "Psychiatre libéral. Suivi thérapeutique adultes. Pas de prise en charge urgence psychiatrique.",
+        "specialty": [
+          {
+            "coding": [
+              {
+                "system": "https://mos.esante.gouv.fr/NOS/JDV_J17-ActiviteOperationnelle-ROR/FHIR/JDV-J17-ActiviteOperationnelle-ROR",
+                "code": "226",
+                "display": "Psychiatrie"
+              }
+            ]
+          }
+        ],
+        "characteristic": [
+          {
+            "coding": [
+              {
+                "system": "https://mos.esante.gouv.fr/NOS/JDV_J16-ActeSpecifique-ROR/FHIR/JDV-J16-ActeSpecifique-ROR",
+                "code": "0009",
+                "display": "Téléconsultation"
+              }
+            ]
+          }
+        ]
+      },
+      "search": {
+        "mode": "include"
+      }
+    }
+  ]
+}

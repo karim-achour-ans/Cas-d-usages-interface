@@ -475,4 +475,37 @@
     }
   }
   
+    ,
+
+  {
+    "appointment": {
+      "appointment_id": 14,
+      "drm_id": 2930,
+      "appointment_reference_id":"3456780581/11242343",
+      "appointment_type":"Orientation PDSA",
+      "appointment_source":"Agenda Interfacé",
+      "created_date": "19/04/2025 à 12h00",
+      "appointment_date": "19/04/2025 à 15h00",
+      "appointment_address": "101 avenue Henri Barbusse, 92140 Clamart",
+      "appointment_status": "RDV pris et confirmé",
+      "appointment_sas_territory": "SAS-92"
+    },
+    "operator": {
+      "email": "cccc@pdsa.com",
+      "operator_fullname": "Fabien Barthez",
+      "operator_sas_territory": "SAS-92"
+    },
+    "practitioner": {
+      "practitioner": "NA",
+      "practitioner_nat_id": "NA",
+      "practitioner_specialty": "NA",
+      "practitioner_sas_modality":"NA"
+    },
+    "organization":{
+      "organization_nat_id":"1241938413",
+      "organization_type": "Maison Médicale de Garde",
+      "organization_title": "MMG de Clamart",
+      "organization_sas_modality":"NA"
+    }
+  }
 ]

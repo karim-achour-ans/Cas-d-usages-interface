@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="../template_integration.css">
+</head>
+<body>
+    <header>
+        <div id="div_header">
+            <div class="state_logo">
+                <img src="../images\logo-ANS.svg" alt="logo-ANS">
+            </div>
+            <div class="state_logo">
+                <img src="../images/logo-min_sante_acces_soins.svg" alt="logo-ANS">
+            </div>
+            <div id="header_title">
+                <h1>Interface Plateforme numérique du SAS</h1>
+                <h2>Présentation des Cas d'usages</h2>
+                <p>Evolution de la gestion des indisponibilités de l'agenda plateforme numérique du SAS</p>
+            </div>
+        </div>
+    </header>
+    
+
+
+
+    <div id="div_main">
+        <div id="div_table">
+            <h3>Sélectionnez votre structure</h3>
+            <div>
+                <select id="structure_select">
+                    <option value="" disabled selected>-- Sélectionner une structure --</option>
+                    <option value="structure_1">Structure 1</option>
+                    <option value="structure_2">Structure 2</option>
+                    <option value="structure_3">Structure 3</option>
+                </select>
+            </div>
+            <div>
+                <h3>Statut actuel dans la plateforme numérique du SAS</h3>
+                <div style="display: flex; font-size: large;">
+                    <p style="margin-right: 2%;">Adresse 1 : Indisponible </p>
+                    <p style="margin-right: 2%;">Adresse 2 : Disponible </p>
+                    <p style="margin-right: 2%;">Adresse 3 : Indisponible </p>
+                </div>
+            </div>
+            <h3>Liste des indisponibilités</h3>
+            <div>
+                <button id="btn_add_indispo" onclick="openModal('indispoModal')">Ajouter une indisponibilité</button>
+            </div>
+            <table id="indispo_table">
+                <thead>
+                    <tr>
+                        <th>Date de début</th>
+                        <th>Date de fin</th>
+                        <th>Lieu d'activité</th>
+                        <th>Statut</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+
+                </tbody>
+            </table>
+        </div>
+
+    </div>
+</body>
+
+<!-- Modal Structure -->
+<div id="indispoModal" class="modal">
+    <div class="modal-content">
+        <span class="close" onclick="closeModal()">&times;</span>
+        <h3>Ajouter une indisponibilité</h3>
+        <form id="indispoForm">
+            <label for="start_date">Date de début :</label>
+            <input type="date" id="start_date" name="start_date" required>
+
+            <label for="end_date">Date de fin :</label>
+            <input type="date" id="end_date" name="end_date">
+            <div style="display: flex;">
+                <label for="undetermined">Non déterminé</label>
+                <input type="checkbox" id="undetermined"/> 
+            </div>
+            <br>
+            
+            <label for="address">Lieu d'activité :</label>
+<div class="multiselect">
+    <div class="selectBox" onclick="toggleCheckboxes()">
+        <select>
+            <option>-- Sélectionnez une ou plusieurs adresses --</option>
+        </select>
+        <div class="overSelect"></div>
+    </div>
+
+    <div id="checkboxes" class="checkboxes">
+        <label><input type="checkbox" value="Adresse 1" onclick="updateAddressSelection()"> Adresse 1</label>
+        <br>
+        <label><input type="checkbox" value="Adresse 2" onclick="updateAddressSelection()"> Adresse 2</label>
+        <br>
+        <label><input type="checkbox" value="Adresse 3" onclick="updateAddressSelection()"> Adresse 3</label>
+    </div>
+
+    <!-- Hidden input where selected values go -->
+    <input type="hidden" id="address" name="address" required>
+</div>
+            <button type="submit">Ajouter</button>
+        </form>
+    </div>
+</div>
+
+<!-- 🔹 Modal Update Indisponibilité -->
+<div id="updateModal" class="modal">
+    <div class="modal-content">
+        <span class="close" onclick="closeUpdateModal()">&times;</span>
+        <h3>Mettre à jour l'indisponibilité</h3>
+
+        <form id="updateForm">
+
+            <label>Date de début :</label>
+            <br>
+            <input type="date" id="update_start_date"/>
+            
+            <br>
+
+            <label>Date de fin :</label>
+            <br>
+            <input type="date" id="update_end_date"/>
+            
+            <div style="display:flex;">
+                <label>Non déterminé</label>
+                <input type="checkbox" id="update_undetermined"/>
+            </div><br>
+
+            <!-- 🔥 Multiselect same as your add form -->
+            <div class="multiselect" style ="display: none;">
+                <div class="selectBox" onclick="toggleCheckboxesUpdate()">
+                    <select><option>-- Modifier les adresses --</option></select>
+                    <div class="overSelect"></div>
+                </div>
+
+                <div id="update_checkboxes" class="checkboxes">
+                    <label><input type="checkbox" value="Adresse 1" onclick="updateSelectedUpdate()"> Adresse 1</label>
+                    <label><input type="checkbox" value="Adresse 2" onclick="updateSelectedUpdate()"> Adresse 2</label>
+                    <label><input type="checkbox" value="Adresse 3" onclick="updateSelectedUpdate()"> Adresse 3</label>
+                </div>
+
+                <!-- hidden value for save -->
+                <input type="hidden" id="update_address">
+            </div>
+
+            <br><button type="submit">Enregistrer la mise à jour</button>
+        </form>
+    </div>
+</div>
+
+
+<script src="get_indispo.js"></script>
+<script src="create_indispo.js"></script>
+<script src="update_indispo.js"></script>
+
+</html>
+
+
+
+<!-- Add CSS for the modal & table -->
+<style>
+.modal {
+  display: none; /* Hidden by default */
+  position: fixed;
+  z-index: 1000;
+  left: 0; top: 0;
+  width: 100%; height: 100%;
+  background-color: rgba(0,0,0,0.4);
+}
+
+.modal-content {
+  background-color: #fff;
+  margin: 10% auto;
+  padding: 20px;
+  border-radius: 10px;
+  width: 400px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+}
+
+.close {
+  float: right;
+  font-size: 24px;
+  cursor: pointer;
+}
+
+#indispoForm {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+#indispoForm input, #indispoForm select, #indispoForm button {
+  padding: 8px;
+  font-size: 14px;
+}
+
+.multiselect {
+    width: 100%;
+    position: relative;
+}
+
+.selectBox {
+    position: relative;
+}
+
+.selectBox select {
+    width: 100%;
+    font-size: 16px;
+}
+
+.overSelect {
+    position: absolute;
+    left: 0; right: 0; top: 0; bottom: 0;
+}
+
+.checkboxes {
+    display: none;
+    border: 1px solid #ccc;
+    padding: 10px;
+    position: absolute;
+    background: white;
+    z-index: 99;
+}
+
+</style>
+
+<script>
+    let expanded = false;
+
+function toggleCheckboxes() {
+    const checkboxes = document.getElementById("checkboxes");
+    checkboxes.style.display = expanded ? "none" : "block";
+    expanded = !expanded;
+}
+
+function updateAddressSelection() {
+    const checks = document.querySelectorAll("#checkboxes input[type='checkbox']:checked");
+    const values = Array.from(checks).map(c => c.value);
+
+    // Store in hidden input for form submission
+    document.getElementById("address").value = values.join(", ");
+
+    // Update the fake select text
+    const select = document.querySelector(".selectBox select");
+    select.options[0].text = values.length > 0 
+        ? values.join(", ")
+        : "-- Sélectionnez une ou plusieurs adresses --";
+}
+
+</script>

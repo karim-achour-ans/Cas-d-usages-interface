@@ -23,7 +23,7 @@
           "IRM obésité – bariatrique",
           "Mammographe"
         ],
-        "additional_info": "Information complémentaire"
+        "additional_info": "Information complémentaire rédigée par le praticien"
       },
       {
         "name": "Dr Martin Dupont",
@@ -47,7 +47,7 @@
           "Robot chirurgical",
           "Échographe"
         ],
-        "additional_info": "Interventions programmées sur rendez-vous"
+        "additional_info": "Information complémentaire  rédigée par le praticien"
       },
       {
         "name": "Dr Sophie Bernard",
@@ -71,7 +71,7 @@
           "Scanner 3D",
           "Laser dentaire"
         ],
-        "additional_info": "Traitement des urgences dentaires"
+        "additional_info": "Information complémentaire rédigée par le praticien"
       }
     ]
   }

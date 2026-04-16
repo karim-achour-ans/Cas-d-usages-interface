@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="../template_integration.css">
+    <link rel="stylesheet" href="./dsfr-interface.css">
+    <!-- DSFR CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@gouvfr/dsfr@1.12.1/dist/dsfr/dsfr.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@gouvfr/dsfr@1.12.1/dist/utility/utility.min.css">
+
+    <!-- DSFR JS (pour les composants interactifs) -->
+    <script type="module" src="https://cdn.jsdelivr.net/npm/@gouvfr/dsfr@1.12.1/dist/dsfr/dsfr.module.min.js"></script>
+    <script nomodule src="https://cdn.jsdelivr.net/npm/@gouvfr/dsfr@1.12.1/dist/dsfr/dsfr.nomodule.min.js"></script>
+
+    <!-- Icônes DSFR (optionnel mais recommandé) -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@gouvfr/dsfr@1.12.1/dist/icons/icons.min.css">
+</head>
+<body>
+    <header>
+        <div id="div_header">
+            <div class="state_logo">
+                <img src="../images\logo-ANS.svg" alt="logo-ANS">
+            </div>
+            <div class="state_logo">
+                <img src="../images/logo-min_sante_acces_soins.svg" alt="logo-ANS">
+            </div>
+            <div id="header_title">
+                <h1>Mock d'interface Plateforme numérique du SAS</h1>
+                <h2>Présentation des Cas d'usages</h2>
+                <p>Affichage des résultats de recherche du SAS</p>
+            </div>
+        </div>
+    </header>
+
+<!-- ===== BARRE DE FILTRES ===== -->
+<section class="fr-container fr-py-3w" aria-labelledby="filters-heading">
+  <div class="fr-grid-row fr-grid-row--gutters">
+    <div class="fr-col-12">      
+      <div class="fr-grid-row fr-grid-row--gutters">
+        
+        <!-- Filtre 1 : Type de recherche -->
+        <div class="fr-col-12 fr-col-md-3">
+          <div class="fr-select-group">
+            <label class="fr-label" for="filter-type-recherche">Type de recherche</label>
+            <select class="fr-select" id="filter-type-recherche" name="typeRecherche">
+              <option value="" selected>Disposant de créneaux disponibles</option>
+              <option value="sas">Offre de soins SAS</option>
+              <option value="pdsa">Offre de soins PDSA</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Filtre 2 : Type d'offre de soins -->
+        <div class="fr-col-12 fr-col-md-3">
+          <div class="fr-select-group">
+            <label class="fr-label" for="filter-type-offre">Type d'offre de soins</label>
+            <select class="fr-select" id="filter-type-offre" name="typeOffre">
+              <option value="" selected>Toutes les professions</option>
+              <option value="medecin_generaliste">Médecin généraliste</option>
+              <option value="infirmier">Infirmier(ère)</option>
+              <option value="kinesitherapeute">Kinésithérapeute</option>
+              <option value="pharmacien">Pharmacien</option>
+              <option value="sage_femme">Sage-femme</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Filtre 3 : Disponible sous -->
+        <div class="fr-col-12 fr-col-md-3">
+          <div class="fr-select-group">
+            <label class="fr-label" for="filter-disponibilite">Disponible sous</label>
+            <select class="fr-select" id="filter-disponibilite" name="disponibilite">
+              <option value="" selected>Toutes disponibilités</option>
+              <option value="sous4h">Sous 4 heures</option>
+              <option value="4a8h">Sous 4 à 8 heures</option>
+              <option value="8a12h">Sous 8 à 12 heures</option>
+              <option value="plus12h">Plus de 12 heures</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Filtre 4 : Mode de consultation -->
+        <div class="fr-col-12 fr-col-md-3">
+          <div class="fr-select-group">
+            <label class="fr-label" for="filter-mode-consultation">Mode de consultation</label>
+            <select class="fr-select" id="filter-mode-consultation" name="modeConsultation">
+              <option value="" selected>Tous les modes</option>
+              <option value="cabinet">En cabinet</option>
+              <option value="domicile">À domicile</option>
+              <option value="teleconsultation">Téléconsultation</option>
+            </select>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Boutons d'action -->
+      <div class="fr-grid-row fr-mt-3w">
+        <div class="fr-col-12">
+          <div class="fr-btns-group fr-btns-group--inline-md">
+            <button class="fr-btn" id="apply-filters">
+              Appliquer les filtres
+              <span class="fr-badge fr-badge--sm fr-badge--info fr-ml-1w" id="results-badge" style="display:none;">0</span>
+            </button>
+            <button class="fr-btn fr-btn--secondary" id="reset-filters">
+              Réinitialiser
+            </button>
+          </div>
+          <p class="fr-text--sm fr-text--mention-grey fr-mt-2w fr-mb-0">
+            <span id="filtered-count">0</span> résultat(s) trouvé(s)
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<main id="main" class="fr-container fr-py-4w" role="main">
+  <div class="fr-grid-row fr-grid-row--gutters">
+    <!-- Left column: Offers grid -->
+    <div class="fr-col-12 fr-col-md-6">
+      <div id="offers-grid" class="fr-grid-row fr-grid-row--gutters">
+        <!-- Cards injected here -->
+      </div>
+    </div>
+    <!-- Right column: OpenStreetMap -->
+    <div class="fr-col-12 fr-col-md-6">
+      <div class="fr-card fr-p-2w">
+        <div class="map-container" style="position: relative; padding-bottom: 75%; height: 0; overflow: hidden; border-radius: 4px;">
+          <iframe 
+            width="100%" 
+            height="100%" 
+            style="position: absolute; top: 0; left: 0; border: none;" 
+            src="https://www.openstreetmap.org/export/embed.html?bbox=-5.5%2C41.5%2C9.5%2C51.5&amp;layer=mapnik&amp;marker=46.45%2C2.21"
+            loading="lazy"
+            title="Carte OpenStreetMap">
+          </iframe>
+        </div>
+      </div>
+    </div>
+    
+  </div>
+</main>
+
+<!-- Overlay (fond sombre) -->
+<div id="panel-overlay" class="fr-overlay" aria-hidden="true"></div>
+<!-- Panneau latéral -->
+<aside id="practitioner-panel" 
+       class="side-panel" 
+       aria-labelledby="panel-title" 
+       role="dialog" 
+       aria-modal="true"
+       hidden>
+  
+  <!-- Header -->
+  <div class="side-panel__header fr-p-3w fr-background-alt--grey">
+    <button class="fr-btn--close fr-btn"
+            aria-controls="practitioner-panel"
+            title="Fermer le panneau">
+      Fermer
+    </button>
+    <h2 id="panel-title" class="fr-h4 fr-mt-2w fr-mb-1w"></h2>
+    <p id="panel-specialty" class="fr-text--sm fr-text--default-grey fr-mb-1w"></p>
+    <div id="panel-sas-badge" hidden></div>
+  </div>
+
+  <!-- Body scrollable -->
+  <div class="side-panel__body fr-p-3w">
+
+    <!-- Contact & Adresse -->
+    <div class="fr-card fr-card--no-border fr-mb-3w">
+      <div class="fr-card__body">
+        <h3 class="fr-h5 fr-mb-2w">Coordonnées</h3>
+        <ul class="fr-list fr-list--no-bullet fr-text--sm">
+          <li id="panel-address" class="fr-mb-1w"></li>
+          <li id="panel-phone" class="fr-mb-1w"></li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Information complémentaire -->
+    <div class="fr-card fr-card--no-border fr-mb-3w sas-panel-section">
+      <div class="fr-card__body">
+        <h3 class="fr-h5 fr-mb-2w">Information complémentaire</h3>
+        <p id="panel-comment" class="fr-text--sm fr-text--default-grey fr-mb-0"></p>
+      </div>
+    </div>
+
+    <!-- Activité opérationnelle & Actes spécifiques -->
+    <div class="fr-card fr-card--no-border fr-mb-3w">
+      <div class="fr-card__body">
+        <h3 class="fr-h5 fr-mb-2w">Offre de soins</h3>
+        <p class="fr-text--sm fr-text--bold fr-mb-1w">Activité opérationnelle</p>
+        <p id="panel-operational-activity" class="fr-text--sm fr-text--default-grey fr-mb-2w"></p>
+        <p class="fr-text--sm fr-text--bold fr-mb-1w">Actes et équipements spécifiques</p>
+        <div id="panel-specific-acts" class="sas-panel-section"></div>
+      </div>
+    </div>
+
+    <!-- Créneaux disponibles -->
+    <div class="fr-card fr-card--no-border fr-mb-3w">
+      <div class="fr-card__body">
+        <h3 class="fr-h5 fr-mb-2w">Disponibilités</h3>
+        <div id="panel-slots" class="fr-tags-group fr-mb-1w"></div>
+        <p id="panel-no-slots" class="fr-text--sm fr-text--mention-grey" hidden>
+          Aucun créneau disponible pour le moment.
+        </p>
+      </div>
+    </div>
+
+    <!-- Infos pratiques -->
+    <div class="fr-card fr-card--no-border fr-mb-3w">
+      <div class="fr-card__body">
+        <h3 class="fr-h5 fr-mb-2w">Informations pratiques</h3>
+        <ul class="fr-list fr-list--no-bullet fr-text--sm">
+          <li id="panel-access" class="fr-mb-1w"></li>
+          <li id="panel-tariffs" class="fr-mb-1w"></li>
+          <li id="panel-languages" class="fr-mb-1w" hidden></li>
+        </ul>
+        <div class="fr-alert fr-alert--info fr-alert--sm fr-mt-2w">
+          <h4 class="fr-alert__title">Note importante</h4>
+          <p id="panel-ps" class="fr-mb-0"></p>
+        </div>
+      </div>
+    </div>
+
+    <button class="fr-btn fr-btn--lg w-100" id="panel-book-btn">
+      Orientation hors disponibilité
+    </button>
+  </div>
+</aside>
+ 
+
+<script type="module">
+  import { buildOffersFromBundle } from 'http://localhost:8000/sas_search_page_v3/use_cases_health_offers/services_js/assembler.js';
+  import { renderLoading, renderError, renderOffers } from 'http://localhost:8000/sas_search_page_v3/use_cases_health_offers/services_js/renderer.js';
+ 
+  // ── Single entry point: one Bundle URL, everything resolved inside ──
+  const BUNDLE_URL = 'http://localhost:8000/sas_search_page_v3/use_cases_health_offers/data/ps_indiv/ExampleBundlePSIndiv.json';
+ 
+  async function init() {
+    renderLoading();
+    try {
+      const offers = await buildOffersFromBundle(BUNDLE_URL);
+      renderOffers(offers);
+    } catch (error) {
+      console.error('[init] Failed to build offers:', error);
+      renderError(error);
+    }
+  }
+ 
+  document.addEventListener('DOMContentLoaded', init);
+</script>
+<script type="module" src="http://localhost:8000/sas_search_page_v3/use_cases_health_offers/services_js/panel.js"></script>
+
+
+</body>
