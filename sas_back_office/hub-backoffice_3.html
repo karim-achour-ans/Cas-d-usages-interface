@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Hub Messages — Back Office</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg-primary: #ffffff; --bg-secondary: #f7f7f5; --bg-tertiary: #f0efeb;
+      --text-primary: #1a1a18; --text-secondary: #6b6b67; --text-tertiary: #9b9b97;
+      --border-light: rgba(0,0,0,0.08); --border-mid: rgba(0,0,0,0.15);
+      --radius-sm: 6px; --radius-md: 8px; --radius-lg: 12px;
+      --ack-bg:#E1F5EE; --ack-tx:#085041;
+      --rep-bg:#E6F1FB; --rep-tx:#0C447C;
+      --err-bg:#FCEBEB; --err-tx:#791F1F;
+      --req-bg:#FAEEDA; --req-tx:#633806;
+      --can-bg:#FBEAF0; --can-tx:#72243E;
+      --def-bg:#F1EFE8; --def-tx:#444441;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg-primary:#1e1e1c; --bg-secondary:#282826; --bg-tertiary:#323230;
+        --text-primary:#f0efeb; --text-secondary:#a0a09c; --text-tertiary:#6b6b67;
+        --border-light:rgba(255,255,255,0.08); --border-mid:rgba(255,255,255,0.14);
+        --ack-bg:#085041; --ack-tx:#9FE1CB;
+        --rep-bg:#0C447C; --rep-tx:#B5D4F4;
+        --err-bg:#791F1F; --err-tx:#F7C1C1;
+        --req-bg:#633806; --req-tx:#FAC775;
+        --can-bg:#72243E; --can-tx:#F4C0D1;
+        --def-bg:#444441; --def-tx:#D3D1C7;
+      }
+    }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif; background: var(--bg-tertiary); color: var(--text-primary); min-height:100vh; font-size:14px; }
+    .app { max-width:1500px; margin:0 auto; background:var(--bg-primary); min-height:100vh; border-left:0.5px solid var(--border-light); border-right:0.5px solid var(--border-light); }
+
+    /* Header */
+    .header { padding:1rem 1.75rem; border-bottom:0.5px solid var(--border-light); display:flex; align-items:center; justify-content:space-between; background:var(--bg-primary); position:sticky; top:0; z-index:20; }
+    .header-left { display:flex; align-items:center; gap:12px; }
+    .h-icon { width:30px; height:30px; border-radius:var(--radius-md); background:var(--rep-bg); color:var(--rep-tx); display:flex; align-items:center; justify-content:center; font-size:15px; }
+    .h-title { font-size:14px; font-weight:500; }
+    .h-sub { font-size:11px; color:var(--text-secondary); margin-top:2px; font-family:monospace; }
+
+    /* Buttons */
+    .btn { padding:6px 14px; font-size:12px; font-weight:500; border-radius:var(--radius-md); border:0.5px solid var(--border-mid); background:var(--bg-primary); color:var(--text-secondary); cursor:pointer; font-family:inherit; white-space:nowrap; transition:background 0.12s,color 0.12s; }
+    .btn:hover { background:var(--bg-secondary); color:var(--text-primary); }
+    .btn-p { background:var(--text-primary); color:var(--bg-primary); border-color:var(--text-primary); }
+    .btn-p:hover { opacity:0.85; }
+    .btn-p:disabled { opacity:0.4; cursor:not-allowed; }
+
+    /* Config */
+    .config { display:none; padding:1rem 1.75rem; background:var(--bg-secondary); border-bottom:0.5px solid var(--border-light); }
+    .config.open { display:block; }
+    .config-grid { display:grid; grid-template-columns:2fr 1fr; gap:10px; max-width:640px; }
+    .config-note { margin-top:10px; font-size:11px; padding:8px 12px; background:var(--rep-bg); color:var(--rep-tx); border-radius:var(--radius-sm); max-width:640px; }
+
+    /* Filters */
+    .filters { padding:0.875rem 1.75rem; display:grid; grid-template-columns:repeat(4,1fr) auto; gap:10px; align-items:flex-end; border-bottom:0.5px solid var(--border-light); }
+    .filters2 { padding:0.875rem 1.75rem; display:grid; grid-template-columns:repeat(3,1fr) 1fr 1fr; gap:10px; align-items:flex-end; border-bottom:0.5px solid var(--border-light); background:var(--bg-secondary); }
+    .fg { display:flex; flex-direction:column; gap:4px; }
+    .fl { font-size:10px; font-weight:600; color:var(--text-secondary); text-transform:uppercase; letter-spacing:0.06em; }
+    input[type="text"], input[type="date"], select { font-size:12px; padding:7px 10px; border-radius:var(--radius-md); border:0.5px solid var(--border-mid); background:var(--bg-primary); color:var(--text-primary); width:100%; outline:none; font-family:inherit; }
+    input:focus, select:focus { border-color:#185FA5; box-shadow:0 0 0 3px rgba(24,95,165,0.1); }
+
+    /* Status */
+    .status { padding:7px 1.75rem; display:flex; align-items:center; gap:8px; font-size:12px; color:var(--text-secondary); border-bottom:0.5px solid var(--border-light); background:var(--bg-secondary); }
+    .dot { width:7px; height:7px; border-radius:50%; background:var(--text-tertiary); flex-shrink:0; }
+    .dot.ready { background:#639922; }
+    .dot.loading { background:#EF9F27; animation:pulse 1s ease-in-out infinite; }
+    .dot.error { background:#E24B4A; }
+    @keyframes pulse { 0%,100%{opacity:1}50%{opacity:0.4} }
+
+    /* Stats */
+    .stats { display:grid; grid-template-columns:repeat(5,1fr); border-bottom:0.5px solid var(--border-light); }
+    .sc { padding:0.875rem 1.5rem; border-right:0.5px solid var(--border-light); }
+    .sc:last-child { border-right:none; }
+    .sc-l { font-size:11px; color:var(--text-secondary); margin-bottom:3px; }
+    .sc-v { font-size:22px; font-weight:500; letter-spacing:-0.5px; }
+
+    /* Table */
+    .tw { overflow-x:auto; }
+    table { width:100%; border-collapse:collapse; font-size:12px; table-layout:fixed; }
+    thead { position:static; }
+    th { text-align:left; padding:8px 12px; font-size:10px; font-weight:700; color:var(--text-secondary); text-transform:uppercase; letter-spacing:0.06em; border-bottom:0.5px solid var(--border-light); background:var(--bg-secondary); white-space:nowrap; cursor:pointer; user-select:none; }
+    th:hover { color:var(--text-primary); }
+    td { padding:9px 12px; border-bottom:0.5px solid var(--border-light); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; vertical-align:middle; }
+    tr:hover td, tr.exp td { background:var(--bg-secondary); }
+    .c-ts{width:130px} .c-kd{width:90px} .c-sn{width:130px} .c-rp{width:130px} .c-ad{width:150px} .c-ap{width:140px} .c-rf{width:170px} .c-tx{width:155px} .c-ac{width:40px;text-align:center}
+
+    .pill { display:inline-block; padding:2px 8px; border-radius:99px; font-size:10px; font-weight:600; }
+    .k-Ack{background:var(--ack-bg);color:var(--ack-tx)} .k-Report{background:var(--rep-bg);color:var(--rep-tx)} .k-Error{background:var(--err-bg);color:var(--err-tx)} .k-Request{background:var(--req-bg);color:var(--req-tx)} .k-Cancel{background:var(--can-bg);color:var(--can-tx)} .k-def{background:var(--def-bg);color:var(--def-tx)}
+    .mono { font-family:'Courier New',monospace; font-size:10px; color:var(--text-secondary); }
+    .ts-c { font-family:'Courier New',monospace; font-size:10px; color:var(--text-secondary); }
+
+    /* Detail */
+    .det-row td { padding:0; }
+    .det-panel { padding:1.25rem 1.75rem; border-bottom:0.5px solid var(--border-light); background:var(--bg-primary); }
+    .det-grid { display:grid; grid-template-columns:1fr 1.4fr; gap:2rem; }
+    .det-title { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:0.08em; color:var(--text-secondary); margin-bottom:10px; }
+    .det-fields { display:flex; flex-direction:column; gap:5px; }
+    .det-f { display:grid; grid-template-columns:155px 1fr; gap:8px; font-size:12px; }
+    .det-k { color:var(--text-secondary); }
+    .det-v { color:var(--text-primary); font-family:monospace; font-size:11px; word-break:break-all; }
+    .json-wrap { background:var(--bg-secondary); border-radius:var(--radius-md); border:0.5px solid var(--border-light); padding:0.75rem 1rem; max-height:360px; overflow-y:auto; margin-top:6px; }
+    pre { font-family:'Courier New',monospace; font-size:11px; white-space:pre-wrap; word-break:break-all; line-height:1.5; color:var(--text-primary); }
+    .jk{color:#185FA5} .js{color:#3B6D11} .jn{color:#854F0B} .jb{color:#A32D2D} .jnu{color:var(--text-tertiary)}
+
+    .xbtn { width:24px; height:24px; border-radius:var(--radius-sm); border:0.5px solid var(--border-mid); background:var(--bg-primary); color:var(--text-secondary); cursor:pointer; font-size:11px; display:flex; align-items:center; justify-content:center; margin:auto; }
+    .xbtn:hover { background:var(--bg-secondary); }
+    .xbtn.open { background:var(--text-primary); color:var(--bg-primary); }
+
+    /* Footer */
+    .footer { padding:0.75rem 1.75rem; display:flex; align-items:center; justify-content:space-between; border-top:0.5px solid var(--border-light); font-size:12px; color:var(--text-secondary); background:var(--bg-primary); }
+    .pag { display:flex; gap:4px; }
+    .pb { padding:4px 10px; border-radius:var(--radius-sm); border:0.5px solid var(--border-mid); background:var(--bg-primary); color:var(--text-secondary); font-size:12px; cursor:pointer; font-family:inherit; }
+    .pb:hover:not(.active) { background:var(--bg-secondary); }
+    .pb.active { background:var(--text-primary); color:var(--bg-primary); border-color:var(--text-primary); }
+
+    /* Empty */
+    .empty { padding:4rem 2rem; text-align:center; color:var(--text-tertiary); }
+    .empty-t { font-size:13px; font-weight:500; color:var(--text-secondary); margin:8px 0 4px; }
+  </style>
+</head>
+<body>
+<div class="app">
+
+  <div class="header">
+    <div class="header-left">
+      <div class="h-icon">⚡</div>
+      <div>
+        <div class="h-title">Hub Messages — Back Office</div>
+        <div class="h-sub">prd-app-sas-api-* &nbsp;·&nbsp; Elastic 8.17.3</div>
+      </div>
+    </div>
+    <div style="display:flex;gap:8px;">
+      <button class="btn" id="exportBtn" onclick="exportCSV()" style="display:none;">↓ Export CSV</button>
+      <button class="btn" onclick="loadMock()">▶ Mock data</button>
+      <button class="btn" onclick="toggleCfg()" id="cfgBtn">⚙ Configure</button>
+    </div>
+  </div>
+
+  <div class="config" id="cfg">
+    <div class="fl" style="margin-bottom:8px;">Elasticsearch connection</div>
+    <div class="config-grid">
+      <div class="fg"><div class="fl">Elasticsearch URL</div><input type="text" id="esUrl" placeholder="https://your-es-host:9200" /></div>
+      <div class="fg"><div class="fl">API Key (encoded)</div><input type="text" id="apiKey" placeholder="Base64 encoded API key" /></div>
+    </div>
+    <div class="config-note">Ask your Elastic admin for a read-only API key on <code>prd-app-sas-api-*</code> and the Elasticsearch host URL. Use "Mock data" to explore the UI without a connection.</div>
+  </div>
+
+  <div class="filters">
+    <div class="fg"><div class="fl">Distribution kind</div>
+      <select id="fKind"><option value="">All kinds</option><option>Ack</option><option>Report</option><option>Error</option><option>Request</option><option>Cancel</option></select>
+    </div>
+    <div class="fg"><div class="fl">Explicit address value</div><input type="text" id="fAddr" placeholder="e.g. fr.health.samu950" /></div>
+    <div class="fg"><div class="fl">Recipient name</div><input type="text" id="fRecip" placeholder="e.g. fr.health.ptfsas" /></div>
+    <div class="fg"><div class="fl">Appointment ID</div><input type="text" id="fAppt" placeholder="e.g. 3fa85f64-..." /></div>
+    <button class="btn btn-p" onclick="runSearch()" id="searchBtn">Search</button>
+  </div>
+
+  <div class="filters2">
+    <div class="fg"><div class="fl">Referenced distribution ID</div><input type="text" id="fRef" placeholder="e.g. fr.health.ptfsas_..." /></div>
+    <div class="fg"><div class="fl">Transaction ID</div><input type="text" id="fTxn" placeholder="e.g. 019d4451-..." /></div>
+    <div class="fg"><div class="fl">Status</div>
+      <select id="fStatus"><option value="">Any</option><option value="error">Errors only</option><option value="ok">No error</option></select>
+    </div>
+    <div class="fg"><div class="fl">Sent from</div><input type="date" id="fFrom" /></div>
+    <div class="fg"><div class="fl">Sent to</div><input type="date" id="fTo" /></div>
+  </div>
+
+  <div class="status"><div class="dot" id="dot"></div><span id="statusTxt">Ready — click "Mock data" to explore, or configure Elasticsearch and search</span></div>
+
+  <div class="stats" id="statsRow" style="display:none;">
+    <div class="sc"><div class="sc-l">Total</div><div class="sc-v" id="sTotal">—</div></div>
+    <div class="sc"><div class="sc-l">Ack</div><div class="sc-v" style="color:var(--ack-tx)" id="sAck">—</div></div>
+    <div class="sc"><div class="sc-l">Report</div><div class="sc-v" style="color:var(--rep-tx)" id="sRep">—</div></div>
+    <div class="sc"><div class="sc-l">Errors</div><div class="sc-v" style="color:#A32D2D" id="sErr">—</div></div>
+    <div class="sc"><div class="sc-l">Other</div><div class="sc-v" id="sOth">—</div></div>
+  </div>
+
+  <div class="tw">
+    <div class="empty" id="emptyState">
+      <div style="font-size:28px;">📭</div>
+      <div class="empty-t">No data yet</div>
+      <div>Click "Mock data" to explore the UI, or configure your ES connection.</div>
+    </div>
+    <table id="tbl" style="display:none;">
+      <thead><tr>
+        <th class="c-ts" onclick="srt('sentAt')">Sent at <span id="si-sentAt">↕</span></th>
+        <th class="c-kd" onclick="srt('kind')">Kind <span id="si-kind">↕</span></th>
+        <th class="c-sn">Sender</th>
+        <th class="c-rp">Recipient</th>
+        <th class="c-ad">Explicit address</th>
+        <th class="c-ap">Appointment ID</th>
+        <th class="c-rf">Referenced dist. ID</th>
+        <th class="c-tx">Transaction ID</th>
+        <th class="c-ac"></th>
+      </tr></thead>
+      <tbody id="tbody"></tbody>
+    </table>
+  </div>
+
+  <div class="footer" id="footer" style="display:none;">
+    <span id="footerInfo"></span>
+    <div class="pag" id="pag"></div>
+  </div>
+
+</div>
+<script>
+var all=[], fil=[], page=1, ps=20, sf='sentAt', sd='desc', exp={};
+
+function toggleCfg(){
+  var c=document.getElementById('cfg'), open=c.classList.toggle('open');
+  document.getElementById('cfgBtn').textContent=open?'✕ Close':'⚙ Configure';
+}
+function setS(msg,state){ document.getElementById('statusTxt').textContent=msg; document.getElementById('dot').className='dot '+(state||''); }
+function esc(s){ if(!s)return''; return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function tr(s,n){ if(!s)return'—'; var t=String(s); return t.length>n?t.slice(0,n)+'…':t; }
+function fmtTs(ts){ if(!ts)return'—'; try{ var d=new Date(ts); return d.toLocaleDateString('fr-FR')+' '+d.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit',second:'2-digit'}); }catch(e){return ts;} }
+function pill(k){ if(!k)return'<span class="pill k-def">—</span>'; var c=['Ack','Report','Error','Request','Cancel'].indexOf(k)>=0?'k-'+k:'k-def'; return'<span class="pill '+c+'">'+esc(k)+'</span>'; }
+
+function synHi(obj){
+  var j=JSON.stringify(obj,null,2).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  return j.replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g,function(m){
+    var c='jn'; if(/^"/.test(m)){c=/:$/.test(m)?'jk':'js';}else if(/true|false/.test(m)){c='jb';}else if(/null/.test(m)){c='jnu';} return'<span class="'+c+'">'+m+'</span>';
+  });
+}
+
+function srt(f){
+  if(sf===f)sd=sd==='asc'?'desc':'asc'; else{sf=f;sd='desc';}
+  document.querySelectorAll('span[id^="si-"]').forEach(function(e){e.textContent='↕';});
+  var el=document.getElementById('si-'+f); if(el)el.textContent=sd==='asc'?'↑':'↓';
+  var gv=function(h){ var s=h._source||h; if(f==='sentAt')return s.sentAt||''; if(f==='kind')return(s.hubMetadata||{}).distributionKind||''; return''; };
+  var m=sd==='asc'?1:-1; fil.sort(function(a,b){var av=gv(a),bv=gv(b);return av<bv?-m:av>bv?m:0;});
+  page=1; exp={}; render();
+}
+
+function renderStats(){
+  document.getElementById('statsRow').style.display='grid';
+  var ack=0,rep=0,err=0,oth=0;
+  all.forEach(function(h){ var s=h._source||h; var k=(s.hubMetadata||{}).distributionKind||'';
+    if(k==='Ack')ack++; else if(k==='Report')rep++; else if(k==='Error'||s.statusCode)err++; else oth++; });
+  document.getElementById('sTotal').textContent=all.length.toLocaleString('fr-FR');
+  document.getElementById('sAck').textContent=ack.toLocaleString('fr-FR');
+  document.getElementById('sRep').textContent=rep.toLocaleString('fr-FR');
+  document.getElementById('sErr').textContent=err.toLocaleString('fr-FR');
+  document.getElementById('sOth').textContent=oth.toLocaleString('fr-FR');
+}
+
+function toggleDet(i){ exp[i]=!exp[i]; render(); }
+
+function detPanel(s){
+  var meta=s.hubMetadata||{};
+  var raw=null; try{raw=s.originalMsg?JSON.parse(s.originalMsg):null;}catch(e){raw=s.originalMsg;}
+  var rawStr=raw?synHi(raw):(s.originalMsg?esc(s.originalMsg):'—');
+  function row(l,v){return'<div class="det-f"><div class="det-k">'+esc(l)+'</div><div class="det-v">'+esc(v||'—')+'</div></div>';}
+  return '<tr class="det-row"><td colspan="9"><div class="det-panel"><div class="det-grid">'+
+    '<div><div class="det-title">Message metadata</div><div class="det-fields">'+
+      row('Distribution ID',meta.distributionID)+
+      row('Referenced dist. ID',s.referencedDistributionId)+
+      row('Transaction ID',s.transaction_id)+
+      row('UUID',s.uuid)+
+      row('Appointment ID',s.appointmentId)+
+      row('Sent at',s.sentAt)+
+      row('Correlation date',s.correlation_date)+
+      row('Dist. status',meta.distributionStatus)+
+      row('Dist. kind',meta.distributionKind)+
+      row('Expl. addr. scheme',meta.explicitAddressScheme)+
+      row('Expl. addr. value',meta.explicitAddressValue)+
+      (s.statusCode?row('Status code',s.statusCode+' — '+(s.statusString||'')):'')+(s.errorCause?row('Error cause',s.errorCause):'')+
+    '</div></div>'+
+    '<div><div class="det-title">Original message (JSON)</div><div class="json-wrap"><pre>'+rawStr+'</pre></div></div>'+
+  '</div></div></td></tr>';
+}
+
+function render(){
+  var start=(page-1)*ps, slice=fil.slice(start,start+ps);
+  if(!fil.length){
+    document.getElementById('tbl').style.display='none';
+    document.getElementById('emptyState').style.display='block';
+    document.getElementById('footer').style.display='none'; return;
+  }
+  document.getElementById('tbl').style.display='table';
+  document.getElementById('emptyState').style.display='none';
+  document.getElementById('footer').style.display='flex';
+  var html='';
+  slice.forEach(function(h,i){
+    var gi=start+i, s=h._source||h, meta=s.hubMetadata||{}, isO=!!exp[gi];
+    html+='<tr class="'+(isO?'exp':'')+'">'
+      +'<td class="c-ts ts-c" title="'+esc(s.sentAt)+'">'+esc(fmtTs(s.sentAt))+'</td>'
+      +'<td class="c-kd">'+pill(meta.distributionKind)+'</td>'
+      +'<td class="c-sn" title="'+esc((s.sender||{}).name)+'">'+esc(tr((s.sender||{}).name,22))+'</td>'
+      +'<td class="c-rp" title="'+esc((s.recipient||{}).name)+'">'+esc(tr((s.recipient||{}).name,22))+'</td>'
+      +'<td class="c-ad mono" title="'+esc(meta.explicitAddressValue)+'">'+esc(tr(meta.explicitAddressValue,24))+'</td>'
+      +'<td class="c-ap mono" title="'+esc(s.appointmentId)+'">'+esc(tr(s.appointmentId,22))+'</td>'
+      +'<td class="c-rf mono" title="'+esc(s.referencedDistributionId)+'">'+esc(tr(s.referencedDistributionId,26))+'</td>'
+      +'<td class="c-tx mono" title="'+esc(s.transaction_id)+'">'+esc(tr(s.transaction_id,22))+'</td>'
+      +'<td class="c-ac"><button class="xbtn'+(isO?' open':'')+'" onclick="toggleDet('+gi+')">'+(isO?'✕':'↓')+'</button></td>'
+      +'</tr>';
+    if(isO)html+=detPanel(s);
+  });
+  document.getElementById('tbody').innerHTML=html;
+  renderPag();
+}
+
+function renderPag(){
+  var total=fil.length, pages=Math.ceil(total/ps);
+  var s=(page-1)*ps+1, e=Math.min(page*ps,total);
+  document.getElementById('footerInfo').textContent=s+'–'+e+' of '+total.toLocaleString('fr-FR')+' results';
+  var h='';
+  if(page>1)h+='<button class="pb" onclick="gp('+(page-1)+')">‹</button>';
+  var a=Math.max(1,page-2),b=Math.min(pages,page+2);
+  if(a>1)h+='<button class="pb" onclick="gp(1)">1</button>';
+  for(var i=a;i<=b;i++)h+='<button class="pb'+(i===page?' active':'')+'" onclick="gp('+i+')">'+i+'</button>';
+  if(b<pages)h+='<button class="pb" onclick="gp('+pages+')">'+pages+'</button>';
+  if(page<pages)h+='<button class="pb" onclick="gp('+(page+1)+')">›</button>';
+  document.getElementById('pag').innerHTML=h;
+}
+function gp(p){page=p;exp={};render();window.scrollTo(0,0);}
+
+function applyFil(){
+  var kind=(document.getElementById('fKind').value||'').toLowerCase();
+  var addr=(document.getElementById('fAddr').value||'').toLowerCase();
+  var recip=(document.getElementById('fRecip').value||'').toLowerCase();
+  var appt=(document.getElementById('fAppt').value||'').toLowerCase();
+  var ref=(document.getElementById('fRef').value||'').toLowerCase();
+  var txn=(document.getElementById('fTxn').value||'').toLowerCase();
+  var stat=document.getElementById('fStatus').value;
+  var df=document.getElementById('fFrom').value;
+  var dt=document.getElementById('fTo').value;
+  fil=all.filter(function(h){
+    var s=h._source||h, meta=s.hubMetadata||{};
+    if(kind&&(meta.distributionKind||'').toLowerCase()!==kind)return false;
+    if(addr&&!(meta.explicitAddressValue||'').toLowerCase().includes(addr))return false;
+    if(recip&&!((s.recipient||{}).name||'').toLowerCase().includes(recip))return false;
+    if(appt&&!(s.appointmentId||'').toLowerCase().includes(appt))return false;
+    if(ref&&!(s.referencedDistributionId||'').toLowerCase().includes(ref))return false;
+    if(txn&&!(s.transaction_id||'').toLowerCase().includes(txn))return false;
+    if(stat==='error'&&!s.statusCode)return false;
+    if(stat==='ok'&&s.statusCode)return false;
+    if(df&&s.sentAt&&new Date(s.sentAt)<new Date(df))return false;
+    if(dt&&s.sentAt&&new Date(s.sentAt)>new Date(dt+'T23:59:59'))return false;
+    return true;
+  });
+}
+
+function done(){
+  renderStats(); page=1; exp={}; applyFil(); render();
+  setS('Loaded '+all.length.toLocaleString('fr-FR')+' messages · '+fil.length.toLocaleString('fr-FR')+' shown','ready');
+  if(all.length)document.getElementById('exportBtn').style.display='inline-block';
+}
+
+async function runSearch(){
+  var esUrl=(document.getElementById('esUrl').value||'').replace(/\/$/,'');
+  var apiKey=document.getElementById('apiKey').value;
+  if(!esUrl||!apiKey){setS('Configure ES URL and API key first','error');return;}
+  document.getElementById('searchBtn').disabled=true;
+  setS('Querying Elasticsearch…','loading');
+  try{
+    var r=await fetch(esUrl+'/prd-app-sas-api-*/_search',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'ApiKey '+apiKey},body:JSON.stringify({size:1000,sort:[{sentAt:{order:'desc'}}],query:{match_all:{}},_source:true})});
+    if(!r.ok)throw new Error('HTTP '+r.status);
+    var d=await r.json();
+    all=(d.hits&&d.hits.hits)?d.hits.hits:[];
+    done();
+  }catch(e){setS('Error: '+e.message,'error');}
+  finally{document.getElementById('searchBtn').disabled=false;}
+}
+
+function uuid(){return'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g,function(c){var r=Math.random()*16|0,v=c=='x'?r:(r&0x3|0x8);return v.toString(16);});}
+
+function loadMock(){
+  var kinds=['Ack','Report','Error','Request','Cancel'];
+  var samus=['fr.health.samu750','fr.health.samu950','fr.health.samu330','fr.health.samu690'];
+  var mock=[];
+  for(var i=0;i<52;i++){
+    var k=kinds[i%kinds.length], samu=samus[i%samus.length];
+    var apptId='fr.health.ptfsas_'+uuid(), refId=apptId+'-'+Math.floor(Math.random()*9999999999);
+    var d=new Date(Date.now()-i*3600000*(Math.random()*5+1));
+    var entry={
+      hubMetadata:{distributionID:'fr.health.hub_'+uuid(),senderID:'fr.health.ptfsas_'+uuid(),dateTimeSent:d.toISOString(),dateTimeExpires:new Date(d.getTime()+86400000).toISOString(),distributionStatus:'Actual',distributionKind:k,explicitAddressScheme:'hubex',explicitAddressValue:samu},
+      sender:{name:'fr.health.ptfsas',URI:'hubex:fr.health.ptfsas'},
+      recipient:{name:samu,URI:'hubex:'+samu},
+      sentAt:d.toISOString(), appointmentId:apptId, referencedDistributionId:refId,
+      transaction_id:uuid(), uuid:uuid(), correlation_date:d.toISOString(), syslog_date:d.toISOString(),
+      name:k.toLowerCase(), version:1, tags:[]
+    };
+    if(k==='Error'){entry.statusCode=501;entry.statusString='UNROUTABLE_MESSAGE';entry.errorCause='Unable to deliver message to '+samu+', cause was NO_ROUTE (312)';}
+    entry.originalMsg=JSON.stringify({distributionID:entry.hubMetadata.senderID,distributionKind:k,senderID:'fr.health.ptfsas',dateTimeSent:d.toISOString(),distributionStatus:'Actual',descriptor:{language:'fr-FR',explicitAddress:{explicitAddressScheme:'hubex',explicitAddressValue:samu}},content:[{jsonContent:{embeddedJsonContent:{message:{messageId:refId,sender:{name:'fr.health.ptfsas',URI:'hubex:fr.health.ptfsas'},sentAt:d.toISOString(),kind:k,status:'Actual',recipient:[{name:samu,URI:'hubex:'+samu}],appointment:{appointmentId:apptId,method:['CreateAppointment','UpdateAppointment','CancelAppointment'][i%3],created:new Date(d.getTime()-86400000).toISOString(),start:d.toISOString(),end:new Date(d.getTime()+3600000).toISOString(),status:'booked',orientationCategory:'PS',practitioner:{rppsId:'810001801538',lastName:'Dupont',firstName:'Marie',specialityCode:'FR46',specialityUrl:'https://mos.esante.gouv.fr/NOS/TRE_R38-SpecialiteOrdinale/FHIR/TRE-R38-SpecialiteOrdinale',professionCode:'FR45',professionUrl:'https://mos.esante.gouv.fr/NOS/TRE_G15-ProfessionSante/FHIR/TRE-G15-ProfessionSante'},organization:{organizationId:'130043847',name:'Cabinet Médical Paris 8'},regulator:{regulatorId:'7767894178',regulatorName:'Martin',regulatorFirstname:'Jean',regulatorEmail:'regulator@mail.com'}}}}}}]});
+    mock.push({_source:entry});
+  }
+  all=mock; done();
+  setS('Mock data loaded (52 messages) — configure ES connection to query real data','ready');
+}
+
+function exportCSV(){
+  if(!fil.length)return;
+  var h=['sentAt','distributionKind','sender','recipient','explicitAddressValue','appointmentId','referencedDistributionId','transaction_id','statusCode','statusString','errorCause'];
+  var rows=fil.map(function(h){var s=h._source||h,meta=s.hubMetadata||{};return[s.sentAt||'',meta.distributionKind||'',(s.sender||{}).name||'',(s.recipient||{}).name||'',meta.explicitAddressValue||'',s.appointmentId||'',s.referencedDistributionId||'',s.transaction_id||'',s.statusCode||'',s.statusString||'',s.errorCause||''].map(function(v){return'"'+String(v).replace(/"/g,'""')+'"';}).join(',');});
+  var csv=[h.join(',')].concat(rows).join('\n');
+  var blob=new Blob([csv],{type:'text/csv;charset=utf-8;'});
+  var url=URL.createObjectURL(blob);
+  var a=document.createElement('a');a.href=url;a.download='hub-messages-'+new Date().toISOString().slice(0,10)+'.csv';a.click();URL.revokeObjectURL(url);
+}
+
+function refilter(){
+  if(!all.length)return;
+  applyFil();page=1;exp={};render();
+  setS(fil.length.toLocaleString('fr-FR')+' / '+all.length.toLocaleString('fr-FR')+' results','ready');
+}
+['fKind','fStatus','fFrom','fTo'].forEach(function(id){
+  var el=document.getElementById(id);
+  if(el)el.addEventListener('change',refilter);
+});
+['fAddr','fRecip','fAppt','fRef','fTxn'].forEach(function(id){
+  var el=document.getElementById(id);
+  if(el){
+    el.addEventListener('input',refilter);
+    el.addEventListener('keydown',function(e){if(e.key==='Enter')refilter();});
+  }
+});
+</script>
+</body>
+</html>

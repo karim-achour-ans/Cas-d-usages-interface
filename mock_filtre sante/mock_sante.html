@@ -1,0 +1,678 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SAS – Filtre Actes Spécifiques</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css" />
+
+  <style>
+    /* ── Reset & tokens ───────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --blue-dark:    #1C3B8F;
+      --blue-mid:     #2E5FCC;
+      --blue-light:   #EEF2FF;
+      --blue-border:  #A8BAEE;
+      --gray-100:     #F7F7F8;
+      --gray-200:     #EBEBED;
+      --gray-300:     #D4D4D8;
+      --gray-400:     #A1A1AA;
+      --gray-600:     #52525B;
+      --gray-800:     #27272A;
+      --white:        #FFFFFF;
+      --shadow-sm:    0 1px 3px rgba(0,0,0,.08), 0 1px 2px rgba(0,0,0,.06);
+      --shadow-md:    0 4px 16px rgba(0,0,0,.10), 0 2px 6px rgba(0,0,0,.07);
+      --radius-sm:    6px;
+      --radius-md:    8px;
+      --radius-lg:    12px;
+      --radius-pill:  999px;
+      --font:         'Source Sans 3', sans-serif;
+      --transition:   0.15s ease;
+    }
+
+    body {
+      font-family: var(--font);
+      font-size: 14px;
+      color: var(--gray-800);
+      background: var(--gray-100);
+      min-height: 100vh;
+      padding: 2rem;
+    }
+
+    /* ── Page shell ───────────────────────────────────────────── */
+    .page {
+      max-width: 900px;
+      margin: 0 auto;
+      background: var(--white);
+      border-radius: var(--radius-lg);
+      padding: 2rem 2.25rem 3rem;
+      box-shadow: var(--shadow-sm);
+    }
+
+    /* ── Section title ────────────────────────────────────────── */
+    .section-label {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--gray-600);
+      letter-spacing: .04em;
+      text-transform: uppercase;
+      margin-bottom: 12px;
+    }
+
+    /* ── Filter bar ───────────────────────────────────────────── */
+    .filter-bar {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+
+    .filter-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 7px 14px;
+      border: 1.5px solid var(--gray-300);
+      border-radius: var(--radius-md);
+      background: var(--white);
+      color: var(--gray-800);
+      font-family: var(--font);
+      font-size: 13.5px;
+      font-weight: 500;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: background var(--transition), border-color var(--transition), color var(--transition);
+      user-select: none;
+    }
+
+    .filter-btn i { font-size: 15px; color: var(--gray-400); transition: color var(--transition); }
+    .filter-btn:hover { background: var(--gray-100); border-color: var(--gray-400); }
+    .filter-btn:hover i { color: var(--gray-600); }
+
+    .filter-btn.active {
+      border-color: var(--blue-dark);
+      background: var(--blue-light);
+      color: var(--blue-dark);
+    }
+    .filter-btn.active i { color: var(--blue-mid); }
+
+    /* ── Reset link ───────────────────────────────────────────── */
+    .reset-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      background: none;
+      border: none;
+      font-family: var(--font);
+      font-size: 13px;
+      color: var(--blue-dark);
+      cursor: pointer;
+      padding: 3px 0;
+      margin-bottom: 16px;
+    }
+    .reset-btn:hover { text-decoration: underline; }
+    .reset-btn i { font-size: 13px; }
+
+    /* ── Applied tags ─────────────────────────────────────────── */
+    .applied-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-bottom: 20px;
+      min-height: 0;
+    }
+
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 4px 10px;
+      background: var(--blue-light);
+      border: 1px solid var(--blue-border);
+      border-radius: var(--radius-pill);
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--blue-dark);
+      animation: tagIn .15s ease;
+    }
+    @keyframes tagIn { from { opacity:0; transform:scale(.9); } to { opacity:1; transform:scale(1); } }
+
+    .tag-remove {
+      display: flex;
+      align-items: center;
+      background: none;
+      border: none;
+      padding: 0;
+      cursor: pointer;
+      color: var(--blue-border);
+      font-size: 13px;
+      line-height: 1;
+      transition: color var(--transition);
+    }
+    .tag-remove:hover { color: #c00; }
+
+    /* ── Result count ─────────────────────────────────────────── */
+    .result-count {
+      font-size: 22px;
+      font-weight: 600;
+      color: var(--gray-800);
+      margin-bottom: 1.5rem;
+    }
+    .result-count em { font-style: normal; color: var(--gray-600); font-weight: 400; }
+
+    /* ── Dropdown wrapper ─────────────────────────────────────── */
+    .dropdown-wrap { position: relative; display: inline-flex; }
+
+    /* ── Popover ──────────────────────────────────────────────── */
+    .popover {
+      position: absolute;
+      top: calc(100% + 8px);
+      left: 0;
+      z-index: 200;
+      width: 350px;
+      background: var(--white);
+      border: 1px solid var(--gray-200);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-md);
+      overflow: hidden;
+      display: none;
+      transform-origin: top left;
+      animation: popIn .18s ease;
+    }
+    @keyframes popIn { from { opacity:0; transform:scale(.97) translateY(-4px); } to { opacity:1; transform:scale(1) translateY(0); } }
+    .popover.open { display: block; }
+
+    /* ── Popover header ───────────────────────────────────────── */
+    .popover-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 16px 12px;
+      border-bottom: 1px solid var(--gray-200);
+    }
+    .popover-title { font-size: 15px; font-weight: 600; color: var(--gray-800); }
+    .close-btn {
+      display: flex;
+      align-items: center;
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: var(--gray-400);
+      font-size: 18px;
+      border-radius: var(--radius-sm);
+      padding: 2px;
+      transition: color var(--transition), background var(--transition);
+    }
+    .close-btn:hover { color: var(--gray-800); background: var(--gray-100); }
+
+    /* ── Search ───────────────────────────────────────────────── */
+    .search-wrap {
+      position: relative;
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--gray-200);
+    }
+    .search-icon {
+      position: absolute;
+      left: 22px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 15px;
+      color: var(--gray-400);
+      pointer-events: none;
+    }
+    .search-input {
+      width: 100%;
+      padding: 7px 10px 7px 32px;
+      border: 1px solid var(--gray-300);
+      border-radius: var(--radius-md);
+      font-family: var(--font);
+      font-size: 13px;
+      background: var(--gray-100);
+      color: var(--gray-800);
+      outline: none;
+      transition: border-color var(--transition), box-shadow var(--transition);
+    }
+    .search-input::placeholder { color: var(--gray-400); }
+    .search-input:focus {
+      border-color: var(--blue-mid);
+      box-shadow: 0 0 0 3px rgba(46,95,204,.12);
+      background: var(--white);
+    }
+
+    /* ── Items list ───────────────────────────────────────────── */
+    .items-list {
+      max-height: 252px;
+      overflow-y: auto;
+      padding: 4px 0;
+      scrollbar-width: thin;
+      scrollbar-color: var(--gray-300) transparent;
+    }
+    .items-list::-webkit-scrollbar { width: 5px; }
+    .items-list::-webkit-scrollbar-track { background: transparent; }
+    .items-list::-webkit-scrollbar-thumb { background: var(--gray-300); border-radius: 3px; }
+
+    .item-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      padding: 8px 16px;
+      cursor: pointer;
+      transition: background var(--transition);
+    }
+    .item-row:hover { background: var(--gray-100); }
+    .item-row.checked { background: var(--blue-light); }
+
+    .item-checkbox {
+      width: 16px;
+      height: 16px;
+      flex-shrink: 0;
+      margin-top: 2px;
+      accent-color: var(--blue-dark);
+      cursor: pointer;
+    }
+    .item-label {
+      flex: 1;
+      font-size: 13.5px;
+      color: var(--gray-800);
+      line-height: 1.45;
+      cursor: pointer;
+    }
+    .item-count {
+      font-size: 12px;
+      color: var(--gray-400);
+      flex-shrink: 0;
+      margin-top: 3px;
+    }
+
+    .no-results {
+      padding: 20px 16px;
+      text-align: center;
+      font-size: 13px;
+      color: var(--gray-400);
+    }
+
+    /* ── Popover footer ───────────────────────────────────────── */
+    .popover-footer {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 8px;
+      padding: 10px 14px;
+      border-top: 1px solid var(--gray-200);
+      background: var(--gray-100);
+    }
+
+    .btn-clear {
+      padding: 7px 20px;
+      border: 1px solid var(--gray-300);
+      border-radius: var(--radius-md);
+      background: var(--white);
+      font-family: var(--font);
+      font-size: 13.5px;
+      font-weight: 500;
+      color: var(--gray-600);
+      cursor: pointer;
+      transition: background var(--transition), border-color var(--transition);
+    }
+    .btn-clear:hover { background: var(--gray-200); border-color: var(--gray-400); }
+
+    .btn-apply {
+      padding: 7px 20px;
+      border: 1.5px solid var(--blue-dark);
+      border-radius: var(--radius-md);
+      background: var(--blue-dark);
+      font-family: var(--font);
+      font-size: 13.5px;
+      font-weight: 600;
+      color: var(--white);
+      cursor: pointer;
+      transition: opacity var(--transition), transform .1s;
+    }
+    .btn-apply:hover { opacity: .88; }
+    .btn-apply:active { transform: scale(.98); }
+
+    /* ── Divider ──────────────────────────────────────────────── */
+    .divider {
+      border: none;
+      border-top: 1px solid var(--gray-200);
+      margin: 0 0 1.5rem;
+    }
+
+    /* ── Result card (mock) ───────────────────────────────────── */
+    .card {
+      border: 1px solid var(--gray-200);
+      border-radius: var(--radius-lg);
+      padding: 1.25rem 1.5rem;
+      background: var(--white);
+    }
+    .card-title { font-size: 15px; font-weight: 600; color: var(--blue-dark); text-decoration: underline; margin-bottom: 6px; cursor: pointer; }
+    .card-title:hover { color: var(--blue-mid); }
+    .badge { display: inline-block; padding: 2px 8px; border: 1px solid var(--gray-300); border-radius: var(--radius-sm); font-size: 12px; color: var(--gray-600); margin-bottom: 10px; }
+    .card-link { font-size: 13px; font-weight: 500; color: var(--blue-dark); cursor: pointer; display: block; margin-bottom: 10px; }
+    .card-link:hover { text-decoration: underline; }
+    .card-address { display: flex; align-items: center; gap: 5px; font-size: 13px; color: var(--blue-dark); margin-bottom: 12px; }
+    .card-address i { font-size: 14px; flex-shrink: 0; }
+    .card-address a { color: inherit; text-decoration: underline; }
+    .card-actions { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+    .btn-voir {
+      display: inline-flex; align-items: center; gap: 5px;
+      padding: 6px 14px;
+      border: 1px solid var(--gray-300);
+      border-radius: var(--radius-md);
+      background: var(--white);
+      font-family: var(--font); font-size: 13px; font-weight: 500;
+      color: var(--gray-800); cursor: pointer;
+      transition: background var(--transition);
+    }
+    .btn-voir:hover { background: var(--gray-100); }
+    .btn-contact {
+      display: inline-flex; align-items: center;
+      padding: 7px 18px;
+      border: none; border-radius: var(--radius-md);
+      background: var(--blue-dark);
+      font-family: var(--font); font-size: 13px; font-weight: 600;
+      color: var(--white); cursor: pointer;
+      transition: opacity var(--transition);
+    }
+    .btn-contact:hover { opacity: .88; }
+    .btn-annote {
+      display: inline-flex; align-items: center; gap: 5px;
+      background: none; border: none;
+      font-family: var(--font); font-size: 13px; font-weight: 500;
+      color: var(--blue-dark); cursor: pointer;
+    }
+    .btn-annote:hover { text-decoration: underline; }
+    .btn-annote i { font-size: 14px; }
+  </style>
+</head>
+<body>
+
+<main class="page">
+
+  <p class="section-label">Filtrer les résultats</p>
+
+  <!-- ── Filter bar ── -->
+  <div class="filter-bar" role="toolbar" aria-label="Filtres de recherche">
+
+    <button class="filter-btn" onclick="alertFilter('Hôpitaux et cliniques')">
+      <i class="ti ti-building-hospital" aria-hidden="true"></i>
+      Hôpitaux et cliniques
+    </button>
+
+    <button class="filter-btn" onclick="alertFilter('Spécialité')">
+      <i class="ti ti-stethoscope" aria-hidden="true"></i>
+      Spécialité
+    </button>
+
+    <button class="filter-btn" onclick="alertFilter('Prise en charge')">
+      <i class="ti ti-clipboard-heart" aria-hidden="true"></i>
+      Prise en charge
+    </button>
+
+    <!-- Actes spécifiques dropdown -->
+    <div class="dropdown-wrap" id="actes-wrap">
+      <button
+        class="filter-btn active"
+        id="actes-btn"
+        onclick="togglePopover()"
+        aria-haspopup="dialog"
+        aria-expanded="false"
+        aria-controls="actes-popover"
+      >
+        <i class="ti ti-pencil" aria-hidden="true"></i>
+        Actes spécifiques
+      </button>
+
+      <div class="popover" id="actes-popover" role="dialog" aria-label="Filtre – Actes spécifiques">
+
+        <div class="popover-header">
+          <span class="popover-title">Actes spécifiques</span>
+          <button class="close-btn" onclick="closePopover()" aria-label="Fermer le filtre">
+            <i class="ti ti-x"></i>
+          </button>
+        </div>
+
+        <div class="search-wrap">
+          <i class="ti ti-search search-icon" aria-hidden="true"></i>
+          <input
+            class="search-input"
+            type="search"
+            id="search-input"
+            placeholder="Saisir un mot clé"
+            aria-label="Rechercher un acte spécifique"
+            oninput="filterItems(this.value)"
+            autocomplete="off"
+          />
+        </div>
+
+        <div class="items-list" id="items-list" role="listbox" aria-multiselectable="true" aria-label="Actes disponibles"></div>
+
+        <div class="popover-footer">
+          <button class="btn-clear" onclick="clearPending()">Effacer</button>
+          <button class="btn-apply" onclick="applyFilter()">Appliquer</button>
+        </div>
+
+      </div>
+    </div><!-- /dropdown-wrap -->
+
+    <button class="filter-btn" onclick="alertFilter('Equipements spécifiques')">
+      <i class="ti ti-tool" aria-hidden="true"></i>
+      Equipements spécifiques
+    </button>
+
+  </div><!-- /filter-bar -->
+
+  <button class="reset-btn" onclick="resetAll()">
+    <i class="ti ti-refresh" aria-hidden="true"></i>
+    Réinitialiser les filtres
+  </button>
+
+  <!-- Applied tags -->
+  <div class="applied-tags" id="applied-tags" aria-live="polite" aria-label="Filtres actifs"></div>
+
+  <!-- Result count -->
+  <p class="result-count" id="result-count">
+    740 résultats de la recherche <em>"cardiologie"</em>
+  </p>
+
+  <hr class="divider" />
+
+  <!-- Mock result card -->
+  <div class="card">
+    <p class="card-title">Chd la roche sur yon – site la roche sur yon</p>
+    <span class="badge">Centre hospitalier (CH)</span>
+    <a class="card-link">Voir l'offre identifiée</a>
+    <p class="card-address">
+      <i class="ti ti-map-pin" aria-hidden="true"></i>
+      <a href="#">Boulevard stéphane moreau 85000 La Roche-sur-Yon <i class="ti ti-external-link" style="font-size:12px;vertical-align:-1px;"></i></a>
+    </p>
+    <div class="card-actions">
+      <button class="btn-voir">
+        Voir plus <i class="ti ti-chevron-down" aria-hidden="true"></i>
+      </button>
+      <button class="btn-contact">Contacter</button>
+      <button class="btn-annote">
+        <i class="ti ti-pencil" aria-hidden="true"></i>
+        Ajouter une annotation
+      </button>
+    </div>
+  </div>
+
+</main>
+
+<script>
+  /* ── Data – FHIR HealthcareService.characteristic (cardiologie) ── */
+  const ACTES = [
+    { id: "a01", label: "Epreuve d'effort",                                          count: 606 },
+    { id: "a02", label: "Echographie transthoracique",                               count: 547 },
+    { id: "a03", label: "Réalisation et lecture d'un holter ECG",                    count: 519 },
+    { id: "a04", label: "Echographie cardiaque transoesophagienne (ETO)",             count: 517 },
+    { id: "a05", label: "Implantation d'un stimulateur cardiaque : pace maker",      count: 428 },
+    { id: "a06", label: "Choc électrique externe (cardioversion électrique)",        count: 425 },
+    { id: "a07", label: "Coronarographie",                                            count: 398 },
+    { id: "a08", label: "Pose d'un défibrillateur implantable",                      count: 381 },
+    { id: "a09", label: "Test d'effort sur vélo",                                    count: 312 },
+    { id: "a10", label: "Ablation par cathéter",                                     count: 287 },
+    { id: "a11", label: "Cathétérisme cardiaque gauche",                             count: 265 },
+    { id: "a12", label: "IRM cardiaque",                                              count: 241 },
+  ];
+
+  const BASE_COUNT = 740;
+
+  /* ── State ─────────────────────────────────────────────────── */
+  let selected = new Set();   // applied selection
+  let pending  = new Set();   // in-popover (not yet applied)
+  let popoverOpen = false;
+
+  /* ── Render helpers ──────────────────────────────────────────── */
+  function renderList(query = "") {
+    const list = document.getElementById("items-list");
+    const q = query.toLowerCase().trim();
+    const visible = ACTES.filter(a => a.label.toLowerCase().includes(q));
+
+    if (!visible.length) {
+      list.innerHTML = '<p class="no-results">Aucun résultat pour cette recherche.</p>';
+      return;
+    }
+
+    list.innerHTML = visible.map(a => {
+      const checked = pending.has(a.id);
+      return `
+        <label class="item-row${checked ? " checked" : ""}" for="cb-${a.id}" role="option" aria-selected="${checked}">
+          <input
+            class="item-checkbox"
+            type="checkbox"
+            id="cb-${a.id}"
+            value="${a.id}"
+            ${checked ? "checked" : ""}
+            onchange="togglePending('${a.id}', this)"
+          />
+          <span class="item-label">${a.label}</span>
+          <span class="item-count">(${a.count.toLocaleString("fr-FR")})</span>
+        </label>`;
+    }).join("");
+  }
+
+  function renderTags() {
+    const wrap = document.getElementById("applied-tags");
+    if (!selected.size) { wrap.innerHTML = ""; return; }
+
+    wrap.innerHTML = [...selected].map(id => {
+      const a = ACTES.find(x => x.id === id);
+      return `
+        <span class="tag">
+          ${a.label}
+          <button class="tag-remove" onclick="removeTag('${a.id}')" aria-label="Retirer le filtre ${a.label}">
+            <i class="ti ti-x" aria-hidden="true"></i>
+          </button>
+        </span>`;
+    }).join("");
+  }
+
+  function updateResultCount() {
+    const reduction = selected.size * 48;
+    const count = Math.max(30, BASE_COUNT - reduction);
+    document.getElementById("result-count").innerHTML =
+      `${count.toLocaleString("fr-FR")} résultats de la recherche <em>"cardiologie"</em>`;
+  }
+
+  function updateBtnState() {
+    const btn = document.getElementById("actes-btn");
+    btn.classList.toggle("active", selected.size > 0 || popoverOpen);
+  }
+
+  /* ── Popover ─────────────────────────────────────────────────── */
+  function togglePopover() {
+    popoverOpen ? closePopover() : openPopover();
+  }
+
+  function openPopover() {
+    popoverOpen = true;
+    pending = new Set(selected);
+    document.getElementById("search-input").value = "";
+    renderList();
+    const pop = document.getElementById("actes-popover");
+    pop.classList.add("open");
+    document.getElementById("actes-btn").setAttribute("aria-expanded", "true");
+    updateBtnState();
+    setTimeout(() => document.getElementById("search-input").focus(), 80);
+  }
+
+  function closePopover() {
+    popoverOpen = false;
+    document.getElementById("actes-popover").classList.remove("open");
+    document.getElementById("actes-btn").setAttribute("aria-expanded", "false");
+    updateBtnState();
+  }
+
+  /* ── Interactions ────────────────────────────────────────────── */
+  function togglePending(id, cb) {
+    const row = cb.closest(".item-row");
+    if (cb.checked) {
+      pending.add(id);
+      row.classList.add("checked");
+      row.setAttribute("aria-selected", "true");
+    } else {
+      pending.delete(id);
+      row.classList.remove("checked");
+      row.setAttribute("aria-selected", "false");
+    }
+  }
+
+  function filterItems(value) {
+    renderList(value);
+  }
+
+  function clearPending() {
+    pending.clear();
+    document.getElementById("search-input").value = "";
+    renderList();
+  }
+
+  function applyFilter() {
+    selected = new Set(pending);
+    renderTags();
+    updateResultCount();
+    closePopover();
+  }
+
+  function removeTag(id) {
+    selected.delete(id);
+    renderTags();
+    updateResultCount();
+    updateBtnState();
+  }
+
+  function resetAll() {
+    selected.clear();
+    pending.clear();
+    renderTags();
+    document.getElementById("result-count").innerHTML =
+      `${BASE_COUNT.toLocaleString("fr-FR")} résultats de la recherche <em>"cardiologie"</em>`;
+    closePopover();
+    updateBtnState();
+  }
+
+  function alertFilter(name) {
+    alert(`Filtre "${name}" — non implémenté dans ce mock.`);
+  }
+
+  /* ── Close on outside click ───────────────────────────────────── */
+  document.addEventListener("click", function(e) {
+    const wrap = document.getElementById("actes-wrap");
+    if (popoverOpen && !wrap.contains(e.target)) closePopover();
+  });
+
+  /* ── Close on Escape ──────────────────────────────────────────── */
+  document.addEventListener("keydown", function(e) {
+    if (e.key === "Escape" && popoverOpen) closePopover();
+  });
+</script>
+</body>
+</html>

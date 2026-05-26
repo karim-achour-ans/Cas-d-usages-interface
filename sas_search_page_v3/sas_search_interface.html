@@ -17,6 +17,58 @@
     <!-- Styles supplémentaires -->
     <link href="dist/core/core.min.css" rel="stylesheet">
     <link href="dist/component/quote/quote.min.css" rel="stylesheet">
+
+    <style>
+      /* ── Layout résultats / carte ── */
+      .sas-results-layout {
+        display: flex;
+        align-items: flex-start;
+        gap: 1rem;
+      }
+
+      /* Colonne liste : 60% */
+      .sas-results-list {
+        flex: 0 0 60%;
+        max-width: 60%;
+        min-width: 0;
+      }
+
+      /* Colonne carte : 40%, sticky, pleine hauteur viewport */
+      .sas-results-map {
+        flex: 0 0 calc(40% - 1rem);
+        max-width: calc(40% - 1rem);
+        position: sticky;
+        top: 0;
+        height: 100vh;
+      }
+
+      /* Override DSFR fr-card pour pleine hauteur */
+      .sas-results-map .fr-card {
+        height: 100% !important;
+        min-height: unset !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        border-radius: 0.5rem;
+        overflow: hidden;
+        border: none !important;
+        display: block !important;
+      }
+
+      .sas-map-iframe {
+        width: 100%;
+        height: 100%;
+        border: none;
+        display: block;
+      }
+
+      /* Sur mobile : carte en dessous, hauteur fixe */
+      @media (max-width: 768px) {
+        .sas-results-layout  { flex-direction: column; }
+        .sas-results-list,
+        .sas-results-map     { flex: none; max-width: 100%; width: 100%; }
+        .sas-results-map     { position: static; height: 300px; }
+      }
+    </style>
 </head>
 <body>
     <header>
@@ -52,7 +104,7 @@
                         aria-expanded="false"
                         type="button">
                   Type de recherche
-                      <span id="type-filter-count" class="fr-badge fr-badge--sm fr-badge--info fr-ml-1w" hidden>0</span>
+                  <span id="type-filter-count" class="fr-badge fr-badge--sm fr-badge--info fr-ml-1w" hidden>0</span>
                 </button>
                 <div id="type-filter-panel"
                      class="filter-panel fr-background-alt--grey fr-border fr-p-2w"
@@ -68,22 +120,30 @@
                 </div>
               </div>
 
-              <!-- ───────────────── PROFESSION ───────────────── -->
+              <!-- ───────────────── PROFESSIONNEL / STRUCTURE ───────────────── -->
               <div class="fr-col-12 fr-col-md-3 fr-position-relative">
-                <label class="fr-label">Profession</label>
+                <label class="fr-label">Professionnel / Structure</label>
                 <button class="fr-select fr-select--multiple"
-                        id="profession-filter-btn"
+                        id="category-filter-btn"
                         aria-expanded="false"
                         type="button">
-                  Profession
-                      <span id="profession-filter-count" class="fr-badge fr-badge--sm fr-badge--info fr-ml-1w" hidden>0</span>
+                  Professionnel / Structure
+                  <span id="category-filter-count" class="fr-badge fr-badge--sm fr-badge--info fr-ml-1w" hidden>0</span>
                 </button>
-                <div id="profession-filter-panel"
+                <div id="category-filter-panel"
                      class="filter-panel fr-background-alt--grey fr-border fr-p-2w"
                      style="display:none; position:absolute; z-index:50; width:100%;">
+
+                  <p class="fr-text--xs fr-text--mention-grey fr-mb-1w" style="font-weight:600;text-transform:uppercase;letter-spacing:.05em;">
+                    Professionnels de santé
+                  </p>
                   <div class="fr-checkbox-group">
                     <input type="checkbox" id="filter-medecin" value="medecin">
                     <label class="fr-label" for="filter-medecin">Médecin</label>
+                  </div>
+                  <div class="fr-checkbox-group">
+                    <input type="checkbox" id="filter-mg" value="mg">
+                    <label class="fr-label" for="filter-mg">Médecine générale</label>
                   </div>
                   <div class="fr-checkbox-group">
                     <input type="checkbox" id="filter-infirmier" value="infirmier">
@@ -92,6 +152,22 @@
                   <div class="fr-checkbox-group">
                     <input type="checkbox" id="filter-kine" value="kine">
                     <label class="fr-label" for="filter-kine">Kiné</label>
+                  </div>
+
+                  <p class="fr-text--xs fr-text--mention-grey fr-mb-1w fr-mt-2w" style="font-weight:600;text-transform:uppercase;letter-spacing:.05em;">
+                    Structures
+                  </p>
+                  <div class="fr-checkbox-group">
+                    <input type="checkbox" id="filter-sos" value="sos">
+                    <label class="fr-label" for="filter-sos">SOS Médecins</label>
+                  </div>
+                  <div class="fr-checkbox-group">
+                    <input type="checkbox" id="filter-mmg" value="mmg">
+                    <label class="fr-label" for="filter-mmg">Maison médicale de garde</label>
+                  </div>
+                  <div class="fr-checkbox-group">
+                    <input type="checkbox" id="filter-cds" value="cds">
+                    <label class="fr-label" for="filter-cds">Centre de santé</label>
                   </div>
                 </div>
               </div>
@@ -104,7 +180,7 @@
                         aria-expanded="false"
                         type="button">
                   Disponibilité
-                      <span id="dispo-filter-count" class="fr-badge fr-badge--sm fr-badge--info fr-ml-1w" hidden>0</span>
+                  <span id="dispo-filter-count" class="fr-badge fr-badge--sm fr-badge--info fr-ml-1w" hidden>0</span>
                 </button>
                 <div id="dispo-filter-panel"
                      class="filter-panel fr-background-alt--grey fr-border fr-p-2w"
@@ -132,7 +208,7 @@
                         aria-expanded="false"
                         type="button">
                   Mode
-                      <span id="mode-filter-count" class="fr-badge fr-badge--sm fr-badge--info fr-ml-1w" hidden>0</span>
+                  <span id="mode-filter-count" class="fr-badge fr-badge--sm fr-badge--info fr-ml-1w" hidden>0</span>
                 </button>
                 <div id="mode-filter-panel"
                      class="filter-panel fr-background-alt--grey fr-border fr-p-2w"
@@ -175,33 +251,30 @@
     </section>
 
     <main id="main" class="fr-container fr-py-4w" role="main">
-      <div class="fr-grid-row fr-grid-row--gutters">
-        
-        <!-- Colonne gauche : Cartes (40%) -->
-        <div class="fr-col-12 fr-col-md-5 fr-col-lg-6">
+
+      <!-- Layout flex : liste large / carte étroite sticky -->
+      <div class="sas-results-layout">
+
+        <!-- ── Colonne liste (≈ 72%) ── -->
+        <div class="sas-results-list">
           <div id="offers-grid" class="fr-grid-row fr-grid-row--gutters">
             <!-- Cards injectées ici par renderMergedOffers -->
           </div>
         </div>
-        
-        <!-- Colonne droite : Carte STICKY (60%) -->
-        <div class="fr-col-12 fr-col-md-7 fr-col-lg-6">
-          <div class="fr-card fr-p-2w">
-            <div class="map-container" 
-                 style="position: relative; padding-bottom: 60%; height: 0; overflow: hidden; border-radius: 4px; border: 1px solid var(--border-default-grey);">
-              <iframe 
-                width="100%" 
-                height="100%" 
-                style="position: absolute; top: 0; left: 0; border: none;" 
-                src="https://www.openstreetmap.org/export/embed.html?bbox=-5.5%2C41.5%2C9.5%2C51.5&amp;layer=mapnik&amp;marker=46.45%2C2.21"
-                loading="lazy"
-                title="Carte OpenStreetMap"
-                aria-label="Carte interactive des professionnels de santé">
-              </iframe>
-            </div>
+
+        <!-- ── Colonne carte (≈ 28%) sticky pleine hauteur ── -->
+        <div class="sas-results-map">
+          <div class="fr-card">
+            <iframe
+              class="sas-map-iframe"
+              src="https://www.openstreetmap.org/export/embed.html?bbox=-5.5%2C41.5%2C9.5%2C51.5&amp;layer=mapnik&amp;marker=46.45%2C2.21"
+              loading="lazy"
+              title="Carte OpenStreetMap"
+              aria-label="Carte interactive des professionnels de santé">
+            </iframe>
           </div>
         </div>
-        
+
       </div>
     </main>
 
@@ -301,26 +374,24 @@
       import { renderLoading, renderError } from 'http://localhost:8000/sas_search_page_v3/use_cases_health_offers/services_js/renderer.js';
       import { renderMergedOffers } from 'http://localhost:8000/sas_search_page_v3/use_cases_health_offers/services_js/renderer-org.js';
 
-      const PS_BUNDLE_URL = 'http://localhost:8000/sas_search_page_v3/use_cases_health_offers/data/ps_indiv/ExampleBundlePSIndiv.json';
+      const PS_BUNDLE_URL  = 'http://localhost:8000/sas_search_page_v3/use_cases_health_offers/data/ps_indiv/ExampleBundlePSIndiv.json';
       const ORG_BUNDLE_URL = 'http://localhost:8000/sas_search_page_v3/use_cases_health_offers/data/organization/ExampleBundleOrganisation.json';
 
       async function init() {
         renderLoading();
-
         try {
           const [psOffers, orgOffers] = await Promise.allSettled([
             buildOffersFromBundle(PS_BUNDLE_URL),
             buildOrgOffersFromBundle(ORG_BUNDLE_URL),
           ]);
 
-          const ps  = psOffers.status === 'fulfilled' ? psOffers.value : [];
+          const ps  = psOffers.status  === 'fulfilled' ? psOffers.value  : [];
           const org = orgOffers.status === 'fulfilled' ? orgOffers.value : [];
 
-          if (psOffers.status === 'rejected') console.warn('[init] PS bundle failed:', psOffers.reason);
+          if (psOffers.status  === 'rejected') console.warn('[init] PS bundle failed:',  psOffers.reason);
           if (orgOffers.status === 'rejected') console.warn('[init] Org bundle failed:', orgOffers.reason);
 
           renderMergedOffers(ps, org);
-
         } catch (error) {
           console.error('[init] Fatal error:', error);
           renderError(error);

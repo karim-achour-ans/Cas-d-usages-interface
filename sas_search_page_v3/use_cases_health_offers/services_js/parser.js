@@ -4,19 +4,11 @@
  * display object. No fetching, no DOM, no side effects.
  */
 
-/**
- * Extract the display name from a Practitioner resource.
- * Falls back gracefully if prefix, given or family are missing.
- *
- * @param {Object} practitioner - FHIR Practitioner resource
- * @returns {{ title: string|null, firstname: string|null, name: string|null }}
- */
 function extractName(practitioner) {
   const nameEntry =
     practitioner?.name?.find(n => n.use === "official") ??
     practitioner?.name?.[0] ??
     {};
-
   return {
     title:     nameEntry.prefix?.[0] ?? null,
     firstname: nameEntry.given?.[0]  ?? null,
@@ -24,13 +16,6 @@ function extractName(practitioner) {
   };
 }
 
-/**
- * Extract the RPPS/IDNPS identifier value from a Practitioner.
- * Matches on system urn:oid:1.2.250.1.71.4.2.1 (RPPS/IDNPS).
- *
- * @param {Object} practitioner - FHIR Practitioner resource
- * @returns {string|null}
- */
 function extractIdentifier(practitioner) {
   return (
     practitioner?.identifier?.find(
@@ -39,26 +24,12 @@ function extractIdentifier(practitioner) {
   );
 }
 
-/**
- * Extract the first coding display from a CodeableConcept array.
- *
- * @param {Array} codeableConceptArray
- * @returns {string|null}
- */
 function extractFirstDisplay(codeableConceptArray) {
   return codeableConceptArray?.[0]?.coding?.[0]?.display ?? null;
 }
 
-/**
- * Extract the phone number from a telecom array.
- * Picks the entry with the lowest rank, or the first phone found.
- *
- * @param {Array} telecom - FHIR ContactPoint array
- * @returns {string|null}
- */
 function extractPhone(telecom) {
   if (!Array.isArray(telecom)) return null;
-
   return (
     telecom
       .filter(t => t.system === "phone")
@@ -66,18 +37,10 @@ function extractPhone(telecom) {
   );
 }
 
-/**
- * Resolve a contained Location from a PractitionerRole.
- * Contained references use the format "#resourceId".
- *
- * @param {Object} practitionerRole - FHIR PractitionerRole resource
- * @returns {Object|null} The contained Location resource, or null
- */
 function resolveContainedLocation(practitionerRole) {
   const locationRef = practitionerRole?.location?.[0]?.reference;
   if (!locationRef?.startsWith("#")) return null;
-
-  const containedId = locationRef.slice(1); // strip leading "#"
+  const containedId = locationRef.slice(1);
   return (
     practitionerRole.contained?.find(
       r => r.resourceType === "Location" && r.id === containedId
@@ -85,16 +48,9 @@ function resolveContainedLocation(practitionerRole) {
   );
 }
 
-/**
- * Normalize a FHIR Address into a flat display-ready object.
- *
- * @param {Object|null} location - FHIR Location resource
- * @returns {Object|null}
- */
 function extractAddress(location) {
   const addr = location?.address;
   if (!addr) return null;
-
   return {
     line:       addr.line ?? [],
     city:       addr.city       ?? null,
@@ -105,27 +61,32 @@ function extractAddress(location) {
 }
 
 /**
- * Extract and sort slot start times from a Slot array.
- * Returns ISO strings sorted chronologically.
- *
- * @param {Object[]} slots - Array of FHIR Slot resources
- * @returns {string[]} Sorted array of ISO 8601 start datetime strings
+ * Extract ISO start strings sorted chronologically.
+ * Kept for backward compat (panel, dispo filter).
  */
 function extractSlotStarts(slots) {
   if (!Array.isArray(slots) || slots.length === 0) return [];
-
   return slots
-    .map(slot => slot.start)
+    .map(s => s.start)
     .filter(Boolean)
     .sort((a, b) => new Date(a) - new Date(b));
 }
 
 /**
- * Extract SAS participation info from PractitionerRole extensions.
+ * Extract slot objects { start, end } sorted chronologically.
+ * Used by the renderer for the time-range button display.
  *
- * @param {Object} practitionerRole
- * @returns {{ sasOk: boolean|null, sasTypes: string[] }}
+ * @param {Object[]} slots - FHIR Slot resources
+ * @returns {{ start: string, end: string|null }[]}
  */
+function extractSlots(slots) {
+  if (!Array.isArray(slots) || slots.length === 0) return [];
+  return slots
+    .filter(s => s.start)
+    .sort((a, b) => new Date(a.start) - new Date(b.start))
+    .map(s => ({ start: s.start, end: s.end ?? null }));
+}
+
 function extractSasParticipation(practitionerRole) {
   const sasExt = practitionerRole?.extension?.find(
     e => e.url === "https://annuaire.sante.fr/fhir/StructureDefinition/practitioner-sas-participation"
@@ -142,12 +103,30 @@ function extractSasParticipation(practitionerRole) {
 }
 
 /**
- * Extract the operational activity from a HealthcareService specialty slice.
- * Discriminated by JDV_J17-ActiviteOperationnelle-ROR system.
- *
- * @param {Object|null} healthcareService
- * @returns {string|null}
+ * Extract the conventionnement (CNAM agreement sector) from PractitionerRole.
+ * Extension : practitioner-role-conventionnement
+ * Système NOS : TRE_R75-TypeDeConventionnement
+ * Codes : "1" Secteur 1 | "2" Secteur 2 | "3" Non conventionné
  */
+function extractConventionnement(practitionerRole) {
+  const convExt = practitionerRole?.extension?.find(
+    e => e.url === "https://annuaire.sante.fr/fhir/StructureDefinition/practitioner-role-conventionnement"
+  );
+  if (!convExt) return { conventionnementCode: null, conventionnementDisplay: null };
+
+  const coding =
+    convExt.valueCoding ??
+    convExt.valueCodeableConcept?.coding?.[0] ??
+    null;
+
+  if (!coding) return { conventionnementCode: null, conventionnementDisplay: null };
+
+  return {
+    conventionnementCode:    coding.code    ?? null,
+    conventionnementDisplay: coding.display ?? null,
+  };
+}
+
 function extractOperationalActivity(healthcareService) {
   return (
     healthcareService?.specialty
@@ -156,13 +135,6 @@ function extractOperationalActivity(healthcareService) {
   );
 }
 
-/**
- * Extract all specific acts from HealthcareService.characteristic.
- * Discriminated by JDV_J16-ActeSpecifique-ROR system.
- *
- * @param {Object|null} healthcareService
- * @returns {string[]}
- */
 function extractSpecificActs(healthcareService) {
   return (
     healthcareService?.characteristic
@@ -173,46 +145,71 @@ function extractSpecificActs(healthcareService) {
 }
 
 /**
- * Parse a resolved set of FHIR resources into a normalized HealthOffer
- * display object (one card = one PractitionerRole).
+ * Extract the org type ('cpts' | 'msp' | null) from an Organization resource.
  *
- * @param {Object} params
- * @param {Object}      params.practitioner     - FHIR Practitioner resource
- * @param {Object}      params.practitionerRole - FHIR PractitionerRole resource
- * @param {Object[]}    params.slots            - FHIR Slot resources linked to this role
- * @returns {{
- *   id: string|null,
- *   title: string|null,
- *   firstname: string|null,
- *   name: string|null,
- *   identifier: string|null,
- *   profession: string|null,
- *   specialty: string|null,
- *   phone: string|null,
- *   address: Object|null,
- *   slotStarts: string[],
- * }}
+ * Parcourt Organization.type[].coding[].code (ValueSet ANS).
+ * Normalise en minuscules pour cohérence avec SAS_LABEL_MAP (renderer.js).
+ *
+ * @param {Object|null} organization - FHIR Organization resource
+ * @returns {'cpts'|'msp'|null}
  */
-export function parseOffer({ practitioner, practitionerRole, slots = [], healthcareService = null }) {
-  const { title, firstname, name } = extractName(practitioner);
-  const containedLocation          = resolveContainedLocation(practitionerRole);
-  const { sasOk, sasTypes }        = extractSasParticipation(practitionerRole);
+function extractOrgType(organization) {
+  if (!organization) return null;
+
+  for (const type of organization.type ?? []) {
+    for (const coding of type.coding ?? []) {
+      const code = coding.code?.toLowerCase();
+      if (code === 'cpts' || code === 'msp') return code;
+    }
+  }
+
+  return null;
+}
+
+/**
+ * Parse a resolved set of FHIR resources into a normalized HealthOffer object.
+ * One card = one PractitionerRole.
+ *
+ * @param {{ practitioner, practitionerRole, slots, healthcareService, organization }} params
+ * @returns {Object} HealthOffer display object
+ */
+export function parseOffer({
+  practitioner,
+  practitionerRole,
+  slots            = [],
+  healthcareService = null,
+  organization      = null,   // FHIR Organization (CPTS / MSP) — peut être null
+}) {
+  const { title, firstname, name }                        = extractName(practitioner);
+  const containedLocation                                 = resolveContainedLocation(practitionerRole);
+  const { sasOk, sasTypes }                               = extractSasParticipation(practitionerRole);
+  const { conventionnementCode, conventionnementDisplay } = extractConventionnement(practitionerRole);
 
   return {
-    id:                  practitionerRole?.id ?? null,
+    id:                      practitionerRole?.id ?? null,
     title,
     firstname,
     name,
-    identifier:          extractIdentifier(practitioner),
-    profession:          extractFirstDisplay(practitionerRole?.code),
-    specialty:           extractFirstDisplay(practitionerRole?.specialty),
-    phone:               extractPhone(practitionerRole?.telecom),
-    address:             extractAddress(containedLocation),
-    slotStarts:          extractSlotStarts(slots),
+    identifier:              extractIdentifier(practitioner),
+    profession:              extractFirstDisplay(practitionerRole?.code),
+    specialty:               extractFirstDisplay(practitionerRole?.specialty),
+    phone:                   extractPhone(practitionerRole?.telecom),
+    address:                 extractAddress(containedLocation),
+    // slotStarts: string[] — backward compat pour panel, dispo, filtres
+    slotStarts:              extractSlotStarts(slots),
+    // slots: { start, end }[] — utilisé par le renderer pour les boutons créneaux
+    slots:                   extractSlots(slots),
     sasOk,
     sasTypes,
-    comment:             healthcareService?.comment ?? null,
-    operationalActivity: extractOperationalActivity(healthcareService),
-    specificActs:        extractSpecificActs(healthcareService),
+    conventionnementCode,
+    conventionnementDisplay,
+    comment:                 healthcareService?.comment ?? null,
+    operationalActivity:     extractOperationalActivity(healthcareService),
+    specificActs:            extractSpecificActs(healthcareService),
+    // ── Organisation (CPTS / MSP) ─────────────────────────────────────────
+    // null pour les PS libéraux sans rattachement CPTS/MSP : comportement nominal.
+    orgId:                   organization?.id   ?? null,
+    orgName:                 organization?.name ?? null,
+    orgType:                 extractOrgType(organization),
   };
 }

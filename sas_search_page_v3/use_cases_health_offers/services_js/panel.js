@@ -6,7 +6,7 @@
 
 document.addEventListener('DOMContentLoaded', () => {
   // 🔍 Références DOM
-  const panel = document.getElementById('practitioner-panel');
+  const panel   = document.getElementById('practitioner-panel');
   const overlay = document.getElementById('panel-overlay');
   const closeBtn = panel?.querySelector('.fr-btn--close');
 
@@ -18,24 +18,55 @@ document.addEventListener('DOMContentLoaded', () => {
   // 📝 1. Remplir le panneau avec les données du professionnel
   function populatePanel(data) {
     const $ = (id) => document.getElementById(id);
-    
-    $('panel-title').textContent = data.name || '—';
+
+    $('panel-title').textContent     = data.name     || '—';
     $('panel-specialty').textContent = data.specialty || '';
-    $('panel-address').textContent = data.address || '';
-    $('panel-phone').innerHTML = data.phone 
-      ? `<a href="tel:${data.phone}">${data.phone}</a>` 
+    $('panel-address').textContent   = data.address   || '';
+    $('panel-phone').innerHTML = data.phone
+      ? `<a href="tel:${data.phone}">${data.phone}</a>`
       : 'Non communiqué';
 
-    // Créneaux
+    // ── Lien vers les professionnels de la CPTS / MSP ─────────────────────
+    // L'élément #panel-org-link est créé dynamiquement s'il n'existe pas encore
+    // (évite de modifier index.html). Il est inséré après #panel-phone dans la
+    // même <ul> de coordonnées.
+    const phoneEl = $('panel-phone');
+    let orgLinkEl = $('panel-org-link');
+
+    if (!orgLinkEl && phoneEl?.parentNode) {
+      orgLinkEl    = document.createElement('li');
+      orgLinkEl.id = 'panel-org-link';
+      orgLinkEl.className = 'fr-mb-0 fr-mt-1w';
+      phoneEl.parentNode.appendChild(orgLinkEl);
+    }
+
+    if (orgLinkEl) {
+      if (data.orgType && data.orgName) {
+        const prefix = data.orgType === 'cpts' ? 'de la CPTS' : 'du MSP';
+        const href   = data.orgId
+          ? `?organization=${encodeURIComponent(data.orgId)}`
+          : '#';
+
+        orgLinkEl.hidden = false;
+        orgLinkEl.innerHTML = `
+          <a href="${href}" class="fr-link fr-link--sm fr-icon-group-line fr-link--icon-left">
+            Voir les professionnels ${prefix} ${data.orgName}
+          </a>`;
+      } else {
+        orgLinkEl.hidden = true;
+      }
+    }
+
+    // ── Créneaux ───────────────────────────────────────────────────────────
     const slotsContainer = $('panel-slots');
-    const noSlots = $('panel-no-slots');
+    const noSlots        = $('panel-no-slots');
     slotsContainer.innerHTML = '';
-    
+
     if (data.slots?.length) {
       noSlots.hidden = true;
       data.slots.forEach(time => {
         const tag = document.createElement('span');
-        tag.className = 'fr-tag fr-tag--sm fr-mr-1w fr-mb-1w';
+        tag.className   = 'fr-tag fr-tag--sm fr-mr-1w fr-mb-1w';
         tag.textContent = time;
         slotsContainer.appendChild(tag);
       });
@@ -43,22 +74,22 @@ document.addEventListener('DOMContentLoaded', () => {
       noSlots.hidden = false;
     }
 
-    // Infos pratiques
-    $('panel-access').innerHTML = 
+    // ── Infos pratiques ────────────────────────────────────────────────────
+    $('panel-access').innerHTML =
       `<span class="fr-icon-wheelchair-line fr-mr-1w" aria-hidden="true"></span> ${data.access || '—'}`;
-    $('panel-tariffs').innerHTML = 
+    $('panel-tariffs').innerHTML =
       `<span class="fr-icon-money-euro-circle-line fr-mr-1w" aria-hidden="true"></span> ${data.tariffs || '—'}`;
 
-    // Langues (optionnel)
+    // ── Langues (optionnel) ────────────────────────────────────────────────
     const langEl = $('panel-languages');
     if (data.languages?.length) {
-      langEl.hidden = false;
+      langEl.hidden   = false;
       langEl.innerHTML = `<span class="fr-icon-global-line fr-mr-1w" aria-hidden="true"></span> Langues : ${data.languages.join(', ')}`;
     } else {
       langEl.hidden = true;
     }
 
-    // ⭐ Note / PS
+    // ── Note / PS ──────────────────────────────────────────────────────────
     $('panel-ps').textContent = data.ps || 'Aucune information complémentaire.';
   }
 
@@ -71,16 +102,15 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!rawData) return;
 
     try {
-      // Nettoyage des apostrophes encodées puis parsing
       const data = JSON.parse(rawData.replace(/&apos;/g, "'"));
-      populatePanel(data); // ✅ Fonction maintenant bien définie et accessible
+      populatePanel(data);
 
       panel.hidden = false;
       requestAnimationFrame(() => {
         panel.classList.add('active');
         overlay.classList.add('active');
       });
-      document.body.style.overflow = 'hidden'; // Bloque le scroll arrière
+      document.body.style.overflow = 'hidden';
     } catch (e) {
       console.error('[panel] Erreur de parsing data-panel:', e);
     }
@@ -91,8 +121,7 @@ document.addEventListener('DOMContentLoaded', () => {
     panel.classList.remove('active');
     overlay.classList.remove('active');
     document.body.style.overflow = '';
-    
-    // Attendre la fin de la transition CSS avant de masquer
+
     setTimeout(() => {
       if (!panel.classList.contains('active')) {
         panel.hidden = true;
@@ -104,7 +133,6 @@ document.addEventListener('DOMContentLoaded', () => {
   if (closeBtn) closeBtn.addEventListener('click', closePanel);
   overlay.addEventListener('click', closePanel);
 
-  // Clic sur n'importe quel élément déclencheur (.js-open-panel)
   document.addEventListener('click', (e) => {
     const trigger = e.target.closest('.js-open-panel');
     if (trigger) {
@@ -113,14 +141,12 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // Accessibilité clavier (Entrée / Espace sur le titre)
   document.addEventListener('keydown', (e) => {
-    if (e.target.classList?.contains('js-open-panel') && 
+    if (e.target.classList?.contains('js-open-panel') &&
         (e.key === 'Enter' || e.key === ' ')) {
       e.preventDefault();
       openPanelFromElement(e.target);
     }
-    // Fermeture avec Échap
     if (e.key === 'Escape' && panel.classList.contains('active')) {
       closePanel();
     }

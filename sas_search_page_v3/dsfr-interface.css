@@ -305,7 +305,7 @@
 
 .sas-slot-day:first-child .sas-slot-btn.fr-btn--secondary:hover {
   background-color: var(--background-action-high-blue-france) !important;
-  color: var(--text-white) !important; /* Texte blanc au hover/active pour lisibilité */
+  color: var(--text-white) !important;
 }
 
 .sas-slot-day:first-child .sas-slot-btn.fr-btn--secondary:active {
@@ -380,4 +380,138 @@
 
 .fr-select.fr-select--multiple{
   justify-content: normal !important;
+}
+/* ═══════════════════════════════════════════════════════════════════════════
+   SLOT BUTTONS — Design maquette (surcharge les anciennes règles fr-btn--secondary)
+   ─ Colonne D      : fond bleu clair  → hover bleu foncé #0855a0
+   ─ Colonnes D+1/2 : fond vert clair  → hover vert foncé
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.sas-slot-btn {
+  appearance: none;
+  border: none;
+  font-family: inherit;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  width: 100%;
+  padding: 0.35rem 0.4rem;
+  border-radius: 0.375rem;
+  cursor: pointer;
+  text-align: left;
+  transition: background-color 0.15s ease, transform 0.1s ease;
+  background-color: var(--background-action-low-blue-france);
+}
+.sas-slot-day:nth-child(2) .sas-slot-btn,
+.sas-slot-day:nth-child(3) .sas-slot-btn {
+  background-color: var(--background-action-low-green-emeraude);
+}
+
+/* Hover colonne D : bleu foncé explicite */
+.sas-slot-day:first-child .sas-slot-btn:hover,
+.sas-slot-btn:hover {
+  background-color: #0855a0;
+  transform: translateY(-1px);
+}
+/* Hover colonnes D+1 / D+2 : vert foncé DSFR */
+.sas-slot-day:nth-child(2) .sas-slot-btn:hover,
+.sas-slot-day:nth-child(3) .sas-slot-btn:hover {
+  background-color: var(--background-action-high-green-emeraude);
+  transform: translateY(-1px);
+}
+
+/* Active */
+.sas-slot-btn:active {
+  transform: translateY(0);
+  background-color: #0648891a; /* bleu encore plus sombre */
+}
+.sas-slot-btn:active,
+.sas-slot-day:first-child .sas-slot-btn:active {
+  background-color: #063f7a;
+}
+.sas-slot-day:nth-child(2) .sas-slot-btn:active,
+.sas-slot-day:nth-child(3) .sas-slot-btn:active {
+  background-color: var(--background-action-high-green-emeraude);
+}
+
+/* Focus */
+.sas-slot-btn:focus-visible {
+  outline: 2px solid var(--border-action-high-blue-france);
+  outline-offset: 2px;
+}
+.sas-slot-day:nth-child(2) .sas-slot-btn:focus-visible,
+.sas-slot-day:nth-child(3) .sas-slot-btn:focus-visible {
+  outline-color: var(--border-action-high-green-emeraude);
+}
+
+/* Ligne 1 : plage horaire */
+.sas-slot-time {
+  font-size: clamp(0.6rem, 0.72vw, 0.8rem);
+  font-weight: 700;
+  color: var(--text-action-high-blue-france);
+  white-space: nowrap;
+  line-height: 1.2;
+}
+.sas-slot-day:nth-child(2) .sas-slot-time,
+.sas-slot-day:nth-child(3) .sas-slot-time {
+  color: var(--text-action-high-green-emeraude);
+}
+.sas-slot-btn:hover .sas-slot-time,
+.sas-slot-btn:active .sas-slot-time {
+  color: #ffffff;
+}
+
+/* Ligne 2 : badge compteur (gauche) + icônes (droite) */
+.sas-slot-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.18rem;
+}
+
+.sas-slot-counter {
+  flex-shrink: 0;
+  margin-right: auto;
+  font-size: 0.8rem;
+  font-weight: 700;
+  line-height: 1;
+  padding: 0.07rem 0.22rem;
+  border-radius: 0.75rem;
+  background: rgba(255, 255, 255, 0.9);
+  color: var(--text-action-high-blue-france);
+  border: 1px solid var(--text-action-high-blue-france);
+  white-space: nowrap;
+}
+.sas-slot-day:nth-child(2) .sas-slot-counter,
+.sas-slot-day:nth-child(3) .sas-slot-counter {
+  color: var(--text-action-high-green-emeraude);
+  border-color: var(--text-action-high-green-emeraude);
+}
+.sas-slot-btn:hover .sas-slot-counter,
+.sas-slot-btn:active .sas-slot-counter {
+  background: rgba(255, 255, 255, 0.97);
+}
+
+.sas-slot-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 0.95rem;
+  height: 0.95rem;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.85);
+  flex-shrink: 0;
+  font-size: 0.8rem;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--text-action-high-blue-france);
+  transition: background-color 0.1s;
+}
+.sas-slot-day:nth-child(2) .sas-slot-icon,
+.sas-slot-day:nth-child(3) .sas-slot-icon {
+  color: var(--text-action-high-green-emeraude);
+}
+.sas-slot-btn:hover .sas-slot-icon,
+.sas-slot-btn:active .sas-slot-icon {
+  background: rgba(255, 255, 255, 0.97);
 }
