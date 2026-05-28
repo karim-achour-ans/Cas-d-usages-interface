@@ -5,8 +5,8 @@
  * No DOM manipulation, no fetching, no rendering.
  */
 
-import { loadBundle }  from 'http://localhost:8000/sas_search_page_v3/use_cases_health_offers/services_js/fhir-loader.js';
-import { parseOffer }  from 'http://localhost:8000/sas_search_page_v3/use_cases_health_offers/services_js/parser.js';
+import { loadBundle }  from './fhir-loader.js';
+import { parseOffer }  from './parser.js';
 
 /**
  * Build an index of all Bundle entries keyed by "ResourceType/id".
