@@ -743,6 +743,11 @@
               {
                 "system": "https://mos.esante.gouv.fr/NOS/JDV_J17-ActiviteOperationnelle-ROR/FHIR/JDV-J17-ActiviteOperationnelle-ROR",
                 "code": "573",
+                "display": "Rédaction de certificat de décès"
+              },
+              {
+                "system": "https://mos.esante.gouv.fr/NOS/JDV_J17-ActiviteOperationnelle-ROR/FHIR/JDV-J17-ActiviteOperationnelle-ROR",
+                "code": "573",
                 "display": "Soins infirmiers orientation Diabète"
               }
             ]

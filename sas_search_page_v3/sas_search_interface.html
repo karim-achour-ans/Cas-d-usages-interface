@@ -200,6 +200,8 @@
                 </div>
               </div>
 
+
+
               <!-- ───────────────── MODE ───────────────── -->
               <div class="fr-col-12 fr-col-md-3 fr-position-relative">
                 <label class="fr-label">Mode</label>
@@ -263,8 +265,20 @@
         </div>
 
         <!-- ── Colonne carte (≈ 28%) sticky pleine hauteur ── -->
-        <div class="sas-results-map">
+<div class="sas-results-map">
           <div class="fr-card">
+ 
+            <!--
+              Cercle de rayon positionné par-dessus l'iframe.
+              Position et dimensions pilotées par le JS ci-dessous.
+              aria-hidden car purement décoratif/visuel.
+            -->
+            <div class="map-radius-circle"
+                 id="map-radius-circle"
+                 style="left:50%; top:44%; width:160px; height:160px;"
+                 aria-hidden="true">
+            </div>
+ 
             <iframe
               class="sas-map-iframe"
               src="https://www.openstreetmap.org/export/embed.html?bbox=-5.5%2C41.5%2C9.5%2C51.5&amp;layer=mapnik&amp;marker=46.45%2C2.21"
@@ -272,10 +286,42 @@
               title="Carte OpenStreetMap"
               aria-label="Carte interactive des professionnels de santé">
             </iframe>
+ 
+            <!-- Widget slider ancré en bas de la carte -->
+            <div class="map-slider-widget" role="group" aria-label="Rayon de recherche">
+ 
+              <div class="map-slider-top">
+                <span class="map-slider-label">Rayon de recherche</span>
+                <span class="map-slider-val" id="map-rayon-val">14<span>km</span></span>
+              </div>
+ 
+              <input
+                type="range"
+                class="map-rayon-range"
+                id="map-rayon-slider"
+                min="1" max="100" value="14" step="1"
+                aria-label="Rayon en kilomètres"
+                oninput="updateRayon(parseInt(this.value))"
+              />
+ 
+              <div class="map-slider-bounds">
+                <span>1 km</span>
+                <span>100 km</span>
+              </div>
+ 
+              <div class="map-rayon-presets">
+                <button class="map-rayon-pt"    id="mpt-5"   onclick="setRayon(5)">5 km</button>
+                <button class="map-rayon-pt on" id="mpt-14"  onclick="setRayon(14)">14 km</button>
+                <button class="map-rayon-pt"    id="mpt-25"  onclick="setRayon(25)">25 km</button>
+                <button class="map-rayon-pt"    id="mpt-50"  onclick="setRayon(50)">50 km</button>
+                <button class="map-rayon-pt"    id="mpt-100" onclick="setRayon(100)">100 km</button>
+              </div>
+ 
+            </div>
           </div>
         </div>
-
       </div>
+    </div>
     </main>
 
     <!-- Overlay (fond sombre) -->
@@ -367,43 +413,104 @@
       </div>
     </aside>
  
-    <!-- Scripts principaux -->
-    <script type="module">
-      import { buildOffersFromBundle } from 'http://localhost:8000/sas_search_page_v3/use_cases_health_offers/services_js/assembler.js';
-      import { buildOrgOffersFromBundle } from 'http://localhost:8000/sas_search_page_v3/use_cases_health_offers/services_js/assembler-org.js';
-      import { renderLoading, renderError } from 'http://localhost:8000/sas_search_page_v3/use_cases_health_offers/services_js/renderer.js';
-      import { renderMergedOffers } from 'http://localhost:8000/sas_search_page_v3/use_cases_health_offers/services_js/renderer-org.js';
+<!-- Scripts principaux -->
+<script type="module">
+  import { buildOffersFromBundle } from './use_cases_health_offers/services_js/assembler.js';
+  import { buildOrgOffersFromBundle } from './use_cases_health_offers/services_js/assembler-org.js';
+  import { renderLoading, renderError } from './use_cases_health_offers/services_js/renderer.js';
+  import { renderMergedOffers } from './use_cases_health_offers/services_js/renderer-org.js';
 
-      const PS_BUNDLE_URL  = 'http://localhost:8000/sas_search_page_v3/use_cases_health_offers/data/ps_indiv/ExampleBundlePSIndiv.json';
-      const ORG_BUNDLE_URL = 'http://localhost:8000/sas_search_page_v3/use_cases_health_offers/data/organization/ExampleBundleOrganisation.json';
+  const PS_BUNDLE_URL  = './use_cases_health_offers/data/ps_indiv/ExampleBundlePSIndiv.json';
+  const ORG_BUNDLE_URL = './use_cases_health_offers/data/organization/ExampleBundleOrganisation.json';
 
-      async function init() {
-        renderLoading();
-        try {
-          const [psOffers, orgOffers] = await Promise.allSettled([
-            buildOffersFromBundle(PS_BUNDLE_URL),
-            buildOrgOffersFromBundle(ORG_BUNDLE_URL),
-          ]);
+  async function init() {
+    renderLoading();
 
-          const ps  = psOffers.status  === 'fulfilled' ? psOffers.value  : [];
-          const org = orgOffers.status === 'fulfilled' ? orgOffers.value : [];
+    try {
+      const [psOffers, orgOffers] = await Promise.allSettled([
+        buildOffersFromBundle(PS_BUNDLE_URL),
+        buildOrgOffersFromBundle(ORG_BUNDLE_URL),
+      ]);
 
-          if (psOffers.status  === 'rejected') console.warn('[init] PS bundle failed:',  psOffers.reason);
-          if (orgOffers.status === 'rejected') console.warn('[init] Org bundle failed:', orgOffers.reason);
+      const ps  = psOffers.status === 'fulfilled' ? psOffers.value : [];
+      const org = orgOffers.status === 'fulfilled' ? orgOffers.value : [];
 
-          renderMergedOffers(ps, org);
-        } catch (error) {
-          console.error('[init] Fatal error:', error);
-          renderError(error);
-        }
+      if (psOffers.status === 'rejected') {
+        console.warn('[init] PS bundle failed:', psOffers.reason);
       }
 
-      init();
-    </script>
-    
-    <!-- Scripts fonctionnels -->
-    <script type="module" src="http://localhost:8000/sas_search_page_v3/use_cases_health_offers/services_js/panel.js"></script>
-    <script type="module" src="http://localhost:8000/sas_search_page_v3/use_cases_health_offers/services_js/filters.js"></script>
+      if (orgOffers.status === 'rejected') {
+        console.warn('[init] Org bundle failed:', orgOffers.reason);
+      }
+
+      renderMergedOffers(ps, org);
+
+    } catch (error) {
+      console.error('[init] Fatal error:', error);
+      renderError(error);
+    }
+  }
+
+  init();
+</script>
+
+<!-- Rayon slider -->
+<script>
+(function () {
+  var PRESETS = [5, 14, 25, 50, 100];
+  var MIN_PX = 40;
+  var MAX_PX = 340;
+
+  function pxFromKm(km) {
+    return Math.round(MIN_PX + (km - 1) / 99 * (MAX_PX - MIN_PX));
+  }
+
+  function updateRayon(v) {
+    v = parseInt(v, 10);
+
+    document.getElementById('map-rayon-val').innerHTML =
+      v + '<span>km</span>';
+
+    var pct = Math.round((v - 1) / 99 * 100);
+
+    document.getElementById('map-rayon-slider')
+      .style.setProperty('--pct', pct + '%');
+
+    var px = pxFromKm(v);
+    var circle = document.getElementById('map-radius-circle');
+
+    if (circle) {
+      circle.style.width = px + 'px';
+      circle.style.height = px + 'px';
+    }
+
+    PRESETS.forEach(function (p) {
+      var el = document.getElementById('mpt-' + p);
+      if (el) el.classList.toggle('on', p === v);
+    });
+
+    document.dispatchEvent(
+      new CustomEvent('rayon:change', {
+        detail: { km: v }
+      })
+    );
+  }
+
+  function setRayon(v) {
+    document.getElementById('map-rayon-slider').value = v;
+    updateRayon(v);
+  }
+
+  window.updateRayon = updateRayon;
+  window.setRayon = setRayon;
+
+  updateRayon(14);
+})();
+</script>
+
+<!-- Scripts fonctionnels -->
+<script type="module" src="./use_cases_health_offers/services_js/panel.js"></script>
+<script type="module" src="./use_cases_health_offers/services_js/filters.js"></script>
 
 </body>
 </html>

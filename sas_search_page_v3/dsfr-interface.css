@@ -515,3 +515,192 @@
 .sas-slot-btn:active .sas-slot-icon {
   background: rgba(255, 255, 255, 0.97);
 }
+
+      /* ── Layout résultats / carte ── */
+      .sas-results-layout {
+        display: flex;
+        align-items: flex-start;
+        gap: 1rem;
+      }
+ 
+      .sas-results-list {
+        flex: 0 0 60%;
+        max-width: 60%;
+        min-width: 0;
+      }
+ 
+      .sas-results-map {
+        flex: 0 0 calc(40% - 1rem);
+        max-width: calc(40% - 1rem);
+        position: sticky;
+        top: 0;
+        height: 100vh;
+      }
+ 
+      /* Override DSFR fr-card — position:relative nécessaire pour les enfants absolus */
+      .sas-results-map .fr-card {
+        height: 100% !important;
+        min-height: unset !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        border-radius: 0.5rem;
+        overflow: hidden;
+        border: none !important;
+        display: block !important;
+        position: relative;
+      }
+ 
+      .sas-map-iframe {
+        width: 100%;
+        height: 100%;
+        border: none;
+        display: block;
+      }
+ 
+      /* ── Cercle de rayon ── */
+      .map-radius-circle {
+        position: absolute;
+        border-radius: 50%;
+        border: 2px solid #000091;
+        background: rgba(0, 0, 145, 0.07);
+        transform: translate(-50%, -50%);
+        pointer-events: none;
+        transition: width 0.2s ease, height 0.2s ease;
+        z-index: 5;
+      }
+ 
+      /* ── Widget slider sur carte ── */
+      .map-slider-widget {
+        position: absolute;
+        bottom: 16px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: calc(100% - 32px);
+        max-width: 320px;
+        background: #fff;
+        border-radius: 4px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.22);
+        padding: 10px 14px 12px;
+        z-index: 10;
+      }
+ 
+      .map-slider-top {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 8px;
+      }
+ 
+      .map-slider-label {
+        font-size: 11px;
+        font-weight: 700;
+        color: #3a3a3a;
+        text-transform: uppercase;
+        letter-spacing: .04em;
+      }
+ 
+      .map-slider-val {
+        font-size: 16px;
+        font-weight: 700;
+        color: #000091;
+        line-height: 1;
+      }
+ 
+      .map-slider-val span {
+        font-size: 11px;
+        font-weight: 400;
+        color: #666;
+        margin-left: 2px;
+      }
+ 
+      /* Range slider — track fill progressif via CSS custom property */
+      input[type=range].map-rayon-range {
+        -webkit-appearance: none;
+        appearance: none;
+        width: 100%;
+        height: 3px;
+        border-radius: 2px;
+        outline: none;
+        cursor: pointer;
+        background: linear-gradient(
+          to right,
+          #000091 0%,
+          #000091 var(--pct, 13%),
+          #ccc    var(--pct, 13%),
+          #ccc    100%
+        );
+        margin: 0;
+      }
+ 
+      input[type=range].map-rayon-range::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        width: 18px;
+        height: 18px;
+        border-radius: 50%;
+        background: #fff;
+        border: 2px solid #000091;
+        cursor: pointer;
+        box-shadow: 0 1px 4px rgba(0, 0, 0, .2);
+      }
+ 
+      input[type=range].map-rayon-range::-moz-range-thumb {
+        width: 18px;
+        height: 18px;
+        border-radius: 50%;
+        background: #fff;
+        border: 2px solid #000091;
+        cursor: pointer;
+      }
+ 
+      input[type=range].map-rayon-range:focus-visible {
+        outline: 2px solid #0a76f6;
+        outline-offset: 3px;
+      }
+ 
+      .map-slider-bounds {
+        display: flex;
+        justify-content: space-between;
+        font-size: 10px;
+        color: #999;
+        margin-top: 4px;
+      }
+ 
+      /* Preset chips */
+      .map-rayon-presets {
+        display: flex;
+        gap: 5px;
+        margin-top: 10px;
+        flex-wrap: wrap;
+      }
+ 
+      .map-rayon-pt {
+        padding: 3px 10px;
+        border: 1px solid #ccc;
+        border-radius: 2px;
+        font-size: 11px;
+        color: #3a3a3a;
+        background: #fff;
+        cursor: pointer;
+        font-family: Marianne, arial, sans-serif;
+        transition: border-color .12s, background .12s, color .12s;
+      }
+ 
+      .map-rayon-pt:hover {
+        border-color: #000091;
+        color: #000091;
+      }
+ 
+      .map-rayon-pt.on {
+        border-color: #000091;
+        background: #000091;
+        color: #fff;
+      }
+ 
+      /* Sur mobile : carte en dessous, hauteur fixe */
+      @media (max-width: 768px) {
+        .sas-results-layout { flex-direction: column; }
+        .sas-results-list,
+        .sas-results-map    { flex: none; max-width: 100%; width: 100%; }
+        .sas-results-map    { position: static; height: 300px; }
+        .map-slider-widget  { max-width: 100%; }
+      }

@@ -356,12 +356,14 @@ function renderCard(offer) {
               <div class="sas-slots-grid">
                 ${renderSlotColumns(offer.slots ?? offer.slotStarts)}
               </div>
+              ${offer.sasOk === true ? `
               <button class="fr-btn fr-btn--sm fr-mt-1w sas-btn-full">
                 Orientation hors disponibilité
               </button>
               <button class="fr-btn fr-btn--secondary fr-btn--sm fr-mt-1w sas-btn-full">
                 Demande de prise en charge
               </button>
+              ` : ''}
             </div>
 
           </div>
