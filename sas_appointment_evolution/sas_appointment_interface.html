@@ -1,170 +1,244 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
+    <link rel="stylesheet" href="../template_integration.css">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="../template_integration.css">
+    <title>Suivi des rendez-vous — Plateforme SAS</title>
+
+    <!-- Tabler Icons (outline) -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css">
+
+    <!-- CSS DSFR custom SAS -->
+    <link rel="stylesheet" href="appointment_management.css">
+
+    <style>
+        /* Focus visible renforcé — ne touche pas au CSS fourni */
+        :focus-visible {
+            outline: 3px solid #0a76f6;
+            outline-offset: 3px;
+        }
+        .sr-only {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0,0,0,0);
+            white-space: nowrap;
+            border: 0;
+        }
+        /* Lien d'évitement */
+        .skip-link {
+            position: absolute;
+            top: -100%;
+            left: 8px;
+            background: #000091;
+            color: #fff;
+            padding: 8px 16px;
+            border-radius: 0 0 4px 4px;
+            font-size: 13px;
+            font-family: 'Marianne', Arial, sans-serif;
+            text-decoration: none;
+            z-index: 200;
+            transition: top 0.1s;
+        }
+        .skip-link:focus { top: 0; }
+        /* Ligne de tableau focusable */
+        #div_table tbody tr:focus {
+            outline: 2px solid #0a76f6;
+            outline-offset: -2px;
+        }
+        /* Annonce live pour les filtres */
+        #liveRegion { position: absolute; left: -9999px; }
+    </style>
 </head>
 <body>
-    <header>
-        <div id="div_header">
-            <div class="state_logo">
-                <img src="../images\logo-ANS.svg" alt="logo-ANS">
-            </div>
-            <div class="state_logo">
-                <img src="../images/logo-min_sante_acces_soins.svg" alt="logo-ANS">
-            </div>
-            <div id="header_title">
-                <h1>Interface Plateforme numérique du SAS</h1>
-                <h2>Présentation des Cas d'usages</h2>
-            </div>
+
+    <!-- Lien d'évitement (RGAA 12.11) -->
+    <a class="skip-link" href="#div_main">Aller au contenu principal</a>
+
+    <!-- Annonce dynamique pour les lecteurs d'écran -->
+    <div id="liveRegion" role="status" aria-live="polite" aria-atomic="true"></div>
+
+    <div id="div_header" role="banner">
+        <div class="state_logo">
+            <img src="../images/logo-ANS.svg" alt="Agence du Numérique en Santé">
         </div>
-    </header>
-    
-    <div id="use_case_description">
-        <h3>Evolution de la prise de rendez-vous</h3>
-        <p>Le tableau ci-dessous présente les rendez-vous pris par les patients et les rendez-vous confirmés par les effecteurs de soins.</p>
-    </div>
-
-    <div id="div_use_case_per_user_role">
-        <select id="roleSelector">
-            <option value="all" data-scope="nation_wide">Vue d'ensemble</option>
-            <option value="osnp" data-scope="linked_territories">Régulateur OSNP</option>
-            <option value="su" data-scope="linked_territories">Régulateur SU</option>
-            <option value="practioner" data-scope="user_wide">Professionnel de santé</option>
-            <option value="organization_free" data-scope="user_wide">Gestionnaire de Structure effection libérale</option>
-            <option value="organization_employee" data-scope="user_wide">Gestionnaire de Structure effection salarié</option>
-            <option value="sas_national" data-scope="nation_wide">Administrateur National</option>
-            <option value="sas_account_manager" data-scope="linked_territories">Gestionnaire de compte</option>
-        </select>
-    </div>
-
-    <div id="div_main">
-        <div class="div_filters">
-            <div>
-                <label for="drm_id">Clé d'échange</label>
-                <input type="text" id="drm_id" name="drm_id">
-            </div>
-            <div>
-                <label for="date_start">Créé entre le</label>
-                <input type="date" id="date_start" name="date_start">
-            </div>
-            <div>
-                <label for="date_end">et le</label>
-                <input type="date" id="date_end" name="date_end">
-            </div>
-            <div>
-                <label for="practioner_nat_id">RPPS / FINESS / Siret</label>
-                <input type="text" id="practioner_nat_id" name="practioner_nat_id">
-            </div>
-            <div>
-                <label for="search_filter"></label>
-                <input type="button" id="search_filter" name="search_filter" value="Rechercher">
-            </div>
-            <div>
-                <label for="reset_filter"></label>
-                <input type="button" id="reset_filter" name="reset_filter" value="Réinitialiser">
-            </div>
+        <div class="state_logo">
+            <img src="../images/logo-min_sante_acces_soins.svg" alt="Ministère de la Santé et de l'Accès aux Soins">
         </div>
-
-        <div id="div_table">
-            <table>
-                <thead>
-                    <tr>
-                        <th class="drm_id">Clé d'échange LRM</th>
-                        <th class="appointment_source">Source du rendez-vous</th>
-                        <th class="created_date">Date et heure d'enregistrement</th>
-                        <th class="appointment_date">Date et heure du rendez-vous</th>
-                        <th class="practioner">Effecteur de soins / Structure</th>
-                        <th class="practioner_specialty">Spécialité</th>
-                        <th class="appointment_status">Statut</th>
-                        <th class="appointment_sas_territory">Territoire SAS</th>
-                    </tr>
-                </thead>
-                <tbody>
-                </tbody>
-            </table>
+        <div id="header_title">
+            <h1>Interface Plateforme numérique du SAS</h1>
+            <p>Présentation des cas d'usages</p>
         </div>
     </div>
+
+    <!-- ── Contenu principal ───────────────────────────────────────── -->
+    <main id="div_main">
+
+        <!-- ── Filtres ────────────────────────────────────────────── -->
+        <section class="div_filters fr-card" aria-labelledby="filters-title">
+            <h2 id="filters-title" class="sr-only">Filtres de recherche</h2>
+            <div class="filters-grid" role="group" aria-labelledby="filters-title">
+                <div class="fr-input-group">
+                    <label class="fr-label" for="drm_id">Clé d'échange LRM</label>
+                    <input class="fr-input" type="text" id="drm_id" name="drm_id"
+                           placeholder="Ex : 9101"
+                           autocomplete="off"
+                           aria-describedby="drm_id-hint">
+                    <span id="drm_id-hint" class="sr-only">Saisir tout ou partie de la clé LRM</span>
+                </div>
+                <div class="fr-input-group">
+                    <label class="fr-label" for="date_start">Créé à partir du</label>
+                    <input class="fr-input" type="date" id="date_start" name="date_start"
+                           aria-describedby="date-range-hint">
+                </div>
+                <div class="fr-input-group">
+                    <label class="fr-label" for="date_end">Jusqu'au</label>
+                    <input class="fr-input" type="date" id="date_end" name="date_end"
+                           aria-describedby="date-range-hint">
+                </div>
+                <div class="fr-input-group">
+                    <label class="fr-label" for="practioner_nat_id">RPPS / FINESS / SIRET</label>
+                    <input class="fr-input" type="text" id="practioner_nat_id" name="practioner_nat_id"
+                           placeholder="Identifiant national"
+                           autocomplete="off"
+                           inputmode="numeric">
+                </div>
+                <div class="fr-input-group">
+                    <label class="fr-label" for="filter_name">Effecteur / Structure</label>
+                    <input class="fr-input" type="text" id="filter_name" name="filter_name"
+                           placeholder="Nom du praticien ou de la structure"
+                           autocomplete="off">
+                </div>
+                <div class="fr-input-group">
+                    <label class="fr-label" for="filter_status">Statut</label>
+                    <select class="fr-select" id="filter_status" name="filter_status"
+                            aria-describedby="filter_status-hint">
+                        <option value="">Tous les statuts</option>
+                        <option value="RDV Honoré">RDV Honoré</option>
+                        <option value="RDV pris et confirmé">RDV pris et confirmé</option>
+                        <option value="RDV annulé">RDV annulé</option>
+                        <option value="RDV en attente">RDV en attente</option>
+                    </select>
+                    <span id="filter_status-hint" class="sr-only">Filtrer par statut du rendez-vous</span>
+                </div>
+            </div>
+            <span id="date-range-hint" class="sr-only">Définir une plage de dates de création</span>
+            <div class="filters-actions">
+                <button class="fr-btn fr-btn--secondary" id="reset_filter" name="reset_filter" type="button"
+                        aria-label="Réinitialiser tous les filtres">
+                    <i class="ti ti-refresh" aria-hidden="true"></i>
+                    Réinitialiser
+                </button>
+                <button class="fr-btn fr-btn--primary" id="search_filter" name="search_filter" type="button"
+                        aria-label="Lancer la recherche avec les filtres sélectionnés">
+                    <i class="ti ti-search" aria-hidden="true"></i>
+                    Rechercher
+                </button>
+            </div>
+        </section>
+
+        <!-- ── Tableau ─────────────────────────────────────────────── -->
+        <section id="div_table" class="fr-card" aria-labelledby="table-title">
+
+            <div class="table-header">
+                <h2 id="table-title" class="table-title">
+                    Rendez-vous
+                    <span class="fr-badge fr-badge--count" id="totalCount" aria-live="polite" aria-atomic="true">0 résultat</span>
+                </h2>
+            </div>
+
+            <div role="region" aria-label="Tableau des rendez-vous" tabindex="0">
+                <table aria-labelledby="table-title" aria-describedby="table-caption">
+                    <caption id="table-caption" class="sr-only">
+                        Liste des rendez-vous pris et confirmés par les effecteurs de soins.
+                        Cliquez sur un en-tête de colonne pour trier, ou sur une ligne pour voir les détails.
+                    </caption>
+                    <thead>
+                        <tr>
+                            <th scope="col" data-col="drm" aria-sort="none" tabindex="0"
+                                role="columnheader"
+                                aria-label="Clé LRM, cliquez pour trier">
+                                Clé LRM <span class="sort-arrow" id="sort-drm" aria-hidden="true">↕</span>
+                            </th>
+                            <th scope="col" data-col="source" aria-sort="none" tabindex="0"
+                                aria-label="Source, cliquez pour trier">
+                                Source <span class="sort-arrow" id="sort-source" aria-hidden="true">↕</span>
+                            </th>
+                            <th scope="col" data-col="created" aria-sort="none" tabindex="0"
+                                aria-label="Date d'enregistrement, cliquez pour trier">
+                                Enregistrement <span class="sort-arrow" id="sort-created" aria-hidden="true">↕</span>
+                            </th>
+                            <th scope="col" data-col="date" aria-sort="none" tabindex="0"
+                                aria-label="Date du RDV prévu, cliquez pour trier">
+                                RDV prévu <span class="sort-arrow" id="sort-date" aria-hidden="true">↕</span>
+                            </th>
+                            <th scope="col">Effecteur / Structure</th>
+                            <th scope="col" data-col="specialty" aria-sort="none" tabindex="0"
+                                aria-label="Spécialité, cliquez pour trier">
+                                Spécialité <span class="sort-arrow" id="sort-specialty" aria-hidden="true">↕</span>
+                            </th>
+                            <th scope="col" data-col="status" aria-sort="none" tabindex="0"
+                                aria-label="Statut, cliquez pour trier">
+                                Statut <span class="sort-arrow" id="sort-status" aria-hidden="true">↕</span>
+                            </th>
+                            <th scope="col" data-col="territory" aria-sort="none" tabindex="0"
+                                aria-label="Territoire SAS, cliquez pour trier">
+                                Territoire <span class="sort-arrow" id="sort-territory" aria-hidden="true">↕</span>
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Rempli dynamiquement par appointment_management.js -->
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- État vide -->
+            <div id="emptyState" class="empty-state" style="display:none" role="alert">
+                <i class="ti ti-search-off" aria-hidden="true"></i>
+                <p>Aucun rendez-vous ne correspond aux critères de recherche.</p>
+            </div>
+
+            <!-- ── Pagination ──────────────────────────────────────── -->
+            <div class="fr-pagination">
+                <div class="pag-size">
+                    <label for="pageSizeSelect">Lignes par page :</label>
+                    <select id="pageSizeSelect" class="fr-select fr-select--sm"
+                            aria-label="Nombre de lignes par page">
+                        <option value="5">5</option>
+                        <option value="10" selected>10</option>
+                        <option value="20">20</option>
+                    </select>
+                </div>
+                <span class="pag-info" id="pagInfo" aria-live="polite" aria-atomic="true"></span>
+                <nav id="pagControls" aria-label="Pagination des rendez-vous"></nav>
+            </div>
+
+        </section>
+    </main>
+
+    <!-- ── Modale ──────────────────────────────────────────────────── -->
+    <div id="appointmentModal"
+         class="modal"
+         role="dialog"
+         aria-modal="true"
+         aria-labelledby="modalMainTitle"
+         aria-describedby="modalContent">
+        <div class="modal-content">
+            <button class="modal-close"
+                    id="modalCloseBtn"
+                    onclick="closeModal()"
+                    aria-label="Fermer les détails du rendez-vous">
+                <i class="ti ti-x" aria-hidden="true"></i>
+            </button>
+            <div id="modalContent" tabindex="-1"></div>
+        </div>
+    </div>
+
+    <script src="appointment_management.js"></script>
 </body>
-
-<!-- Modal Structure -->
-<div id="appointmentModal" class="modal">
-    <div class="modal-content">
-        <span class="close" onclick="closeModal()">&times;</span>
-        <div id="modalContent"></div>
-    </div>
-</div>
-
-
-<script src="appointment_management.js"></script>
-
 </html>
-
-
-
-<!-- Add CSS for the modal & table -->
-<style>
-.modal {
-    display: none;
-    position: fixed;
-    z-index: 1;
-    left: 0;
-    top: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.4);
-    overflow-y: scroll;
-}
-
-.modal-content {
-    background-color: white;
-    margin: 10% auto;
-    padding: 20px;
-    border-radius: 10px;
-    width: 50%;
-    text-align: center;
-
-}
-
-.modal-table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-top: 10px;
-}
-
-.modal-table th, .modal-table td {
-    border: 1px solid #ddd;
-    padding: 8px;
-    text-align: left;
-}
-
-.modal-table th {
-    font-weight: bold;
-    color: black;
-    background-color: white;
-    width: 20%;
-}
-
-.close-btn {
-    margin-top: 15px;
-    padding: 10px 20px;
-    background-color: red;
-    color: white;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-}
-
-.close-btn:hover {
-    background-color: darkred;
-}
-
-.close {
-    color: red;
-    float: right;
-    font-size: 28px;
-    font-weight: bold;
-    cursor: pointer;
-}
-</style>

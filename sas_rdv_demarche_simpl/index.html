@@ -1,0 +1,369 @@
+```html
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RDV Solidarités - Explorateur API</title>
+
+<style>
+    * {
+        box-sizing: border-box;
+    }
+
+    body {
+        font-family: Arial, Helvetica, sans-serif;
+        margin: 0;
+        padding: 20px;
+        background: #f5f7fa;
+    }
+
+    h1 {
+        margin-top: 0;
+    }
+
+    .toolbar {
+        background: white;
+        padding: 16px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+        box-shadow: 0 2px 8px rgba(0,0,0,.08);
+    }
+
+    button {
+        cursor: pointer;
+        padding: 10px 16px;
+        border: none;
+        border-radius: 6px;
+        background: #0063cb;
+        color: white;
+        font-weight: bold;
+    }
+
+    button:hover {
+        opacity: .9;
+    }
+
+    .organisation {
+        background: white;
+        margin-bottom: 16px;
+        border-radius: 8px;
+        padding: 16px;
+        box-shadow: 0 2px 8px rgba(0,0,0,.08);
+    }
+
+    .organisation h2 {
+        margin-top: 0;
+    }
+
+    .badge {
+        display: inline-block;
+        padding: 4px 8px;
+        border-radius: 12px;
+        background: #edf2ff;
+        font-size: 12px;
+        margin-right: 8px;
+    }
+
+    .section {
+        margin-top: 12px;
+        padding: 12px;
+        background: #fafafa;
+        border-radius: 6px;
+    }
+
+    .loading {
+        color: #666;
+    }
+
+    .error {
+        color: red;
+        font-weight: bold;
+    }
+
+    pre {
+        background: #111;
+        color: #ddd;
+        padding: 12px;
+        overflow: auto;
+        border-radius: 6px;
+        max-height: 300px;
+    }
+</style>
+</head>
+
+<body>
+
+<h1>RDV Solidarités - Dashboard API</h1>
+
+<div class="toolbar">
+    <button onclick="loadOrganisations()">
+        Charger les organisations
+    </button>
+</div>
+
+<div id="app"></div>
+
+<script>
+
+const API_BASE = "https://www.rdv-solidarites.fr/api/v1";
+
+/*
+ * Remplacer par vos identifiants
+ */
+const AUTH = {
+    accessToken: "SFYBngO55ImjD1HOcv-ivQ",
+    client: "Z6EihQAY9NWsZByfZ47i_Q",
+    uid: "martine@demo.rdv-solidarites.fr"
+};
+
+async function api(path) {
+
+    const response = await fetch(
+        API_BASE + path,
+        {
+            method: "GET",
+            headers: {
+                "Accept": "application/json",
+                "access-token": AUTH.accessToken,
+                "client": AUTH.client,
+                "uid": AUTH.uid
+            }
+        }
+    );
+
+    if (!response.ok) {
+
+        let body = "";
+
+        try {
+            body = await response.text();
+        } catch (_) {}
+
+        throw new Error(
+            `HTTP ${response.status}\n${body}`
+        );
+    }
+
+    return response.json();
+}
+
+async function getAllOrganisations() {
+
+    let page = 1;
+
+    let organisations = [];
+
+    while (true) {
+
+        const data =
+            await api(`/organisations?page=${page}`);
+
+        organisations.push(
+            ...data.organisations
+        );
+
+        if (!data.meta.next_page) {
+            break;
+        }
+
+        page = data.meta.next_page;
+    }
+
+    return organisations;
+}
+
+/*
+ * MOCKS
+ * À remplacer dès que vous me donnez
+ * les vrais endpoints.
+ */
+async function getLieux(organisationId) {
+
+    return [
+        {
+            id: 1,
+            name: "Lieu principal",
+            address: "Adresse inconnue"
+        }
+    ];
+}
+
+async function getDisponibilites(lieuId) {
+
+    return [
+        {
+            date: "2026-06-10 09:00",
+            motif: "RSA"
+        },
+        {
+            date: "2026-06-10 10:00",
+            motif: "Logement"
+        }
+    ];
+}
+
+async function getRdvs(lieuId) {
+
+    return [
+        {
+            date: "2026-06-08 14:00",
+            motif: "RSA",
+            status: "confirmed"
+        },
+        {
+            date: "2026-06-09 15:00",
+            motif: "Logement",
+            status: "cancelled"
+        }
+    ];
+}
+
+async function loadOrganisations() {
+
+    const app = document.getElementById("app");
+
+    app.innerHTML =
+        '<div class="loading">Chargement...</div>';
+
+    try {
+
+        const organisations =
+            await getAllOrganisations();
+
+        app.innerHTML = "";
+
+        for (const org of organisations) {
+
+            const orgDiv =
+                document.createElement("div");
+
+            orgDiv.className =
+                "organisation";
+
+            orgDiv.innerHTML = `
+                <h2>${org.name}</h2>
+
+                <div class="badge">
+                    ID ${org.id}
+                </div>
+
+                <div class="badge">
+                    ${org.verticale}
+                </div>
+
+                <div class="section">
+                    Chargement des lieux...
+                </div>
+            `;
+
+            app.appendChild(orgDiv);
+
+            const section =
+                orgDiv.querySelector(".section");
+
+            const lieux =
+                await getLieux(org.id);
+
+            let html = "";
+
+            for (const lieu of lieux) {
+
+                const dispos =
+                    await getDisponibilites(
+                        lieu.id
+                    );
+
+                const rdvs =
+                    await getRdvs(
+                        lieu.id
+                    );
+
+                html += `
+                    <div style="
+                        border:1px solid #ddd;
+                        padding:12px;
+                        margin-bottom:12px;
+                        border-radius:6px;
+                    ">
+
+                        <h3>
+                            ${lieu.name}
+                        </h3>
+
+                        <div>
+                            ${lieu.address}
+                        </div>
+
+                        <h4>
+                            Disponibilités
+                        </h4>
+
+                        <ul>
+                            ${dispos.map(d => `
+                                <li>
+                                    ${d.date}
+                                    -
+                                    ${d.motif}
+                                </li>
+                            `).join("")}
+                        </ul>
+
+                        <h4>
+                            Rendez-vous
+                        </h4>
+
+                        <ul>
+                            ${rdvs.map(r => `
+                                <li>
+                                    ${r.date}
+                                    -
+                                    ${r.motif}
+                                    -
+                                    <strong>
+                                        ${r.status}
+                                    </strong>
+                                </li>
+                            `).join("")}
+                        </ul>
+
+                        <details>
+                            <summary>
+                                Debug JSON
+                            </summary>
+
+                            <pre>${JSON.stringify(
+                                {
+                                    lieu,
+                                    disponibilites: dispos,
+                                    rdvs
+                                },
+                                null,
+                                2
+                            )}</pre>
+                        </details>
+
+                    </div>
+                `;
+            }
+
+            section.innerHTML = html;
+        }
+
+    } catch (error) {
+
+        app.innerHTML = `
+            <div class="error">
+                ${error.message}
+            </div>
+        `;
+    }
+}
+
+loadOrganisations();
+
+</script>
+
+</body>
+</html>
+```
