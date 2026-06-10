@@ -57,40 +57,8 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     }
 
-    // ── Créneaux ───────────────────────────────────────────────────────────
-    const slotsContainer = $('panel-slots');
-    const noSlots        = $('panel-no-slots');
-    slotsContainer.innerHTML = '';
-
-    if (data.slots?.length) {
-      noSlots.hidden = true;
-      data.slots.forEach(time => {
-        const tag = document.createElement('span');
-        tag.className   = 'fr-tag fr-tag--sm fr-mr-1w fr-mb-1w';
-        tag.textContent = time;
-        slotsContainer.appendChild(tag);
-      });
-    } else {
-      noSlots.hidden = false;
-    }
-
-    // ── Infos pratiques ────────────────────────────────────────────────────
-    $('panel-access').innerHTML =
-      `<span class="fr-icon-wheelchair-line fr-mr-1w" aria-hidden="true"></span> ${data.access || '—'}`;
-    $('panel-tariffs').innerHTML =
-      `<span class="fr-icon-money-euro-circle-line fr-mr-1w" aria-hidden="true"></span> ${data.tariffs || '—'}`;
-
-    // ── Langues (optionnel) ────────────────────────────────────────────────
-    const langEl = $('panel-languages');
-    if (data.languages?.length) {
-      langEl.hidden   = false;
-      langEl.innerHTML = `<span class="fr-icon-global-line fr-mr-1w" aria-hidden="true"></span> Langues : ${data.languages.join(', ')}`;
-    } else {
-      langEl.hidden = true;
-    }
-
     // ── Note / PS ──────────────────────────────────────────────────────────
-    $('panel-ps').textContent = data.ps || 'Aucune information complémentaire.';
+    // (section supprimée — infos pratiques retirées de l'interface)
   }
 
   // 🚪 2. Ouvrir le panneau

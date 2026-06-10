@@ -704,3 +704,299 @@
         .sas-results-map    { position: static; height: 300px; }
         .map-slider-widget  { max-width: 100%; }
       }
+/* ═══════════════════════════════════════════════════════════════════════════
+   RAFFINEMENTS VISUELS — Surcharge légère post-DSFR
+   ─ Moins de masse, plus d'air, typographie plus fine
+   ─ Accessibilité DSFR/RGAA conservée intégralement
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ── Barre de recherche principale ──────────────────────────────────────── */
+#search-section {
+  background: #f5f5fe !important; /* bleu très désaturé — plus doux que blue-france */
+  border-bottom: 1px solid var(--border-default-blue-france, #cacafb);
+  padding-top: 1.25rem !important;
+  padding-bottom: 1.25rem !important;
+}
+
+#search-section .fr-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-mention-grey);
+  margin-bottom: 0.3rem;
+}
+
+#search-section .fr-input {
+  border-width: 0 0 1px 0 !important;  /* underline uniquement */
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  font-size: 0.95rem;
+  padding-left: 0 !important;
+  padding-bottom: 0.4rem !important;
+}
+
+#search-section .fr-input:focus {
+  outline: none !important;
+  border-bottom-color: var(--border-action-high-blue-france) !important;
+  box-shadow: 0 1px 0 0 var(--border-action-high-blue-france) !important;
+}
+
+#search-section #search-submit {
+  font-size: 0.85rem;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  padding: 0.55rem 1rem;
+  border-radius: 2px;
+}
+
+/* ── Barre de filtres ────────────────────────────────────────────────────── */
+#filters-section {
+  background: #ffffff;
+  border-bottom: 1px solid var(--border-default-grey);
+  padding-top: 0.6rem !important;
+  padding-bottom: 0.6rem !important;
+}
+
+#filters-section .fr-label {
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--text-mention-grey);
+  margin-bottom: 0.2rem;
+}
+
+#filters-section .fr-select--multiple {
+  font-size: 0.8rem;
+  min-height: 2rem;
+  border-width: 1px !important;
+  border-color: var(--border-default-grey) !important;
+  border-radius: 2px !important;
+  background: #fff;
+  color: var(--text-label-grey);
+}
+
+#filters-section #reset-filters {
+  font-size: 0.75rem;
+  color: var(--text-mention-grey);
+}
+
+/* ── Cards résultats ─────────────────────────────────────────────────────── */
+.fr-card {
+  border-radius: 3px !important; /* moins arrondi = plus rigoureux */
+}
+
+/* Accent border plus fine et plus subtile */
+.fr-card--org {
+  border-left: 2px solid var(--border-action-high-blue-france) !important;
+}
+
+.fr-card--org[data-org-type="SOS Médecins"] {
+  border-left-color: #6a0dad !important;
+}
+
+.fr-card--org[data-org-type="Centre de santé"] {
+  border-left-color: #009081 !important;
+}
+
+.fr-card--org[data-org-type="Maison médicale de garde"] {
+  border-left-color: #003189 !important;
+}
+
+/* Hover plus léger */
+.fr-card:hover {
+  transform: none !important; /* supprime le translateY qui peut faire sursauter */
+  box-shadow: 0 1px 6px rgba(0, 0, 145, 0.07) !important;
+  background-color: var(--background-alt-grey-hover) !important;
+}
+
+/* Titre de card */
+.fr-card__title.js-open-panel {
+  font-size: 0.9rem !important;
+  font-weight: 600 !important;
+  letter-spacing: -0.01em;
+  line-height: 1.3 !important;
+}
+
+/* ── Panneau latéral ─────────────────────────────────────────────────────── */
+
+/* Header : supprime le fond gris massif, utilise un liseré bas */
+.side-panel__header {
+  background: #ffffff !important;
+  border-bottom: 1px solid var(--border-default-grey) !important;
+  padding: 1.25rem 1.5rem 1rem !important;
+}
+
+.side-panel__header .fr-btn--close {
+  font-size: 0.75rem;
+  letter-spacing: 0.04em;
+  font-weight: 600;
+  color: var(--text-mention-grey);
+  opacity: 0.7;
+}
+
+.side-panel__header .fr-btn--close:hover {
+  opacity: 1;
+  background: none !important;
+  color: var(--text-label-grey);
+}
+
+#panel-title {
+  font-size: 1.05rem !important;
+  font-weight: 700 !important;
+  letter-spacing: -0.02em;
+  margin-bottom: 0.2rem !important;
+  margin-top: 0.75rem !important;
+  color: var(--text-title-grey);
+}
+
+#panel-specialty {
+  font-size: 0.78rem !important;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-mention-grey) !important;
+}
+
+/* Body du panneau */
+.side-panel__body {
+  padding: 0 !important; /* Les sections gèrent leur propre espacement */
+}
+
+/* Sections du panneau : diviseurs fins au lieu de cards imbriquées */
+.side-panel__body .fr-card.fr-card--no-border {
+  border: none !important;
+  border-radius: 0 !important;
+  border-bottom: 1px solid var(--border-default-grey) !important;
+  box-shadow: none !important;
+  background: transparent !important;
+  margin-bottom: 0 !important;
+}
+
+.side-panel__body .fr-card.fr-card--no-border:hover {
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+.side-panel__body .fr-card__body {
+  padding: 1rem 1.5rem !important;
+}
+
+/* Titres de section dans le panneau : caption style */
+.side-panel__body .fr-h5 {
+  font-size: 0.68rem !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.08em !important;
+  text-transform: uppercase !important;
+  color: var(--text-mention-grey) !important;
+  margin-bottom: 0.75rem !important;
+}
+
+/* Texte courant dans le panneau */
+.side-panel__body .fr-text--sm {
+  font-size: 0.85rem !important;
+  line-height: 1.5 !important;
+}
+
+/* Inputs itinéraire plus fins */
+.side-panel__body .fr-input {
+  font-size: 0.85rem;
+  min-height: 2.25rem;
+  border-width: 0 0 1px 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  padding-left: 0 !important;
+}
+
+.side-panel__body .fr-input:focus {
+  outline: none !important;
+  border-bottom-color: var(--border-action-high-blue-france) !important;
+  box-shadow: 0 1px 0 0 var(--border-action-high-blue-france) !important;
+}
+
+.side-panel__body .fr-label {
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--text-mention-grey);
+}
+
+.side-panel__body .fr-select {
+  font-size: 0.82rem;
+  min-height: 2.25rem;
+  border-radius: 2px !important;
+}
+
+/* Bouton calculer : contour discret */
+#panel-itinerary-btn {
+  font-size: 0.78rem !important;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  padding: 0.4rem 0.9rem !important;
+  border-radius: 2px !important;
+  border-width: 1px !important;
+}
+
+/* Résumé itinéraire */
+#panel-itinerary-summary {
+  font-size: 0.82rem !important;
+  color: var(--text-label-grey);
+  letter-spacing: 0.01em;
+}
+
+/* Bouton RDV SAS */
+#practitioner-panel .fr-btn--secondary.fr-icon-calendar-line {
+  font-size: 0.8rem;
+  font-weight: 600;
+  border-width: 1px !important;
+  border-radius: 2px !important;
+  letter-spacing: 0.03em;
+  padding: 0.5rem 1rem !important;
+}
+
+/* Bouton Orientation — bas du panneau */
+#panel-book-btn {
+  margin: 1rem 1.5rem;
+  width: calc(100% - 3rem) !important;
+  border-radius: 2px !important;
+  font-size: 0.85rem;
+  letter-spacing: 0.03em;
+}
+
+/* ── Résumé résultats ────────────────────────────────────────────────────── */
+#results-count {
+  font-weight: 600;
+  font-size: 0.85rem;
+  color: var(--text-mention-grey);
+  letter-spacing: 0.02em;
+}
+
+/* ── Widget carte / slider ───────────────────────────────────────────────── */
+.map-slider-widget {
+  border-radius: 2px !important;
+  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.14) !important;
+  padding: 8px 12px 10px !important;
+}
+
+.map-slider-label {
+  font-size: 10px !important;
+  letter-spacing: 0.06em !important;
+  font-weight: 600 !important;
+}
+
+.map-rayon-pt {
+  border-radius: 2px !important;
+  font-size: 10px !important;
+  padding: 2px 8px !important;
+}
+
+/* ── Badges DSFR plus légers ─────────────────────────────────────────────── */
+.fr-badge {
+  font-size: 0.68rem !important;
+  letter-spacing: 0.04em;
+  font-weight: 600;
+}

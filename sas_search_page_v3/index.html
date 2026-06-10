@@ -87,6 +87,47 @@
         </div>
     </header>
 
+    <!-- ===== BARRE DE RECHERCHE PRINCIPALE ===== -->
+    <section id="search-section" class="fr-py-3w" aria-label="Recherche de professionnels de santé">
+      <div class="fr-container">
+        <div class="fr-grid-row fr-grid-row--gutters fr-grid-row--middle">
+          <div class="fr-col-12 fr-col-md-5">
+            <div class="fr-input-group fr-mb-0">
+              <label class="fr-label" for="search-specialty">
+                <span class="fr-icon-stethoscope-line fr-mr-1w" aria-hidden="true"></span>Spécialité
+              </label>
+              <input class="fr-input"
+                     type="search"
+                     id="search-specialty"
+                     name="search-specialty"
+                     placeholder="Ex : Médecin généraliste, Cardiologue…"
+                     autocomplete="off">
+            </div>
+          </div>
+          <div class="fr-col-12 fr-col-md-5">
+            <div class="fr-input-group fr-mb-0">
+              <label class="fr-label" for="search-location">
+                <span class="fr-icon-map-pin-2-line fr-mr-1w" aria-hidden="true"></span>Localisation
+              </label>
+              <input class="fr-input"
+                     type="search"
+                     id="search-location"
+                     name="search-location"
+                     value="Paris"
+                     autocomplete="off">
+            </div>
+          </div>
+          <div class="fr-col-12 fr-col-md-2 fr-mt-md-5w">
+            <button class="fr-btn fr-btn--icon-left fr-icon-search-line fr-btn--full-width"
+                    id="search-submit"
+                    type="button">
+              Rechercher
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
     <!-- ===== BARRE DE FILTRES COMPACTE ===== -->
     <section id="filters-section" class="fr-py-2w" aria-labelledby="filters-heading">
       <div class="fr-container">
@@ -336,7 +377,7 @@
            hidden>
       
       <!-- Header -->
-      <div class="side-panel__header fr-p-3w fr-background-alt--grey">
+      <div class="side-panel__header">
         <button class="fr-btn--close fr-btn"
                 aria-controls="practitioner-panel"
                 title="Fermer le panneau">
@@ -348,7 +389,7 @@
       </div>
 
       <!-- Body scrollable -->
-      <div class="side-panel__body fr-p-3w">
+      <div class="side-panel__body">
 
         <!-- Contact & Adresse -->
         <div class="fr-card fr-card--no-border fr-mb-3w">
@@ -368,7 +409,53 @@
             <p id="panel-comment" class="fr-text--sm fr-text--default-grey fr-mb-0"></p>
           </div>
         </div>
+<!-- ── Itinéraire ── -->
+<div class="fr-card fr-card--no-border fr-mb-3w">
+  <div class="fr-card__body">
+    <h3 class="fr-h5 fr-mb-2w">Itinéraire</h3>
 
+    <!-- Adresse patient -->
+    <div class="fr-input-group fr-mb-1w">
+      <label class="fr-label" for="panel-patient-address">
+        Adresse de départ
+      </label>
+      <input class="fr-input"
+             type="text"
+             id="panel-patient-address"
+             placeholder="Ex : 15 rue de Rivoli, 75001 Paris">
+    </div>
+
+    <!-- Mode de transport -->
+    <div class="fr-select-group fr-mb-2w">
+      <label class="fr-label" for="panel-transport-mode">
+        Mode de transport
+      </label>
+      <select class="fr-select" id="panel-transport-mode">
+        <option value="car">Voiture</option>
+        <option value="bike">Vélo</option>
+        <option value="foot">À pied</option>
+      </select>
+    </div>
+
+    <!-- Bouton -->
+    <button class="fr-btn fr-btn--secondary fr-btn--sm fr-mb-2w"
+            id="panel-itinerary-btn">
+      Calculer l'itinéraire
+    </button>
+
+    <!-- Carte Leaflet -->
+    <div id="panel-map"
+         style="height:340px; max-width:380px; border-radius:4px; overflow:hidden; display:none;">
+    </div>
+
+    <!-- Résumé distance / durée -->
+    <div id="panel-itinerary-summary"
+         class="fr-text--sm fr-mt-1w"
+         style="display:none;">
+    </div>
+
+  </div>
+</div>
         <!-- Activité opérationnelle & Actes spécifiques -->
         <div class="fr-card fr-card--no-border fr-mb-3w">
           <div class="fr-card__body">
@@ -380,30 +467,16 @@
           </div>
         </div>
 
-        <!-- Créneaux disponibles -->
-        <div class="fr-card fr-card--no-border fr-mb-3w">
-          <div class="fr-card__body">
-            <h3 class="fr-h5 fr-mb-2w">Disponibilités</h3>
-            <div id="panel-slots" class="fr-tags-group fr-mb-1w"></div>
-            <p id="panel-no-slots" class="fr-text--sm fr-text--mention-grey" hidden>
-              Aucun créneau disponible pour le moment.
-            </p>
-          </div>
-        </div>
 
-        <!-- Infos pratiques -->
+        <!-- Lien interface RDV SAS -->
         <div class="fr-card fr-card--no-border fr-mb-3w">
           <div class="fr-card__body">
-            <h3 class="fr-h5 fr-mb-2w">Informations pratiques</h3>
-            <ul class="fr-list fr-list--no-bullet fr-text--sm">
-              <li id="panel-access" class="fr-mb-1w"></li>
-              <li id="panel-tariffs" class="fr-mb-1w"></li>
-              <li id="panel-languages" class="fr-mb-1w" hidden></li>
-            </ul>
-            <div class="fr-alert fr-alert--info fr-alert--sm fr-mt-2w">
-              <h4 class="fr-alert__title">Note importante</h4>
-              <p id="panel-ps" class="fr-mb-0"></p>
-            </div>
+            <a href="http://localhost:8000/sas_appointment_evolution/sas_appointment_interface.html"
+               class="fr-btn fr-btn--secondary fr-btn--icon-left fr-icon-calendar-line"
+               target="_blank"
+               rel="noopener noreferrer">
+              Voir le suivi des rendez-vous SAS
+            </a>
           </div>
         </div>
 
@@ -508,9 +581,201 @@
 })();
 </script>
 
+<!-- Sync localisation → adresse départ itinéraire -->
+<script>
+(function () {
+  function syncLocationToPanel() {
+    const locInput     = document.getElementById('search-location');
+    const patientInput = document.getElementById('panel-patient-address');
+    if (locInput && patientInput) {
+      const val = locInput.value.trim();
+      if (val) patientInput.value = val;
+    }
+  }
+
+  /* Sync à l'ouverture de chaque card (délégation déjà en place dans panel.js) */
+  document.addEventListener('click', function (e) {
+    if (e.target.closest('.js-open-panel')) {
+      /* Délai pour que panel.js ait fini de populater et que l'adresse soit présente */
+      setTimeout(function () {
+        syncLocationToPanel();
+        if (typeof window._panelCalculateItinerary === 'function') {
+          window._panelCalculateItinerary();
+        }
+      }, 120);
+    }
+  });
+
+  /* Sync en temps réel quand l'utilisateur change la localisation */
+  document.addEventListener('DOMContentLoaded', function () {
+    document.getElementById('search-location')
+      ?.addEventListener('input', syncLocationToPanel);
+  });
+})();
+</script>
+
 <!-- Scripts fonctionnels -->
 <script type="module" src="./use_cases_health_offers/services_js/panel.js"></script>
 <script type="module" src="./use_cases_health_offers/services_js/filters.js"></script>
+
+<!-- Leaflet CSS – chargé une seule fois même si la lib est déjà dans la page -->
+<link rel="stylesheet"
+      href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+(function () {
+
+  /* ─── état module ─── */
+  let _map       = null;   // instance Leaflet
+  let _route     = null;   // polyline courante
+  let _initiated = false;  // carte déjà initialisée ?
+
+  /* ─── 1. Géocodage IGN ─── */
+  async function geocode(address) {
+    const url =
+      'https://data.geopf.fr/geocodage/search?q=' +
+      encodeURIComponent(address) + '&limit=1';
+    const res  = await fetch(url);
+    const data = await res.json();
+    if (!data.features?.length)
+      throw new Error('Adresse introuvable : ' + address);
+    return data.features[0].geometry.coordinates; // [lon, lat]
+  }
+
+  /* ─── 2. Navigation IGN ─── */
+  async function getItinerary(sLon, sLat, eLon, eLat, profile) {
+    const profileMap = { car: 'car', bike: 'bicycle', foot: 'pedestrian' };
+    const p   = profileMap[profile] || 'car';
+    const url = 'https://data.geopf.fr/navigation/itineraire?' +
+      new URLSearchParams({
+        resource    : 'bdtopo-osrm',
+        start       : sLon + ',' + sLat,
+        end         : eLon + ',' + eLat,
+        profile     : p,
+        optimization: 'fastest',
+        getSteps    : 'true',
+        getBbox     : 'true',
+        distanceUnit: 'kilometer',
+        timeUnit    : 'minute',
+        crs         : 'EPSG:4326'
+      });
+    const res = await fetch(url);
+    if (!res.ok) throw new Error('Erreur API navigation (code ' + res.status + ')');
+    return res.json();
+  }
+
+  /* ─── 3. Init carte (paresseuse) ─── */
+  function initMap() {
+    if (_initiated) return;
+    _initiated = true;
+
+    _map = L.map('panel-map').setView([46.6, 2.3], 6);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '© OpenStreetMap'
+    }).addTo(_map);
+  }
+
+  /* ─── 4. Étapes HTML ─── */
+  function buildStepsHtml(portions) {
+    if (!portions?.length || !portions[0].steps) return '';
+
+    const tr = {
+      depart            : 'Départ',
+      turn              : 'Tourner',
+      continue          : 'Continuer',
+      'end of road'     : 'Fin de la route',
+      'new name'        : 'Continuer (nouveau nom)',
+      arrive            : 'Arrivée',
+      'fork slight right': 'Légèrement à droite',
+      'fork slight left' : 'Légèrement à gauche'
+    };
+    const trMod = { left: 'à gauche', right: 'à droite', straight: 'tout droit' };
+
+    return portions[0].steps.map(function (step, i) {
+      const instr   = tr[step.instruction?.type]   || step.instruction?.type   || '—';
+      const mod     = trMod[step.instruction?.modifier] || '';
+      const street  = step.attributes?.name?.nom_1_gauche
+                   || step.attributes?.name?.nom_1_droite
+                   || 'Nom de rue inconnu';
+      const dist    = (step.distance * 1000).toFixed(0);
+      const dur     = (step.duration * 60).toFixed(1);
+      return '<div style="padding:5px 0;border-bottom:1px solid #e0e0e0">'
+           + '<strong>' + (i + 1) + '. ' + instr + (mod ? ' ' + mod : '') + '</strong><br>'
+           + '➤ ' + street + '<br>'
+           + '<em>' + dist + ' m — ' + dur + ' min</em>'
+           + '</div>';
+    }).join('');
+  }
+
+  /* ─── 5. Handler bouton ─── */
+  async function onCalculate() {
+    const btn          = document.getElementById('panel-itinerary-btn');
+    const offerAddress = (document.getElementById('panel-address')?.textContent || '').replace(/📍\s*/,'').trim();
+    const patientAddr  = (document.getElementById('panel-patient-address')?.value || '').trim();
+    const profile      = document.getElementById('panel-transport-mode')?.value || 'car';
+    const mapEl        = document.getElementById('panel-map');
+    const summaryEl    = document.getElementById('panel-itinerary-summary');
+
+    if (!offerAddress || !patientAddr) return; /* silencieux à l'auto-ouverture */
+
+    btn.setAttribute('disabled', '');
+    btn.textContent = 'Calcul en cours…';
+    summaryEl.style.display = 'none';
+
+    try {
+      const [sLon, sLat] = await geocode(offerAddress);
+      const [eLon, eLat] = await geocode(patientAddr);
+      const route        = await getItinerary(sLon, sLat, eLon, eLat, profile);
+
+      if (!route.geometry?.coordinates) throw new Error('Aucun itinéraire trouvé.');
+
+      /* Afficher la carte */
+      mapEl.style.display = 'block';
+      initMap();
+      setTimeout(function () { _map.invalidateSize(); }, 50);
+
+      /* Tracer la route */
+      if (_route) _map.removeLayer(_route);
+      const coords = route.geometry.coordinates.map(function (c) { return [c[1], c[0]]; });
+      _route = L.polyline(coords, { color: '#0063cb', weight: 4 }).addTo(_map);
+      _map.fitBounds(_route.getBounds(), { padding: [20, 20] });
+
+      /* Résumé */
+      summaryEl.innerHTML =
+        '<span class="fr-icon-road-map-line" aria-hidden="true"></span> '
+        + '<strong>' + route.distance.toFixed(2) + ' km</strong> — '
+        + '<strong>' + route.duration.toFixed(1) + ' min</strong>';
+      summaryEl.style.display = 'block';
+
+    } catch (e) {
+      console.error('[itineraire]', e.message);
+    } finally {
+      btn.removeAttribute('disabled');
+      btn.textContent = 'Calculer l\'itinéraire';
+    }
+  }
+
+  /* Exposé pour le déclenchement automatique à l'ouverture */
+  window._panelCalculateItinerary = onCalculate;
+
+  /* ─── 6. Montage ─── */
+  document.addEventListener('DOMContentLoaded', function () {
+    document.getElementById('panel-itinerary-btn')
+            ?.addEventListener('click', onCalculate);
+  });
+
+  /* ─── 7. Réinitialiser quand le panneau se ferme ─── */
+  document.addEventListener('panel:close', function () {
+    var mapEl = document.getElementById('panel-map');
+    if (mapEl) mapEl.style.display = 'none';
+    var summaryEl = document.getElementById('panel-itinerary-summary');
+    if (summaryEl) { summaryEl.style.display = 'none'; summaryEl.innerHTML = ''; }
+    if (_route && _map) { _map.removeLayer(_route); _route = null; }
+  });
+
+})();
+</script>
 
 </body>
 </html>
