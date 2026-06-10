@@ -1,0 +1,353 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   SAS — Système typographique harmonisé
+   Couvre : cards de résultats, panneau latéral, filtres, slots
+   Base    : DSFR tokens (--text-*, --blue-france-*, --spacing-*)
+   Logique : une échelle fluide en 5 niveaux, clampée entre mobile et desktop
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ───────────────────────────────────────────────────────────────────────────
+   0. ÉCHELLE FLUIDE — tokens réutilisables partout
+   clamp(min, préféré-vw, max) : garantit la lisibilité entre 320 px et 1440 px
+   ─────────────────────────────────────────────────────────────────────────── */
+:root {
+  --sas-text-2xs:  clamp(0.625rem,  1.5vw,  0.6875rem); /*  10–11 px  — mentions, meta        */
+  --sas-text-xs:   clamp(0.6875rem, 1.8vw,  0.75rem);   /*  11–12 px  — labels secondaires    */
+  --sas-text-sm:   clamp(0.75rem,   2vw,    0.875rem);   /*  12–14 px  — corps courant         */
+  --sas-text-base: clamp(0.875rem,  2.2vw,  1rem);       /*  14–16 px  — valeurs, adresses     */
+  --sas-text-md:   clamp(1rem,      2.5vw,  1.125rem);   /*  16–18 px  — titres de section     */
+  --sas-text-lg:   clamp(1.125rem,  3vw,    1.375rem);   /*  18–22 px  — titre principal panel */
+
+  --sas-fw-normal: 400;
+  --sas-fw-medium: 500;
+  --sas-fw-bold:   700;
+
+  --sas-lh-tight:  1.25;
+  --sas-lh-normal: 1.5;
+  --sas-lh-loose:  1.65;
+
+  --sas-color-title:   var(--text-title-grey,   #161616);
+  --sas-color-body:    var(--text-default-grey,  #1e1e1e);
+  --sas-color-muted:   var(--text-mention-grey,  #666666);
+  --sas-color-accent:  var(--blue-france-sun-113-625, #0063cb);
+  --sas-color-subtle:  var(--text-disabled-grey, #929292);
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   1. CARDS DE RÉSULTATS
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.js-practitioner-card .fr-card__title {
+  font-size:     var(--sas-text-md) !important;
+  font-weight:   var(--sas-fw-bold) !important;
+  line-height:   var(--sas-lh-tight) !important;
+  color:         var(--sas-color-accent) !important;
+  cursor:        pointer;
+  margin-bottom: 0 !important;
+}
+
+.js-practitioner-card .fr-card__title:hover {
+  text-decoration: underline;
+}
+
+.js-practitioner-card .fr-text--sm,
+.js-practitioner-card .sas-comment {
+  font-size:   var(--sas-text-sm) !important;
+  line-height: var(--sas-lh-normal) !important;
+  color:       var(--sas-color-body);
+}
+
+.sas-card-org-link {
+  font-size:   var(--sas-text-xs) !important;
+  display:     inline-flex;
+  align-items: center;
+  gap:         0.2rem;
+}
+
+.js-practitioner-card .fr-badge {
+  font-size:      var(--sas-text-2xs) !important;
+  font-weight:    var(--sas-fw-medium) !important;
+  letter-spacing: 0.02em;
+  line-height:    1.2 !important;
+}
+
+.js-practitioner-card .fr-callout p {
+  font-size:   var(--sas-text-sm) !important;
+  font-style:  italic;
+  color:       var(--sas-color-body);
+  line-height: var(--sas-lh-loose) !important;
+  margin:      0;
+}
+
+.sas-btn-full {
+  width:       100%;
+  font-size:   var(--sas-text-xs) !important;
+  font-weight: var(--sas-fw-medium) !important;
+  white-space: normal;
+  text-align:  center;
+  line-height: var(--sas-lh-tight) !important;
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   2. COLONNE CRÉNEAUX (slots)
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.sas-slot-day-label {
+  font-size:      var(--sas-text-xs) !important;
+  font-weight:    var(--sas-fw-bold) !important;
+  line-height:    var(--sas-lh-tight) !important;
+  text-transform: capitalize;
+  color:          var(--sas-color-body);
+  margin-bottom:  0.25rem !important;
+}
+
+.sas-slot-btn {
+  font-size:   var(--sas-text-xs) !important;
+  line-height: var(--sas-lh-tight) !important;
+}
+
+.sas-slot-time {
+  font-size:   var(--sas-text-xs) !important;
+  font-weight: var(--sas-fw-medium) !important;
+}
+
+.sas-slot-counter {
+  font-size: var(--sas-text-2xs) !important;
+  color:     var(--sas-color-muted);
+}
+
+.sas-slot-icon {
+  font-size:   var(--sas-text-2xs) !important;
+  font-weight: var(--sas-fw-bold) !important;
+}
+
+.sas-slot-day-list .fr-text--xs {
+  font-size: var(--sas-text-xs) !important;
+  color:     var(--sas-color-subtle);
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   3. BARRE DE FILTRES
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+#filters-section .fr-label {
+  font-size:     var(--sas-text-xs) !important;
+  font-weight:   var(--sas-fw-medium) !important;
+  color:         var(--sas-color-muted);
+  line-height:   var(--sas-lh-tight) !important;
+  margin-bottom: 0.2rem !important;
+  display:       block;
+}
+
+#filters-section .fr-select {
+  font-size: var(--sas-text-sm) !important;
+}
+
+.filter-panel .fr-label {
+  font-size:   var(--sas-text-sm) !important;
+  font-weight: var(--sas-fw-normal) !important;
+  color:       var(--sas-color-body) !important;
+}
+
+.filter-panel .fr-text--xs {
+  font-size:      var(--sas-text-2xs) !important;
+  font-weight:    var(--sas-fw-bold) !important;
+  color:          var(--sas-color-muted) !important;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+#active-filters .fr-tag {
+  font-size: var(--sas-text-xs) !important;
+}
+
+#reset-filters {
+  font-size: var(--sas-text-sm) !important;
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   4. PANNEAU LATÉRAL
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+#practitioner-panel #panel-title {
+  font-size:     var(--sas-text-lg) !important;
+  font-weight:   var(--sas-fw-bold) !important;
+  line-height:   var(--sas-lh-tight) !important;
+  color:         var(--sas-color-title) !important;
+  margin-bottom: 0.2rem !important;
+}
+
+#practitioner-panel #panel-specialty {
+  font-size:     var(--sas-text-sm) !important;
+  font-weight:   var(--sas-fw-medium) !important;
+  color:         var(--sas-color-muted) !important;
+  line-height:   var(--sas-lh-normal) !important;
+  margin-bottom: 0.5rem !important;
+}
+
+#practitioner-panel #panel-sas-badge .fr-badge {
+  font-size: var(--sas-text-2xs) !important;
+}
+
+/* Titres de section h3 — séparateur visuel léger */
+#practitioner-panel .fr-h5,
+#practitioner-panel h3 {
+  font-size:      var(--sas-text-md) !important;
+  font-weight:    var(--sas-fw-bold) !important;
+  line-height:    var(--sas-lh-tight) !important;
+  color:          var(--sas-color-title) !important;
+  border-bottom:  1px solid var(--border-default-grey, #ddd);
+  padding-bottom: 0.35rem;
+  margin-bottom:  0.75rem !important;
+}
+
+#practitioner-panel .fr-text--bold {
+  font-size:   var(--sas-text-sm) !important;
+  font-weight: var(--sas-fw-bold) !important;
+  color:       var(--sas-color-body) !important;
+  line-height: var(--sas-lh-normal) !important;
+}
+
+#practitioner-panel .fr-text--sm,
+#practitioner-panel #panel-address,
+#practitioner-panel #panel-phone,
+#practitioner-panel #panel-comment,
+#practitioner-panel #panel-operational-activity {
+  font-size:   var(--sas-text-sm) !important;
+  line-height: var(--sas-lh-normal) !important;
+  color:       var(--sas-color-body);
+}
+
+#practitioner-panel #panel-phone a {
+  font-size:   var(--sas-text-base) !important;
+  font-weight: var(--sas-fw-medium) !important;
+  color:       var(--sas-color-accent);
+}
+
+#practitioner-panel .fr-text--mention-grey,
+#practitioner-panel #panel-no-slots,
+#practitioner-panel #panel-ps {
+  font-size:   var(--sas-text-xs) !important;
+  color:       var(--sas-color-muted) !important;
+  line-height: var(--sas-lh-loose) !important;
+}
+
+#practitioner-panel #panel-slots .fr-tag {
+  font-size:   var(--sas-text-sm) !important;
+  font-weight: var(--sas-fw-medium) !important;
+}
+
+#practitioner-panel #panel-specific-acts .fr-tag {
+  font-size: var(--sas-text-xs) !important;
+}
+
+#practitioner-panel #panel-access,
+#practitioner-panel #panel-tariffs,
+#practitioner-panel #panel-languages {
+  font-size:   var(--sas-text-sm) !important;
+  line-height: var(--sas-lh-normal) !important;
+  display:     flex;
+  align-items: flex-start;
+  gap:         0.3rem;
+}
+
+#practitioner-panel .fr-alert__title {
+  font-size:   var(--sas-text-sm) !important;
+  font-weight: var(--sas-fw-bold) !important;
+}
+
+#practitioner-panel #panel-org-link a {
+  font-size: var(--sas-text-xs) !important;
+}
+
+#practitioner-panel #panel-book-btn {
+  font-size:   var(--sas-text-base) !important;
+  font-weight: var(--sas-fw-bold) !important;
+  line-height: var(--sas-lh-tight) !important;
+  width:       100%;
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   5. BLOC ITINÉRAIRE (dans le panneau)
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+#practitioner-panel .fr-label {
+  font-size:     var(--sas-text-xs) !important;
+  font-weight:   var(--sas-fw-medium) !important;
+  color:         var(--sas-color-muted) !important;
+  line-height:   var(--sas-lh-tight) !important;
+  display:       block;
+  margin-bottom: 0.25rem !important;
+}
+
+#practitioner-panel .fr-input,
+#practitioner-panel .fr-select {
+  font-size: var(--sas-text-sm) !important;
+}
+
+#panel-itinerary-btn {
+  font-size:   var(--sas-text-sm) !important;
+  font-weight: var(--sas-fw-medium) !important;
+}
+
+#panel-itinerary-summary {
+  font-size:   var(--sas-text-base) !important;
+  font-weight: var(--sas-fw-medium) !important;
+  color:       var(--sas-color-body);
+  line-height: var(--sas-lh-tight) !important;
+}
+
+#panel-itinerary-steps .fr-accordion__btn {
+  font-size: var(--sas-text-sm) !important;
+}
+
+#panel-steps-list > div {
+  font-size:   var(--sas-text-xs) !important;
+  line-height: var(--sas-lh-loose) !important;
+  color:       var(--sas-color-body);
+}
+
+#panel-steps-list strong {
+  font-size:   var(--sas-text-xs) !important;
+  font-weight: var(--sas-fw-bold) !important;
+  color:       var(--sas-color-title);
+}
+
+#panel-steps-list em {
+  font-size:  var(--sas-text-2xs) !important;
+  color:      var(--sas-color-muted);
+  font-style: normal;
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   6. RESPONSIVE — mobile (< 768 px)
+   ═══════════════════════════════════════════════════════════════════════════ */
+@media (max-width: 767px) {
+
+  .js-practitioner-card .fr-card__title {
+    font-size: var(--sas-text-base) !important;
+  }
+
+  #practitioner-panel #panel-title {
+    font-size: var(--sas-text-md) !important;
+  }
+
+  #practitioner-panel #panel-book-btn {
+    font-size:      var(--sas-text-sm) !important;
+    padding-top:    0.75rem;
+    padding-bottom: 0.75rem;
+  }
+
+  #filters-section .fr-label {
+    font-size: var(--sas-text-2xs) !important;
+  }
+
+  #panel-itinerary-summary {
+    font-size: var(--sas-text-sm) !important;
+  }
+}
