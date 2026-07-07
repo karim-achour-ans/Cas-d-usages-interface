@@ -125,14 +125,21 @@ const SEED_USERS = [
   { id:"u-013", idNational:"SASN-100013", email:"chloe.meyer@effecteur.fr",   nom:"Meyer",   prenom:"Chloé",    roles:["effecteur"],             ville:"67100 Strasbourg",territoire:"SAS-67", actif:true,  rpps:"10011234567", profession:"Médecin", specialite:"Dermatologie" },
   { id:"u-014", idNational:"SASN-100014", email:"lucas.blanc@effecteur.fr",   nom:"Blanc",   prenom:"Lucas",    roles:["effecteur"],             ville:"13008 Marseille", territoire:"SAS-13", actif:true,  rpps:"10012345678", profession:"Médecin", specialite:"Ophtalmologie" },
   { id:"u-015", idNational:"SASN-100015", email:"manon.perrin@effecteur.fr",  nom:"Perrin",  prenom:"Manon",    roles:["effecteur"],             ville:"44100 Nantes",    territoire:"SAS-44", actif:true,  rpps:"10016789012", profession:"Sage-femme", specialite:"Maïeutique" },
+  // Régulateurs OSNP
+  { id:"u-016", idNational:"SASN-100016", email:"regul.osnp.lyon@sas.gouv.fr",   nom:"Nguyen",   prenom:"Linh",     roles:["regulateur_osnp"], ville:"69003 Lyon",      territoire:"SAS-69", actif:true },
+  { id:"u-017", idNational:"SASN-100017", email:"regul.osnp.lille@sas.gouv.fr",  nom:"Dubois",   prenom:"Antoine",  roles:["regulateur_osnp"], ville:"59000 Lille",     territoire:"SAS-59", actif:true },
+  { id:"u-018", idNational:"SASN-100018", email:"regul.osnp.marseille@sas.gouv.fr", nom:"Barbier", prenom:"Léa",   roles:["regulateur_osnp"], ville:"13008 Marseille", territoire:"SAS-13", actif:true },
+  { id:"u-019", idNational:"SASN-100019", email:"regul.osnp.paris2@sas.gouv.fr", nom:"Colin",    prenom:"Maxime",   roles:["regulateur_osnp"], ville:"75015 Paris",     territoire:"SAS-75", actif:false },
+  { id:"u-020", idNational:"SASN-100020", email:"regul.osnp.rennes@sas.gouv.fr", nom:"Guerin",   prenom:"Sophie",   roles:["regulateur_osnp"], ville:"35000 Rennes",    territoire:"SAS-35", actif:true },
 ];
 
 /* ---------------------------------------------------------------- *
  *  ÉTAT
  * ---------------------------------------------------------------- */
-const USERS_KEY = "bo-sas-users-v5";
+const USERS_KEY = "bo-sas-users-v6";
 const TERR_KEY  = "bo-sas-territoires-v1";
 const DEP_KEY   = "bo-sas-departements-v1";
+const SUP_KEY   = "bo-sas-support-v1";
 
 const EMPTY_FILTERS = { q: "", role: "", territoire: "", ville: "", profSpec: "", structure: "", statut: "" };
 
@@ -140,13 +147,18 @@ const state = {
   users: loadUsers(),
   territoires: loadTerritoires(),
   departements: loadDepartements(),
+  support: loadSupport(),
   identityIdx: 0,
-  view: "list",   // "list" | "create" | "territoires" | "departements"
+  view: "list",   // "list" | "create" | "territoires" | "departements" | "support"
   editId: null,   // utilisateur en cours de modification
   filters: { ...EMPTY_FILTERS },
   form: newForm(),
   terr: null,     // { mode:'create'|'edit', code, num, dep, error }
   depSearch: "",  // recherche dans la page Départements
+  depEdits: {},   // { [code]: { countyRadius?, cityDefaultRadius? } } — modifications en attente
+  supCat: "support_n1", // catégorie active de Gestion Support
+  supSearch: "",  // recherche dans la page Gestion Support
+  supEdits: {},   // { [`${catKey}||${territory}`]: "email1, email2" } — modifications en attente
 };
 
 function normalizeUser(u) {
@@ -169,6 +181,11 @@ function loadDepartements() {
   return DEPARTEMENTS.map(d => ({ ...d }));
 }
 function saveDepartements() { try { localStorage.setItem(DEP_KEY, JSON.stringify(state.departements)); } catch (e) {} }
+function loadSupport() {
+  try { const raw = localStorage.getItem(SUP_KEY); if (raw) return JSON.parse(raw); } catch (e) {}
+  return JSON.parse(JSON.stringify(SUPPORT_REORIENTATIONS));
+}
+function saveSupport() { try { localStorage.setItem(SUP_KEY, JSON.stringify(state.support)); } catch (e) {} }
 
 function newForm() {
   return { roles: [], idNational:"", email:"", nom:"", prenom:"", ville:"", territoire:"",
@@ -203,6 +220,26 @@ function structuresOf(u) { return u.structures || []; }
 function rolesOf(u) { return u.roles || []; }
 function depOf(code) { const t = state.territoires.find(x => x.code === code); return t ? t.dep : ""; }
 
+/* Modale simple de confirmation */
+function showModal({ title, bodyHtml, confirmLabel = "Confirmer", cancelLabel = "Annuler", onConfirm }) {
+  const root = el("modal-root");
+  root.innerHTML = `
+    <div class="modal-overlay">
+      <div class="modal-box" role="dialog" aria-modal="true" aria-label="${esc(title)}">
+        <div class="modal-box__head"><h2>${esc(title)}</h2></div>
+        <div class="modal-box__body">${bodyHtml}</div>
+        <div class="modal-box__foot">
+          <button class="fr-btn fr-btn--secondary fr-btn--sm" id="modal-cancel">${esc(cancelLabel)}</button>
+          <button class="fr-btn fr-btn--sm" id="modal-confirm">${esc(confirmLabel)}</button>
+        </div>
+      </div>
+    </div>`;
+  const close = () => { root.innerHTML = ""; };
+  el("modal-cancel").onclick = close;
+  root.querySelector(".modal-overlay").onclick = (e) => { if (e.target.classList.contains("modal-overlay")) close(); };
+  el("modal-confirm").onclick = () => { close(); if (onConfirm) onConfirm(); };
+}
+
 /* ---------------------------------------------------------------- *
  *  MENU VERTICAL (sidebar)
  * ---------------------------------------------------------------- */
@@ -214,8 +251,9 @@ function renderSidebar() {
     { view:"create", icon:"fr-icon-user-add-line", label:"Créer un utilisateur" },
   ];
   if (isAdmin) items.push({ view:"territoires", icon:"fr-icon-map-pin-2-line", label:"Territoires SAS" });
-  // Départements : admin (tous) + gestionnaire de compte (son territoire)
+  // Départements & Gestion Support : admin (tous) + gestionnaire de compte (son territoire)
   items.push({ view:"departements", icon:"fr-icon-building-line", label:"Départements" });
+  items.push({ view:"support", icon:"fr-icon-mail-line", label:"Gestion Support" });
 
   nav.innerHTML = items.map(i => {
     const active = state.view === i.view && !(i.view === "create" && state.editId);
@@ -236,6 +274,7 @@ function renderSidebar() {
   sel.onchange = () => {
     state.identityIdx = Number(sel.value);
     state.filters.territoire = "";
+    state.depEdits = {}; state.supEdits = {}; // abandonner les modifications en attente
     if (state.view === "territoires" && identity().role !== "administrateur") state.view = "list";
     render();
   };
@@ -288,7 +327,7 @@ function userRow(u) {
           ${rolesOf(u).map(roleBadge).join(" ")} ${statut}
         </div>
         <div class="user-row__l2" title="${esc(u.email)}">
-          ${esc(u.email)} · ${esc(u.ville)} · ${esc(u.territoire)}${extra}
+          ${esc(u.email)} · ${esc(u.ville)}${u.territoire ? " · " + esc(u.territoire) : ""}${extra}
         </div>
       </div>
       <div class="user-row__actions">
@@ -414,6 +453,8 @@ function renderCreate() {
   const isEffecteur = f.roles.includes("effecteur");
   const isStructure = f.roles.includes("gestionnaire_structure");
   const hasRoles = f.roles.length > 0;
+  // Le rôle administrateur seul n'a pas besoin de territoire
+  const needsTerritoire = f.roles.some(r => r !== "administrateur");
   const locked = isEffecteur && f.pro;
   const err = (k) => f.errors[k] ? `<p class="fr-error-text">${esc(f.errors[k])}</p>` : "";
   const grp = (k) => `fr-input-group ${f.errors[k]?"fr-input-group--error":""}`;
@@ -518,10 +559,12 @@ function renderCreate() {
           <input class="fr-input" id="ville" list="communes-list" placeholder="Commune ou code postal…" value="${esc(f.ville)}">
           <datalist id="communes-list">${COMMUNES.map(c=>`<option value="${esc(c)}">`).join("")}</datalist>${err('ville')}
         </div>
+        ${needsTerritoire ? `
         <div class="${grp('territoire')}">
           <label class="fr-label" for="territoire">Territoire SAS${req}<span class="fr-hint-text">Format SAS-[n° département]</span></label>
           <select class="fr-select" id="territoire">${territoireOptions}</select>${err('territoire')}
-        </div>
+        </div>` : `
+        <p class="mock-note" style="margin:-.25rem 0 1rem;">Rôle administrateur : accès à tous les territoires, aucun territoire à renseigner.</p>`}
       ` : ""}
       <div style="display:flex;gap:.5rem;margin-top:1rem;">
         <button class="fr-btn" type="submit">${editing ? "Enregistrer les modifications" : "Créer l'utilisateur"}</button>
@@ -597,7 +640,8 @@ function submitForm() {
   if (!f.nom.trim()) errors.nom = "Nom requis.";
   if (!f.prenom.trim()) errors.prenom = "Prénom requis.";
   if (!f.ville.trim()) errors.ville = "Ville requise.";
-  if (!f.territoire) errors.territoire = "Territoire SAS requis.";
+  const needsTerritoire = f.roles.some(r => r !== "administrateur");
+  if (needsTerritoire && !f.territoire) errors.territoire = "Territoire SAS requis.";
   if (isEffecteur && !f.pro) errors.rpps = "Renseignez un n° RPPS valide.";
   if (isStructure && f.structures.length === 0) errors.structures = "Ajoutez au moins une structure.";
   f.errors = errors;
@@ -605,7 +649,7 @@ function submitForm() {
 
   const base = {
     idNational: f.idNational.trim(), email: f.email.trim(), nom: f.nom.trim(), prenom: f.prenom.trim(),
-    roles: [...f.roles], ville: f.ville.trim(), territoire: f.territoire,
+    roles: [...f.roles], ville: f.ville.trim(), territoire: needsTerritoire ? f.territoire : "",
   };
   if (isEffecteur && f.pro) { base.rpps = f.rpps.trim(); base.profession = f.pro.profession; base.specialite = f.pro.specialite; }
   if (isStructure) {
@@ -762,6 +806,17 @@ function depFiltered() {
   if (!q) return list;
   return list.filter(d => (d.code + " " + d.label + " " + d.region + " " + (d.territory||[]).map(t=>t.name).join(" ")).toLowerCase().includes(q));
 }
+function depPending(code, field, orig) {
+  return (state.depEdits[code] && field in state.depEdits[code]) ? state.depEdits[code][field] : orig;
+}
+function depChanged(code, field, orig) {
+  return state.depEdits[code] && field in state.depEdits[code] && state.depEdits[code][field] !== orig;
+}
+function depEditCount() {
+  let n = 0;
+  for (const code in state.depEdits) n += Object.keys(state.depEdits[code]).length;
+  return n;
+}
 function depRows(list) {
   if (!list.length) return `<tr><td colspan="7" style="padding:1rem;color:#666;">Aucun département.</td></tr>`;
   return list.map(d => `
@@ -771,8 +826,8 @@ function depRows(list) {
       <td>${esc(d.region)}</td>
       <td>${esc((d.territory||[]).map(t=>t.name).join(", "))}</td>
       <td class="num">${esc(d.area)}</td>
-      <td class="num"><input class="dep-radius-input" type="number" min="0" step="1" value="${esc(d.countyRadius)}" data-dep-county="${esc(d.code)}"></td>
-      <td class="num"><input class="dep-radius-input" type="number" min="0" step="0.5" value="${esc(d.cityDefaultRadius)}" data-dep-city="${esc(d.code)}"></td>
+      <td class="num"><input class="dep-radius-input ${depChanged(d.code,'countyRadius',d.countyRadius)?'changed':''}" type="number" min="0" step="1" value="${esc(depPending(d.code,'countyRadius',d.countyRadius))}" data-dep-county="${esc(d.code)}"></td>
+      <td class="num"><input class="dep-radius-input ${depChanged(d.code,'cityDefaultRadius',d.cityDefaultRadius)?'changed':''}" type="number" min="0" step="0.5" value="${esc(depPending(d.code,'cityDefaultRadius',d.cityDefaultRadius))}" data-dep-city="${esc(d.code)}"></td>
     </tr>`).join("");
 }
 
@@ -780,16 +835,21 @@ function renderDepartements() {
   const id = identity();
   const isAdmin = id.role === "administrateur";
   const list = depFiltered();
+  const n = depEditCount();
 
   el("view-departements").innerHTML = `
     <h1 class="fr-h4" style="margin:0;">Départements</h1>
     <p class="page-sub">${isAdmin ? "Tous les territoires SAS." : "Territoire <strong>"+esc(id.territoire)+"</strong>."} Paramétrez les rayons de recherche par défaut.</p>
-    <div class="fr-input-group" style="max-width:340px;margin:1rem 0 .25rem;">
+    <div class="save-bar">
+      <button class="fr-btn fr-btn--sm" id="dep-save" ${n?"":"disabled"}>Enregistrer</button>
+      <span class="mock-note" id="dep-pending">${n ? `${n} modification${n>1?"s":""} en attente` : "Aucune modification"}</span>
+    </div>
+    <div class="fr-input-group" style="max-width:340px;margin:.25rem 0 .25rem;">
       <label class="fr-label" for="dep-q">Rechercher</label>
       <input class="fr-input" type="search" id="dep-q" placeholder="Code, département, région…" value="${esc(state.depSearch)}">
     </div>
     <p class="result-count" id="dep-count">${list.length} département${list.length>1?"s":""}</p>
-    <div class="dep-scroll">
+    <div class="dep-wrap">
       <table class="dep-table">
         <thead><tr>
           <th>Code</th><th>Département</th><th>Région</th><th>Territoire SAS</th>
@@ -799,33 +859,192 @@ function renderDepartements() {
         </tr></thead>
         <tbody id="dep-body">${depRows(list)}</tbody>
       </table>
-    </div>
-    <p class="mock-note" style="margin-top:.75rem;">Modifications enregistrées automatiquement (navigateur).</p>`;
+    </div>`;
 
   bindDepartementsEvents();
 }
 
+function depUpdateSaveBar() {
+  const n = depEditCount();
+  const btn = el("dep-save"); if (btn) btn.disabled = n === 0;
+  const info = el("dep-pending"); if (info) info.textContent = n ? `${n} modification${n>1?"s":""} en attente` : "Aucune modification";
+}
+function depSetEdit(code, field, orig, raw) {
+  const val = raw === "" ? 0 : Number(raw);
+  if (val === orig) { if (state.depEdits[code]) { delete state.depEdits[code][field]; if (!Object.keys(state.depEdits[code]).length) delete state.depEdits[code]; } }
+  else { state.depEdits[code] = state.depEdits[code] || {}; state.depEdits[code][field] = val; }
+}
 function bindDepRowInputs(root) {
-  root.querySelectorAll("[data-dep-county]").forEach(inp => inp.onchange = () => {
+  root.querySelectorAll("[data-dep-county]").forEach(inp => inp.oninput = () => {
     const d = state.departements.find(x => x.code === inp.dataset.depCounty);
-    if (d) { d.countyRadius = inp.value === "" ? 0 : Number(inp.value); saveDepartements(); }
+    if (!d) return;
+    depSetEdit(d.code, "countyRadius", d.countyRadius, inp.value);
+    inp.classList.toggle("changed", depChanged(d.code, "countyRadius", d.countyRadius));
+    depUpdateSaveBar();
   });
-  root.querySelectorAll("[data-dep-city]").forEach(inp => inp.onchange = () => {
+  root.querySelectorAll("[data-dep-city]").forEach(inp => inp.oninput = () => {
     const d = state.departements.find(x => x.code === inp.dataset.depCity);
-    if (d) { d.cityDefaultRadius = inp.value === "" ? 0 : Number(inp.value); saveDepartements(); }
+    if (!d) return;
+    depSetEdit(d.code, "cityDefaultRadius", d.cityDefaultRadius, inp.value);
+    inp.classList.toggle("changed", depChanged(d.code, "cityDefaultRadius", d.cityDefaultRadius));
+    depUpdateSaveBar();
   });
 }
 function bindDepartementsEvents() {
   const root = el("view-departements");
-  const search = root.querySelector("#dep-q");
-  search.oninput = () => {
-    state.depSearch = search.value;
+  root.querySelector("#dep-q").oninput = (e) => {
+    state.depSearch = e.target.value;
     const list = depFiltered();
     el("dep-body").innerHTML = depRows(list);
     el("dep-count").textContent = `${list.length} département${list.length>1?"s":""}`;
     bindDepRowInputs(el("dep-body"));
   };
+  root.querySelector("#dep-save").onclick = () => {
+    const items = [];
+    for (const code in state.depEdits) {
+      const d = state.departements.find(x => x.code === code);
+      const e = state.depEdits[code];
+      if ("countyRadius" in e) items.push(`<li><strong>${esc(code)} ${esc(d.label)}</strong> — Rayon défaut : <span class="old">${esc(d.countyRadius)}</span> → <span class="new">${esc(e.countyRadius)} km</span></li>`);
+      if ("cityDefaultRadius" in e) items.push(`<li><strong>${esc(code)} ${esc(d.label)}</strong> — Rayon villes : <span class="old">${esc(d.cityDefaultRadius)}</span> → <span class="new">${esc(e.cityDefaultRadius)} km</span></li>`);
+    }
+    showModal({
+      title: "Confirmer l'enregistrement",
+      bodyHtml: `<p class="fr-text--sm">Les valeurs suivantes vont être enregistrées :</p><ul class="modal-changes">${items.join("")}</ul>`,
+      confirmLabel: "Enregistrer",
+      onConfirm: () => {
+        for (const code in state.depEdits) {
+          const d = state.departements.find(x => x.code === code);
+          Object.assign(d, state.depEdits[code]);
+        }
+        state.depEdits = {};
+        saveDepartements();
+        render();
+      },
+    });
+  };
   bindDepRowInputs(root);
+}
+
+/* ================================================================ *
+ *  VUE GESTION SUPPORT (mails de réorientation)
+ * ================================================================ */
+function supTerrToken(t) { return String(t).split(" ")[0]; }
+function supVisibleTerritories(cat) {
+  const id = identity();
+  if (id.role === "administrateur") return cat.territories;
+  return cat.territories.filter(x => supTerrToken(x.territory) === id.territoire);
+}
+function supCurrentCat() { return state.support.find(c => c.reorientation_key === state.supCat) || state.support[0]; }
+function supKey(catKey, territory) { return catKey + "||" + territory; }
+function supDisplay(catKey, entry) {
+  const k = supKey(catKey, entry.territory);
+  return (k in state.supEdits) ? state.supEdits[k] : entry.emails.join(", ");
+}
+function supEditCount() { return Object.keys(state.supEdits).length; }
+function supParseEmails(str) { return str.split(/[;,]/).map(s => s.trim()).filter(Boolean); }
+
+function supRows(cat, list) {
+  if (!list.length) return `<tr><td colspan="2" style="padding:1rem;color:#666;">Aucun territoire.</td></tr>`;
+  return list.map(entry => {
+    const k = supKey(cat.reorientation_key, entry.territory);
+    const changed = (k in state.supEdits) && state.supEdits[k] !== entry.emails.join(", ");
+    return `<tr>
+      <td class="terr">${esc(entry.territory)}</td>
+      <td><input class="sup-emails-input ${changed?'changed':''}" value="${esc(supDisplay(cat.reorientation_key, entry))}"
+        data-sup-territory="${esc(entry.territory)}" placeholder="email1@ex.fr, email2@ex.fr"></td>
+    </tr>`;
+  }).join("");
+}
+
+function renderSupport() {
+  const id = identity();
+  const isAdmin = id.role === "administrateur";
+  const cat = supCurrentCat();
+  const q = state.supSearch.trim().toLowerCase();
+  let list = supVisibleTerritories(cat);
+  if (q) list = list.filter(x => x.territory.toLowerCase().includes(q) || x.emails.join(" ").toLowerCase().includes(q));
+  const n = supEditCount();
+
+  el("view-support").innerHTML = `
+    <h1 class="fr-h4" style="margin:0;">Gestion Support</h1>
+    <p class="page-sub">${isAdmin ? "Tous les territoires." : "Territoire <strong>"+esc(id.territoire)+"</strong>."} Mails de réorientation par catégorie.</p>
+    <div class="sup-tabs">
+      ${state.support.map(c => `<button class="sup-tab ${c.reorientation_key===state.supCat?'is-active':''}" data-sup-cat="${esc(c.reorientation_key)}">${esc(c.reorientation_name)}</button>`).join("")}
+    </div>
+    <div class="save-bar">
+      <button class="fr-btn fr-btn--sm" id="sup-save" ${n?"":"disabled"}>Enregistrer</button>
+      <span class="mock-note" id="sup-pending">${n ? `${n} modification${n>1?"s":""} en attente` : "Aucune modification"}</span>
+    </div>
+    <div class="fr-input-group" style="max-width:340px;margin:.25rem 0;">
+      <label class="fr-label" for="sup-q">Rechercher</label>
+      <input class="fr-input" type="search" id="sup-q" placeholder="Territoire ou email…" value="${esc(state.supSearch)}">
+    </div>
+    <p class="result-count" id="sup-count">${list.length} territoire${list.length>1?"s":""}</p>
+    <table class="sup-table">
+      <thead><tr><th>Territoire</th><th>Emails (séparés par une virgule)</th></tr></thead>
+      <tbody id="sup-body">${supRows(cat, list)}</tbody>
+    </table>`;
+
+  bindSupportEvents();
+}
+
+function supUpdateSaveBar() {
+  const n = supEditCount();
+  const btn = el("sup-save"); if (btn) btn.disabled = n === 0;
+  const info = el("sup-pending"); if (info) info.textContent = n ? `${n} modification${n>1?"s":""} en attente` : "Aucune modification";
+}
+function bindSupRowInputs(root) {
+  const cat = supCurrentCat();
+  root.querySelectorAll("[data-sup-territory]").forEach(inp => inp.oninput = () => {
+    const territory = inp.dataset.supTerritory;
+    const entry = cat.territories.find(x => x.territory === territory);
+    const k = supKey(cat.reorientation_key, territory);
+    const original = entry.emails.join(", ");
+    if (inp.value === original) delete state.supEdits[k];
+    else state.supEdits[k] = inp.value;
+    inp.classList.toggle("changed", (k in state.supEdits));
+    supUpdateSaveBar();
+  });
+}
+function bindSupportEvents() {
+  const root = el("view-support");
+  root.querySelectorAll("[data-sup-cat]").forEach(b => b.onclick = () => { state.supCat = b.dataset.supCat; render(); });
+  root.querySelector("#sup-q").oninput = (e) => {
+    state.supSearch = e.target.value;
+    const cat = supCurrentCat();
+    const q = state.supSearch.trim().toLowerCase();
+    let list = supVisibleTerritories(cat);
+    if (q) list = list.filter(x => x.territory.toLowerCase().includes(q) || x.emails.join(" ").toLowerCase().includes(q));
+    el("sup-body").innerHTML = supRows(cat, list);
+    el("sup-count").textContent = `${list.length} territoire${list.length>1?"s":""}`;
+    bindSupRowInputs(el("sup-body"));
+  };
+  root.querySelector("#sup-save").onclick = () => {
+    const items = [];
+    for (const k in state.supEdits) {
+      const [catKey, territory] = k.split("||");
+      const cat = state.support.find(c => c.reorientation_key === catKey);
+      const entry = cat.territories.find(x => x.territory === territory);
+      items.push(`<li><strong>${esc(cat.reorientation_name)} — ${esc(territory)}</strong><br><span class="old">${esc(entry.emails.join(", "))}</span> → <span class="new">${esc(supParseEmails(state.supEdits[k]).join(", "))}</span></li>`);
+    }
+    showModal({
+      title: "Confirmer l'enregistrement",
+      bodyHtml: `<p class="fr-text--sm">Les mails suivants vont être enregistrés :</p><ul class="modal-changes">${items.join("")}</ul>`,
+      confirmLabel: "Enregistrer",
+      onConfirm: () => {
+        for (const k in state.supEdits) {
+          const [catKey, territory] = k.split("||");
+          const cat = state.support.find(c => c.reorientation_key === catKey);
+          const entry = cat.territories.find(x => x.territory === territory);
+          entry.emails = supParseEmails(state.supEdits[k]);
+        }
+        state.supEdits = {};
+        saveSupport();
+        render();
+      },
+    });
+  };
+  bindSupRowInputs(root);
 }
 
 /* ================================================================ *
@@ -837,10 +1056,12 @@ function render() {
   el("view-create").hidden      = state.view !== "create";
   el("view-territoires").hidden = state.view !== "territoires";
   el("view-departements").hidden= state.view !== "departements";
+  el("view-support").hidden     = state.view !== "support";
   if (state.view === "list") renderList();
   else if (state.view === "create") renderCreate();
   else if (state.view === "territoires") renderTerritoires();
   else if (state.view === "departements") renderDepartements();
+  else if (state.view === "support") renderSupport();
 }
 
 document.addEventListener("DOMContentLoaded", render);
