@@ -90,6 +90,13 @@ body { margin: 0; background: #fff; color: #1a1a1a; font-size: 14px; line-height
 .badge-gestionnaire_structure { background:#e8edff; color:#0063cb; }
 .badge-regulateur_osnp        { background:#e3fdeb; color:#297254; }
 .badge-effecteur              { background:#f7f0e9; color:#695240; }
+/* Rôles réservés (administrateur) */
+.badge-referent_territoriale  { background:#fceeac; color:#716043; }
+.badge-ambassadeur            { background:#dee5fd; color:#2f4077; }
+.badge-testlrm                { background:#e5e5e5; color:#3a3a3a; }
+
+.roles-reserved { margin-top:.7rem; padding-top:.6rem; border-top:1px dashed #ddd; }
+.roles-reserved__title { display:block; font-size:.8rem; font-weight:600; color:#666; margin-bottom:.15rem; }
 
 /* ── Formulaire : structures multiples ───────────────────── */
 .bo-form { max-width: 600px; }

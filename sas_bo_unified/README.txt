@@ -30,6 +30,10 @@ CE QUE FAIT LA MAQUETTE
    - « Créer un utilisateur » ou le lien « Modifier » sur chaque ligne.
    - RÔLES MULTIPLES : un utilisateur peut cumuler 1 à tous les rôles
      (cases à cocher).
+   - RÔLES RÉSERVÉS (Referent Territoriale, Ambassadeur, TestLRM) :
+     assignables uniquement par un administrateur. Les utilisateurs qui
+     portent l'un de ces rôles ne sont visibles et filtrables que par les
+     administrateurs (masqués aux gestionnaires de compte).
    - Champs communs : identifiant national, email, nom, prénom, ville (Base
      Adresse Nationale), territoire SAS (format SAS-[n° département]).
    - Effecteur : n° RPPS -> pré-remplit nom, prénom, profession et spécialité

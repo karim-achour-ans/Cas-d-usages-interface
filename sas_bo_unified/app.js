@@ -17,6 +17,16 @@ const ROLES = [
 ];
 const ROLE_LABEL = Object.fromEntries(ROLES.map(r => [r.value, r.label]));
 
+// Rôles/tags réservés : assignables uniquement par un administrateur,
+// et les utilisateurs qui les portent ne sont visibles/filtrables que par les admins.
+const ADMIN_TAGS = [
+  { value: "referent_territoriale", label: "Referent Territoriale" },
+  { value: "ambassadeur",           label: "Ambassadeur" },
+  { value: "testlrm",               label: "TestLRM" },
+];
+const ADMIN_TAG_KEYS = ADMIN_TAGS.map(t => t.value);
+ADMIN_TAGS.forEach(t => { ROLE_LABEL[t.value] = t.label; });
+
 const STRUCTURE_TYPES = [
   { value: "sos_medecins", label: "SOS Médecins" },
   { value: "cds",          label: "Centre de Santé (CDS)" },
@@ -107,16 +117,16 @@ const IDENTITES = [
 /* Utilisateurs de démonstration (roles = tableau, structures = tableau) */
 const SEED_USERS = [
   { id:"u-001", idNational:"SASN-100001", email:"admin.national@sas.gouv.fr", nom:"Lefevre", prenom:"Isabelle", roles:["administrateur"],        ville:"75007 Paris",     territoire:"SAS-75", actif:true },
-  { id:"u-002", idNational:"SASN-100002", email:"g.compte.paris@sas.gouv.fr", nom:"Garnier", prenom:"Paul",     roles:["gestionnaire_compte"],   ville:"75012 Paris",     territoire:"SAS-75", actif:true },
+  { id:"u-002", idNational:"SASN-100002", email:"g.compte.paris@sas.gouv.fr", nom:"Garnier", prenom:"Paul",     roles:["gestionnaire_compte","referent_territoriale"], ville:"75012 Paris", territoire:"SAS-75", actif:true },
   { id:"u-003", idNational:"SASN-100003", email:"g.compte.lyon@sas.gouv.fr",  nom:"Faure",   prenom:"Camille",  roles:["gestionnaire_compte"],   ville:"69002 Lyon",      territoire:"SAS-69", actif:true },
   { id:"u-004", idNational:"SASN-100004", email:"regul.osnp.paris@sas.gouv.fr", nom:"Roux",  prenom:"David",    roles:["regulateur_osnp","gestionnaire_compte"], ville:"75015 Paris", territoire:"SAS-75", actif:true },
-  { id:"u-005", idNational:"SASN-100005", email:"claire.durand@effecteur.fr", nom:"Durand",  prenom:"Claire",   roles:["effecteur"],             ville:"75014 Paris",     territoire:"SAS-75", actif:true,  rpps:"10001234567", profession:"Médecin", specialite:"Médecine générale" },
+  { id:"u-005", idNational:"SASN-100005", email:"claire.durand@effecteur.fr", nom:"Durand",  prenom:"Claire",   roles:["effecteur","ambassadeur"], ville:"75014 Paris",     territoire:"SAS-75", actif:true,  rpps:"10001234567", profession:"Médecin", specialite:"Médecine générale" },
   { id:"u-006", idNational:"SASN-100006", email:"sos.paris@structure.fr",     nom:"Leroy",   prenom:"Nathalie", roles:["gestionnaire_structure"],ville:"75014 Paris",     territoire:"SAS-75", actif:true,
     structures:[ {type:"sos_medecins",finess:"750000015",nom:"SOS Médecins Paris"}, {type:"sos_medecins",finess:"750000023",nom:"SOS Médecins Paris Est"}, {type:"cds",finess:"750100056",nom:"Centre de Santé Marcadet"}, {type:"cpts_msp",finess:"750200091",nom:"CPTS Paris 13"}, {type:"cpts_msp",finess:"750200108",nom:"MSP Paris 18"} ] },
   { id:"u-007", idNational:"SASN-100007", email:"cpts.rennes@structure.fr",   nom:"Girard",  prenom:"Hugo",     roles:["gestionnaire_structure","effecteur"], ville:"35000 Rennes", territoire:"SAS-35", actif:true,
     rpps:"10004567890", profession:"Médecin", specialite:"Médecine générale",
     structures:[ {type:"cpts_msp",finess:"350200117",nom:"CPTS Rennes Métropole"} ] },
-  { id:"u-008", idNational:"SASN-100008", email:"julien.martin@effecteur.fr", nom:"Martin",  prenom:"Julien",   roles:["effecteur"],             ville:"69003 Lyon",      territoire:"SAS-69", actif:false, rpps:"10002345678", profession:"Médecin", specialite:"Médecine d'urgence" },
+  { id:"u-008", idNational:"SASN-100008", email:"julien.martin@effecteur.fr", nom:"Martin",  prenom:"Julien",   roles:["effecteur","testlrm"],   ville:"69003 Lyon",      territoire:"SAS-69", actif:false, rpps:"10002345678", profession:"Médecin", specialite:"Médecine d'urgence" },
   { id:"u-009", idNational:"SASN-100009", email:"cds.montreuil@structure.fr", nom:"Fontaine",prenom:"Sarah",    roles:["gestionnaire_structure"],ville:"93100 Montreuil", territoire:"SAS-93", actif:true,
     structures:[ {type:"cds",finess:"930100063",nom:"Centre Municipal de Santé de Montreuil"} ] },
   { id:"u-010", idNational:"SASN-100010", email:"g.compte.lille@sas.gouv.fr", nom:"Chevalier",prenom:"Marion",  roles:["gestionnaire_compte"],   ville:"59000 Lille",     territoire:"SAS-59", actif:true },
@@ -136,7 +146,7 @@ const SEED_USERS = [
 /* ---------------------------------------------------------------- *
  *  ÉTAT
  * ---------------------------------------------------------------- */
-const USERS_KEY = "bo-sas-users-v6";
+const USERS_KEY = "bo-sas-users-v7";
 const TERR_KEY  = "bo-sas-territoires-v1";
 const DEP_KEY   = "bo-sas-departements-v1";
 const SUP_KEY   = "bo-sas-support-v1";
@@ -218,6 +228,7 @@ function esc(s) { return String(s ?? "").replace(/[&<>"]/g, c => ({ "&":"&amp;",
 function el(id) { return document.getElementById(id); }
 function structuresOf(u) { return u.structures || []; }
 function rolesOf(u) { return u.roles || []; }
+function hasAdminTag(u) { return rolesOf(u).some(r => ADMIN_TAG_KEYS.includes(r)); }
 function depOf(code) { const t = state.territoires.find(x => x.code === code); return t ? t.dep : ""; }
 
 /* Modale simple de confirmation */
@@ -286,7 +297,8 @@ function renderSidebar() {
 function visibleUsers() {
   const id = identity();
   if (id.role === "administrateur") return state.users;
-  if (id.role === "gestionnaire_compte") return state.users.filter(u => u.territoire === id.territoire);
+  // Les utilisateurs porteurs d'un rôle réservé ne sont visibles que par les admins
+  if (id.role === "gestionnaire_compte") return state.users.filter(u => u.territoire === id.territoire && !hasAdminTag(u));
   return [];
 }
 function filteredUsers() {
@@ -374,7 +386,7 @@ function renderList() {
         <label class="fr-label" for="flt-q">Rechercher</label>
         <input class="fr-input" type="search" id="flt-q" placeholder="Nom, email, ville, RPPS, FINESS…" value="${esc(f.q)}">
       </div>
-      ${selectField("role", "Rôle", ROLES.map(r => ({ value:r.value, label:r.label })))}
+      ${selectField("role", "Rôle", (isAdmin ? [...ROLES, ...ADMIN_TAGS] : ROLES).map(r => ({ value:r.value, label:r.label })))}
       ${isAdmin ? selectField("territoire", "Territoire", state.territoires.map(t => ({ value:t.code, label:`${t.code} · ${t.dep}` }))) : ""}
       ${selectField("ville", "Ville", villes.map(v => ({ value:v, label:v })))}
       ${selectField("profSpec", "Profession / Spécialité", profSpecs.map(v => ({ value:v, label:v })))}
@@ -454,7 +466,7 @@ function renderCreate() {
   const isStructure = f.roles.includes("gestionnaire_structure");
   const hasRoles = f.roles.length > 0;
   // Le rôle administrateur seul n'a pas besoin de territoire
-  const needsTerritoire = f.roles.some(r => r !== "administrateur");
+  const needsTerritoire = f.roles.some(r => r !== "administrateur" && !ADMIN_TAG_KEYS.includes(r));
   const locked = isEffecteur && f.pro;
   const err = (k) => f.errors[k] ? `<p class="fr-error-text">${esc(f.errors[k])}</p>` : "";
   const grp = (k) => `fr-input-group ${f.errors[k]?"fr-input-group--error":""}`;
@@ -467,11 +479,14 @@ function renderCreate() {
       <button class="fr-btn fr-btn--sm" data-goto-list>Voir la liste</button>
     </div>` : "";
 
-  const rolesCheckboxes = ROLES.map(r => `
+  const canAssignTags = identity().role === "administrateur";
+  const roleCheckbox = (r) => `
     <div class="fr-checkbox-group">
       <input type="checkbox" id="role-${r.value}" data-role="${r.value}" ${f.roles.includes(r.value)?"checked":""}>
       <label class="fr-label" for="role-${r.value}">${esc(r.label)}</label>
-    </div>`).join("");
+    </div>`;
+  const rolesCheckboxes = ROLES.map(roleCheckbox).join("");
+  const tagsCheckboxes = ADMIN_TAGS.map(roleCheckbox).join("");
 
   // Bloc structures — placé juste sous le champ Rôle.
   // Rattachement à PLUSIEURS structures, y compris du même type
@@ -528,6 +543,11 @@ function renderCreate() {
       <div class="${grp('roles')}">
         <label class="fr-label">Rôle(s)${req}<span class="fr-hint-text">Un utilisateur peut cumuler plusieurs rôles.</span></label>
         <div class="roles-checkboxes">${rolesCheckboxes}</div>
+        ${canAssignTags ? `
+        <div class="roles-reserved">
+          <span class="roles-reserved__title">Rôles réservés (administrateur)</span>
+          <div class="roles-checkboxes">${tagsCheckboxes}</div>
+        </div>` : ""}
         ${err('roles')}
       </div>
 
@@ -640,7 +660,7 @@ function submitForm() {
   if (!f.nom.trim()) errors.nom = "Nom requis.";
   if (!f.prenom.trim()) errors.prenom = "Prénom requis.";
   if (!f.ville.trim()) errors.ville = "Ville requise.";
-  const needsTerritoire = f.roles.some(r => r !== "administrateur");
+  const needsTerritoire = f.roles.some(r => r !== "administrateur" && !ADMIN_TAG_KEYS.includes(r));
   if (needsTerritoire && !f.territoire) errors.territoire = "Territoire SAS requis.";
   if (isEffecteur && !f.pro) errors.rpps = "Renseignez un n° RPPS valide.";
   if (isStructure && f.structures.length === 0) errors.structures = "Ajoutez au moins une structure.";
