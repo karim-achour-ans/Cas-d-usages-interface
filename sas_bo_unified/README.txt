@@ -1,18 +1,33 @@
 ========================================================================
-  MOCK — ARRIÈRE-GUICHET DU SAS (Service d'Accès aux Soins)
-  Gestion des utilisateurs · maquette au format DSFR
+  MOCK — SUITE ARRIÈRE-GUICHET DU SAS (Service d'Accès aux Soins)
+  Portail multi-back-offices · maquette au format DSFR
 ========================================================================
 
 COMMENT LANCER
 --------------
-Double-cliquez simplement sur « index.html ».
-Il s'ouvre dans votre navigateur — aucune installation, aucun serveur,
-aucune connexion internet requise. Le DSFR (CSS + polices Marianne) est
-embarqué localement dans le dossier « vendor/ ».
+Double-cliquez sur « index.html » : c'est le PORTAIL de la suite.
+Aucune installation, aucun serveur, aucune connexion requise (DSFR embarqué
+localement dans « vendor/ »).
 
-Dans Visual Studio / VS Code : ouvrez le dossier, puis ouvrez index.html
-(clic droit « Open in Default Browser » ou « Open with Live Server »).
-La page est responsive (adaptée mobile / tablette / bureau).
+STRUCTURE DE LA SUITE
+---------------------
+- index.html   → Portail : tuiles vers les back-offices accessibles selon
+                 le profil connecté (habilitations par périmètre).
+- acces.html   → BO « Accès & Utilisateurs » (utilisateurs, rôles,
+                 territoires, départements, gestion support).
+- interop.html → BO « Interopérabilité » (gestion des flux d'API) —
+                 coquille avec la section « Gestion comptes régulateurs »
+                 et 6 onglets en pages vides (à développer).
+
+IDENTITÉ (compte unique multi-périmètres)
+-----------------------------------------
+Une identité porte des habilitations par application :
+  - acces   : { role, territoire }  → rôles du BO Accès
+  - interop : { role }              → rôles du BO Interop
+              (ROLE_AUTHENTICATED_USER, ROLE_MANAGER, ROLE_ADMINISTRATOR)
+Le portail n'affiche que les BO habilités ; un profil non habilité voit un
+écran « Accès non autorisé » avec retour au portail. Le sélecteur « Connecté
+en tant que » est partagé entre les pages (via l'URL) pour la démo.
 
 CE QUE FAIT LA MAQUETTE
 -----------------------

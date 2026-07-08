@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Arrière-guichet SAS — Interopérabilité</title>
+
+  <link rel="stylesheet" href="vendor/dsfr/dsfr.min.css">
+  <link rel="stylesheet" href="vendor/utility/utility.min.css">
+  <link rel="stylesheet" href="vendor/utility/icons/icons.min.css">
+  <link rel="stylesheet" href="icons-inline.css">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="layout">
+    <aside class="sidebar">
+      <div class="sidebar__brand">
+        <span class="sidebar__brand-title">Arrière-guichet SAS</span>
+        <span class="sidebar__brand-sub">Interopérabilité</span>
+      </div>
+      <nav class="sidebar__nav" id="sidebar-nav" aria-label="Navigation Interopérabilité"></nav>
+      <div class="sidebar__foot">
+        <label for="identity-select">Connecté en tant que</label>
+        <select class="fr-select" id="identity-select"></select>
+      </div>
+    </aside>
+    <main class="main" role="main">
+      <section id="interop-view"></section>
+    </main>
+  </div>
+
+  <script src="identities.js"></script>
+  <script src="interop.js"></script>
+</body>
+</html>

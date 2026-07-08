@@ -192,6 +192,52 @@ body { margin: 0; background: #fff; color: #1a1a1a; font-size: 14px; line-height
 .sup-emails-input:focus { outline: 2px solid #000091; outline-offset: 1px; box-shadow: inset 0 -2px 0 0 #000091; }
 .sup-emails-input.changed { box-shadow: inset 0 -2px 0 0 #b34000; background: #fff7f2; }
 
+/* ── Portail (page d'accueil de la suite) ────────────────── */
+.portal { min-height: 100vh; display: flex; flex-direction: column; }
+.portal__header { background: #f5f5fe; border-bottom: 1px solid #e5e5e5; padding: 1.1rem 0; }
+.portal__header .fr-container { display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; }
+.portal__brand-title { font-weight: 700; color: #000091; font-size: 1.1rem; }
+.portal__brand-sub { font-size: .78rem; color: #666; }
+.portal__identity { margin-left: auto; min-width: 300px; }
+.portal__identity label { display: block; font-size: .72rem; color: #666; margin-bottom: .25rem; }
+.portal__main { flex: 1; padding: 2rem 0; }
+.portal__lead { color: #444; margin: 0 0 1.5rem; }
+.portal__grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1.25rem; }
+.bo-tile {
+  display: flex; flex-direction: column; gap: .5rem;
+  border: 1px solid #e5e5e5; border-left: 4px solid #000091; border-radius: 8px;
+  padding: 1.25rem 1.4rem; background: #fff; text-decoration: none; color: inherit;
+  transition: box-shadow .15s ease, transform .15s ease;
+}
+.bo-tile:hover { box-shadow: 0 6px 20px rgba(0,0,0,.08); transform: translateY(-2px); }
+.bo-tile__icon { width: 2rem; height: 2rem; color: #000091; }
+.bo-tile__title { font-size: 1.05rem; font-weight: 700; color: #000091; }
+.bo-tile__desc { font-size: .86rem; color: #555; }
+.bo-tile__role { font-size: .78rem; color: #297254; }
+.bo-tile__cta { margin-top: .35rem; font-size: .85rem; color: #000091; font-weight: 600; }
+.bo-tile--disabled {
+  border-left-color: #ccc; background: #fafafa; cursor: not-allowed;
+}
+.bo-tile--disabled .bo-tile__title, .bo-tile--disabled .bo-tile__icon { color: #999; }
+.bo-tile--disabled:hover { box-shadow: none; transform: none; }
+.bo-tile__locked { font-size: .78rem; color: #b34000; }
+
+/* ── Lien « ← Portail » dans le menu ─────────────────────── */
+.nav-portal { color: #000091; font-weight: 600; text-decoration: none; margin-bottom: .35rem; }
+.nav-portal:hover { background: #e3e3fd; }
+
+/* ── Menu du BO Interopérabilité (sections) ──────────────── */
+.nav-section { margin: .6rem 0 .25rem; padding: 0 .7rem; font-size: .7rem; font-weight: 700;
+  letter-spacing: .04em; text-transform: uppercase; color: #929292; }
+
+/* ── Page « en construction » (onglets vides Interop) ────── */
+.stub {
+  border: 1px dashed #ccc; border-radius: 8px; background: #fafafa;
+  padding: 2.5rem 1.5rem; text-align: center; color: #666; margin-top: 1rem;
+}
+.stub__icon { font-size: 2rem; color: #b1b1b1; }
+.stub h2 { font-size: 1.1rem; margin: .5rem 0 .25rem; color: #3a3a3a; }
+
 /* ── Divers ──────────────────────────────────────────────── */
 .bo-view[hidden] { display: none; }
 .fr-link { color: #000091; background: none; border: none; cursor: pointer; font-family: inherit; font-size: .82rem; text-decoration: underline; padding: 0; }

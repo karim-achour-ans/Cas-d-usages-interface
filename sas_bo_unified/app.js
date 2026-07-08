@@ -106,13 +106,8 @@ const COMMUNES = [
   "59000 Lille","44100 Nantes","67100 Strasbourg","34000 Montpellier",
 ];
 
-/* Identités de démonstration (qui consulte l'arrière-guichet) */
-const IDENTITES = [
-  { label: "Administrateur national",         role: "administrateur" },
-  { label: "Gestionnaire de compte — SAS-75", role: "gestionnaire_compte", territoire: "SAS-75" },
-  { label: "Gestionnaire de compte — SAS-69", role: "gestionnaire_compte", territoire: "SAS-69" },
-  { label: "Gestionnaire de compte — SAS-59", role: "gestionnaire_compte", territoire: "SAS-59" },
-];
+/* Les identités sont définies dans identities.js (compte unique multi-périmètres).
+   Le BO Accès n'utilise que l'habilitation « acces » de l'identité. */
 
 /* Utilisateurs de démonstration (roles = tableau, structures = tableau) */
 const SEED_USERS = [
@@ -158,7 +153,7 @@ const state = {
   territoires: loadTerritoires(),
   departements: loadDepartements(),
   support: loadSupport(),
-  identityIdx: 0,
+  identityIdx: currentIdentityIdx(),
   view: "list",   // "list" | "create" | "territoires" | "departements" | "support"
   editId: null,   // utilisateur en cours de modification
   filters: { ...EMPTY_FILTERS },
@@ -219,7 +214,10 @@ function formFromUser(u) {
   });
   return f;
 }
-function identity() { return IDENTITES[state.identityIdx]; }
+function identity() { return IDENTITIES[state.identityIdx]; }
+function acAcc()  { return identity().acces; }                  // habilitation « acces » (ou null)
+function acRole() { return acAcc() ? acAcc().role : null; }      // rôle dans le BO Accès
+function acTerr() { return acAcc() ? acAcc().territoire : null; }// territoire du gestionnaire de compte
 
 /* ---------------------------------------------------------------- *
  *  UTILITAIRES
@@ -256,23 +254,28 @@ function showModal({ title, bodyHtml, confirmLabel = "Confirmer", cancelLabel = 
  * ---------------------------------------------------------------- */
 function renderSidebar() {
   const nav = el("sidebar-nav");
-  const isAdmin = identity().role === "administrateur";
-  const items = [
-    { view:"list",   icon:"fr-icon-user-line",     label:"Utilisateurs" },
-    { view:"create", icon:"fr-icon-user-add-line", label:"Créer un utilisateur" },
-  ];
-  if (isAdmin) items.push({ view:"territoires", icon:"fr-icon-map-pin-2-line", label:"Territoires SAS" });
-  // Départements & Gestion Support : admin (tous) + gestionnaire de compte (son territoire)
-  items.push({ view:"departements", icon:"fr-icon-building-line", label:"Départements" });
-  items.push({ view:"support", icon:"fr-icon-mail-line", label:"Gestion Support" });
+  const isAdmin = acRole() === "administrateur";
+  const items = [];
+  if (acAcc()) {
+    items.push({ view:"list",   icon:"fr-icon-user-line",     label:"Utilisateurs" });
+    items.push({ view:"create", icon:"fr-icon-user-add-line", label:"Créer un utilisateur" });
+    if (isAdmin) items.push({ view:"territoires", icon:"fr-icon-map-pin-2-line", label:"Territoires SAS" });
+    // Départements & Gestion Support : admin (tous) + gestionnaire de compte (son territoire)
+    items.push({ view:"departements", icon:"fr-icon-building-line", label:"Départements" });
+    items.push({ view:"support", icon:"fr-icon-mail-line", label:"Gestion Support" });
+  }
 
-  nav.innerHTML = items.map(i => {
-    const active = state.view === i.view && !(i.view === "create" && state.editId);
-    return `<button class="nav-item ${active?"is-active":""}" data-view="${i.view}">
-       <span class="${i.icon}" aria-hidden="true"></span>${i.label}
-     </button>`;
-  }).join("");
-  nav.querySelectorAll(".nav-item").forEach(b => b.onclick = () => {
+  nav.innerHTML =
+    `<a class="nav-item nav-portal" href="${urlWithIdentity("index.html", state.identityIdx)}">
+       <span class="fr-icon-arrow-left-line" aria-hidden="true"></span>Portail
+     </a>` +
+    items.map(i => {
+      const active = state.view === i.view && !(i.view === "create" && state.editId);
+      return `<button class="nav-item ${active?"is-active":""}" data-view="${i.view}">
+         <span class="${i.icon}" aria-hidden="true"></span>${i.label}
+       </button>`;
+    }).join("");
+  nav.querySelectorAll(".nav-item[data-view]").forEach(b => b.onclick = () => {
     state.view = b.dataset.view;
     if (state.view === "create") { state.form = newForm(); state.editId = null; }
     if (state.view === "territoires") state.terr = null;
@@ -280,15 +283,10 @@ function renderSidebar() {
   });
 
   const sel = el("identity-select");
-  sel.innerHTML = IDENTITES.map((i, idx) => `<option value="${idx}">${esc(i.label)}</option>`).join("");
+  sel.innerHTML = IDENTITIES.map((i, idx) => `<option value="${idx}">${esc(i.label)}</option>`).join("");
   sel.value = state.identityIdx;
-  sel.onchange = () => {
-    state.identityIdx = Number(sel.value);
-    state.filters.territoire = "";
-    state.depEdits = {}; state.supEdits = {}; // abandonner les modifications en attente
-    if (state.view === "territoires" && identity().role !== "administrateur") state.view = "list";
-    render();
-  };
+  // Changer d'identité recharge la page (identité partagée entre les BO via l'URL)
+  sel.onchange = () => gotoWithIdentity("acces.html", Number(sel.value));
 }
 
 /* ================================================================ *
@@ -296,9 +294,9 @@ function renderSidebar() {
  * ================================================================ */
 function visibleUsers() {
   const id = identity();
-  if (id.role === "administrateur") return state.users;
+  if (acRole() === "administrateur") return state.users;
   // Les utilisateurs porteurs d'un rôle réservé ne sont visibles que par les admins
-  if (id.role === "gestionnaire_compte") return state.users.filter(u => u.territoire === id.territoire && !hasAdminTag(u));
+  if (acRole() === "gestionnaire_compte") return state.users.filter(u => u.territoire === acTerr() && !hasAdminTag(u));
   return [];
 }
 function filteredUsers() {
@@ -361,7 +359,7 @@ function selectField(key, label, options, includeAll = "Tous") {
 
 function renderList() {
   const id = identity();
-  const isAdmin = id.role === "administrateur";
+  const isAdmin = acRole() === "administrateur";
   const list = filteredUsers();
   const total = visibleUsers().length;
   const f = state.filters;
@@ -376,7 +374,7 @@ function renderList() {
         <h1 class="fr-h4" style="margin:0;">Utilisateurs</h1>
         <p class="page-sub">${isAdmin
           ? "Vue administrateur — tous les territoires."
-          : "Vue gestionnaire de compte — territoire <strong>"+esc(id.territoire)+"</strong>."}</p>
+          : "Vue gestionnaire de compte — territoire <strong>"+esc(acTerr())+"</strong>."}</p>
       </div>
       <button class="fr-btn fr-btn--sm fr-btn--icon-left fr-icon-user-add-line" data-goto="create">Créer un utilisateur</button>
     </div>
@@ -479,7 +477,7 @@ function renderCreate() {
       <button class="fr-btn fr-btn--sm" data-goto-list>Voir la liste</button>
     </div>` : "";
 
-  const canAssignTags = identity().role === "administrateur";
+  const canAssignTags = acRole() === "administrateur";
   const roleCheckbox = (r) => `
     <div class="fr-checkbox-group">
       <input type="checkbox" id="role-${r.value}" data-role="${r.value}" ${f.roles.includes(r.value)?"checked":""}>
@@ -816,9 +814,9 @@ function saveTerritoireForm() {
  * ================================================================ */
 function depVisible() {
   const id = identity();
-  if (id.role === "administrateur") return state.departements;
+  if (acRole() === "administrateur") return state.departements;
   // Gestionnaire de compte : uniquement le département de son territoire SAS
-  return state.departements.filter(d => (d.territory || []).some(t => t.name === id.territoire));
+  return state.departements.filter(d => (d.territory || []).some(t => t.name === acTerr()));
 }
 function depFiltered() {
   const q = state.depSearch.trim().toLowerCase();
@@ -853,13 +851,13 @@ function depRows(list) {
 
 function renderDepartements() {
   const id = identity();
-  const isAdmin = id.role === "administrateur";
+  const isAdmin = acRole() === "administrateur";
   const list = depFiltered();
   const n = depEditCount();
 
   el("view-departements").innerHTML = `
     <h1 class="fr-h4" style="margin:0;">Départements</h1>
-    <p class="page-sub">${isAdmin ? "Tous les territoires SAS." : "Territoire <strong>"+esc(id.territoire)+"</strong>."} Paramétrez les rayons de recherche par défaut.</p>
+    <p class="page-sub">${isAdmin ? "Tous les territoires SAS." : "Territoire <strong>"+esc(acTerr())+"</strong>."} Paramétrez les rayons de recherche par défaut.</p>
     <div class="save-bar">
       <button class="fr-btn fr-btn--sm" id="dep-save" ${n?"":"disabled"}>Enregistrer</button>
       <span class="mock-note" id="dep-pending">${n ? `${n} modification${n>1?"s":""} en attente` : "Aucune modification"}</span>
@@ -951,8 +949,8 @@ function bindDepartementsEvents() {
 function supTerrToken(t) { return String(t).split(" ")[0]; }
 function supVisibleTerritories(cat) {
   const id = identity();
-  if (id.role === "administrateur") return cat.territories;
-  return cat.territories.filter(x => supTerrToken(x.territory) === id.territoire);
+  if (acRole() === "administrateur") return cat.territories;
+  return cat.territories.filter(x => supTerrToken(x.territory) === acTerr());
 }
 function supCurrentCat() { return state.support.find(c => c.reorientation_key === state.supCat) || state.support[0]; }
 function supKey(catKey, territory) { return catKey + "||" + territory; }
@@ -978,7 +976,7 @@ function supRows(cat, list) {
 
 function renderSupport() {
   const id = identity();
-  const isAdmin = id.role === "administrateur";
+  const isAdmin = acRole() === "administrateur";
   const cat = supCurrentCat();
   const q = state.supSearch.trim().toLowerCase();
   let list = supVisibleTerritories(cat);
@@ -987,7 +985,7 @@ function renderSupport() {
 
   el("view-support").innerHTML = `
     <h1 class="fr-h4" style="margin:0;">Gestion Support</h1>
-    <p class="page-sub">${isAdmin ? "Tous les territoires." : "Territoire <strong>"+esc(id.territoire)+"</strong>."} Mails de réorientation par catégorie.</p>
+    <p class="page-sub">${isAdmin ? "Tous les territoires." : "Territoire <strong>"+esc(acTerr())+"</strong>."} Mails de réorientation par catégorie.</p>
     <div class="sup-tabs">
       ${state.support.map(c => `<button class="sup-tab ${c.reorientation_key===state.supCat?'is-active':''}" data-sup-cat="${esc(c.reorientation_key)}">${esc(c.reorientation_name)}</button>`).join("")}
     </div>
@@ -1072,11 +1070,23 @@ function bindSupportEvents() {
  * ================================================================ */
 function render() {
   renderSidebar();
-  el("view-list").hidden        = state.view !== "list";
-  el("view-create").hidden      = state.view !== "create";
-  el("view-territoires").hidden = state.view !== "territoires";
-  el("view-departements").hidden= state.view !== "departements";
-  el("view-support").hidden     = state.view !== "support";
+  const denied = !acAcc();
+  el("view-list").hidden        = denied || state.view !== "list";
+  el("view-create").hidden      = denied || state.view !== "create";
+  el("view-territoires").hidden = denied || state.view !== "territoires";
+  el("view-departements").hidden= denied || state.view !== "departements";
+  el("view-support").hidden     = denied || state.view !== "support";
+  el("view-denied").hidden      = !denied;
+  if (denied) {
+    el("view-denied").innerHTML = `
+      <div class="fr-alert fr-alert--warning" style="margin-top:1rem;">
+        <h1 class="fr-alert__title" style="font-size:1.1rem;">Accès non autorisé</h1>
+        <p>Le profil « ${esc(identity().label)} » n'a pas d'habilitation sur le back-office Accès &amp; Utilisateurs.
+           ${identity().interop ? "Ce profil dispose d'un accès au back-office Interopérabilité." : ""}</p>
+        <p><a class="fr-link" href="${urlWithIdentity("index.html", state.identityIdx)}">← Retour au portail</a></p>
+      </div>`;
+    return;
+  }
   if (state.view === "list") renderList();
   else if (state.view === "create") renderCreate();
   else if (state.view === "territoires") renderTerritoires();
