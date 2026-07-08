@@ -211,6 +211,7 @@ body { margin: 0; background: #fff; color: #1a1a1a; font-size: 14px; line-height
 }
 .bo-tile:hover { box-shadow: 0 6px 20px rgba(0,0,0,.08); transform: translateY(-2px); }
 .bo-tile__icon { width: 2rem; height: 2rem; color: #000091; }
+.bo-tile__tech { font-size: .7rem; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; color: #929292; }
 .bo-tile__title { font-size: 1.05rem; font-weight: 700; color: #000091; }
 .bo-tile__desc { font-size: .86rem; color: #555; }
 .bo-tile__role { font-size: .78rem; color: #297254; }
@@ -237,6 +238,20 @@ body { margin: 0; background: #fff; color: #1a1a1a; font-size: 14px; line-height
 }
 .stub__icon { font-size: 2rem; color: #b1b1b1; }
 .stub h2 { font-size: 1.1rem; margin: .5rem 0 .25rem; color: #3a3a3a; }
+
+/* ── Open-Search : adresses d'activité ───────────────────── */
+.os-addrs { display: flex; flex-direction: column; gap: .75rem; }
+.os-addr {
+  display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem;
+  border: 1px solid #e5e5e5; border-left: 3px solid #000091; border-radius: 6px;
+  padding: .8rem 1rem; background: #fff;
+}
+.os-addr__line { font-weight: 600; display: flex; align-items: center; gap: .4rem; }
+.os-addr__meta { display: flex; gap: 1.2rem; flex-wrap: wrap; font-size: .85rem; color: #444; margin-top: .35rem; align-items: center; }
+.os-addr .act-edit { background: none; border: none; color: #000091; cursor: pointer; font-family: inherit; font-size: .85rem; }
+.os-addr .act-edit:hover { text-decoration: underline; }
+.os-addr--edit { flex-direction: column; align-items: stretch; background: #fafafa; }
+.os-addr--edit .fr-input-group { margin-bottom: .6rem; }
 
 /* ── Divers ──────────────────────────────────────────────── */
 .bo-view[hidden] { display: none; }

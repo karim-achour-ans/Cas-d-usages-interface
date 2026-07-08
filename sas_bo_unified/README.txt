@@ -1,6 +1,6 @@
 ========================================================================
   MOCK — SUITE ARRIÈRE-GUICHET DU SAS (Service d'Accès aux Soins)
-  Portail multi-back-offices · maquette au format DSFR
+  Portail multi-arrière-guichets · maquette au format DSFR
 ========================================================================
 
 COMMENT LANCER
@@ -9,15 +9,16 @@ Double-cliquez sur « index.html » : c'est le PORTAIL de la suite.
 Aucune installation, aucun serveur, aucune connexion requise (DSFR embarqué
 localement dans « vendor/ »).
 
-STRUCTURE DE LA SUITE
----------------------
-- index.html   → Portail : tuiles vers les back-offices accessibles selon
-                 le profil connecté (habilitations par périmètre).
-- acces.html   → BO « Accès & Utilisateurs » (utilisateurs, rôles,
-                 territoires, départements, gestion support).
-- interop.html → BO « Interopérabilité » (gestion des flux d'API) —
-                 coquille avec la section « Gestion comptes régulateurs »
-                 et 6 onglets en pages vides (à développer).
+STRUCTURE DE LA SUITE (un arrière-guichet par composant technique)
+------------------------------------------------------------------
+- index.html        → Portail : tuiles vers les arrière-guichets accessibles
+                      selon le profil connecté (habilitations par périmètre).
+- acces.html?component=keycloak → Keycloak : gestion des utilisateurs.
+- acces.html?component=sasdata  → SAS-DATA : territoires, départements, support.
+- opensearch.html   → Open-Search : offre de soins (professionnels de santé et
+                      adresses d'activité de l'index sas_consultation_place).
+- interop.html      → Interopérabilité : gestion des flux d'API — coquille
+                      « Gestion comptes régulateurs » (6 onglets en pages vides).
 
 IDENTITÉ (compte unique multi-périmètres)
 -----------------------------------------

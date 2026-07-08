@@ -63,7 +63,7 @@ function render() {
     main.innerHTML = `
       <div class="fr-alert fr-alert--warning" style="margin-top:1rem;">
         <h1 class="fr-alert__title" style="font-size:1.1rem;">Accès non autorisé</h1>
-        <p>Le profil « ${esc(identity().label)} » n'a pas d'habilitation sur le back-office Interopérabilité.</p>
+        <p>Le profil « ${esc(identity().label)} » n'a pas d'habilitation sur l'arrière-guichet Interopérabilité.</p>
         <p><a class="fr-link" href="${urlWithIdentity("index.html", state.identityIdx)}">← Retour au portail</a></p>
       </div>`;
     return;

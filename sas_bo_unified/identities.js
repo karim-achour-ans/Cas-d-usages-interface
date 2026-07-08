@@ -56,7 +56,10 @@ function currentIdentityIdx() {
   return 0;
 }
 function persistIdentityIdx(i) { try { localStorage.setItem(IDENTITY_KEY, String(i)); } catch (e) {} }
-function urlWithIdentity(page, i) { return page + "?identity=" + encodeURIComponent(i); }
+function urlWithIdentity(page, i) {
+  const sep = page.includes("?") ? "&" : "?";
+  return page + sep + "identity=" + encodeURIComponent(i);
+}
 
 // Navigation vers une page en conservant l'identité active
 function gotoWithIdentity(page, i) { persistIdentityIdx(i); location.href = urlWithIdentity(page, i); }

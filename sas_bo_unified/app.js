@@ -216,8 +216,24 @@ function formFromUser(u) {
 }
 function identity() { return IDENTITIES[state.identityIdx]; }
 function acAcc()  { return identity().acces; }                  // habilitation « acces » (ou null)
-function acRole() { return acAcc() ? acAcc().role : null; }      // rôle dans le BO Accès
+function acRole() { return acAcc() ? acAcc().role : null; }      // rôle dans l'arrière-guichet
 function acTerr() { return acAcc() ? acAcc().territoire : null; }// territoire du gestionnaire de compte
+
+/* Composant technique ouvert (Keycloak / SAS-DATA), passé par l'URL depuis le portail */
+const AC_COMPONENTS = {
+  all:      { title: "Arrière-guichet SAS", sub: "Accès & données",            views: ["list","create","territoires","departements","support"] },
+  keycloak: { title: "Keycloak",            sub: "Gestion des utilisateurs",   views: ["list","create"] },
+  sasdata:  { title: "SAS-DATA",            sub: "Territoires · Départements · Support", views: ["territoires","departements","support"] },
+};
+function currentComponent() {
+  try { const c = new URLSearchParams(location.search).get("component"); if (c && AC_COMPONENTS[c]) return c; } catch (e) {}
+  return "all";
+}
+function acPage() { return "acces.html?component=" + currentComponent(); }
+function allowedViews() {
+  const comp = AC_COMPONENTS[currentComponent()];
+  return comp.views.filter(v => v !== "territoires" || acRole() === "administrateur");
+}
 
 /* ---------------------------------------------------------------- *
  *  UTILITAIRES
@@ -255,15 +271,21 @@ function showModal({ title, bodyHtml, confirmLabel = "Confirmer", cancelLabel = 
 function renderSidebar() {
   const nav = el("sidebar-nav");
   const isAdmin = acRole() === "administrateur";
-  const items = [];
-  if (acAcc()) {
-    items.push({ view:"list",   icon:"fr-icon-user-line",     label:"Utilisateurs" });
-    items.push({ view:"create", icon:"fr-icon-user-add-line", label:"Créer un utilisateur" });
-    if (isAdmin) items.push({ view:"territoires", icon:"fr-icon-map-pin-2-line", label:"Territoires SAS" });
-    // Départements & Gestion Support : admin (tous) + gestionnaire de compte (son territoire)
-    items.push({ view:"departements", icon:"fr-icon-building-line", label:"Départements" });
-    items.push({ view:"support", icon:"fr-icon-mail-line", label:"Gestion Support" });
-  }
+
+  // Marque selon le composant technique ouvert
+  const comp = AC_COMPONENTS[currentComponent()];
+  const bt = el("brand-title"), bs = el("brand-sub");
+  if (bt) bt.textContent = comp.title;
+  if (bs) bs.textContent = comp.sub;
+
+  const ALL_ITEMS = {
+    list:         { view:"list",         icon:"fr-icon-user-line",      label:"Utilisateurs" },
+    create:       { view:"create",       icon:"fr-icon-user-add-line",  label:"Créer un utilisateur" },
+    territoires:  { view:"territoires",  icon:"fr-icon-map-pin-2-line", label:"Territoires SAS" },
+    departements: { view:"departements", icon:"fr-icon-building-line",  label:"Départements" },
+    support:      { view:"support",      icon:"fr-icon-mail-line",      label:"Gestion Support" },
+  };
+  const items = acAcc() ? allowedViews().map(v => ALL_ITEMS[v]) : [];
 
   nav.innerHTML =
     `<a class="nav-item nav-portal" href="${urlWithIdentity("index.html", state.identityIdx)}">
@@ -285,8 +307,8 @@ function renderSidebar() {
   const sel = el("identity-select");
   sel.innerHTML = IDENTITIES.map((i, idx) => `<option value="${idx}">${esc(i.label)}</option>`).join("");
   sel.value = state.identityIdx;
-  // Changer d'identité recharge la page (identité partagée entre les BO via l'URL)
-  sel.onchange = () => gotoWithIdentity("acces.html", Number(sel.value));
+  // Changer d'identité recharge la page en conservant le composant ouvert
+  sel.onchange = () => gotoWithIdentity(acPage(), Number(sel.value));
 }
 
 /* ================================================================ *
@@ -1069,6 +1091,11 @@ function bindSupportEvents() {
  *  RENDU GLOBAL
  * ================================================================ */
 function render() {
+  // Restreindre la vue active au composant technique ouvert
+  if (acAcc()) {
+    const allowed = allowedViews();
+    if (!allowed.includes(state.view)) state.view = allowed[0];
+  }
   renderSidebar();
   const denied = !acAcc();
   el("view-list").hidden        = denied || state.view !== "list";
@@ -1081,8 +1108,8 @@ function render() {
     el("view-denied").innerHTML = `
       <div class="fr-alert fr-alert--warning" style="margin-top:1rem;">
         <h1 class="fr-alert__title" style="font-size:1.1rem;">Accès non autorisé</h1>
-        <p>Le profil « ${esc(identity().label)} » n'a pas d'habilitation sur le back-office Accès &amp; Utilisateurs.
-           ${identity().interop ? "Ce profil dispose d'un accès au back-office Interopérabilité." : ""}</p>
+        <p>Le profil « ${esc(identity().label)} » n'a pas d'habilitation sur cet arrière-guichet.
+           ${identity().interop ? "Ce profil dispose en revanche d'un accès à l'arrière-guichet Interopérabilité." : ""}</p>
         <p><a class="fr-link" href="${urlWithIdentity("index.html", state.identityIdx)}">← Retour au portail</a></p>
       </div>`;
     return;
