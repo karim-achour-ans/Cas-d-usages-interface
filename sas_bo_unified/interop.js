@@ -27,11 +27,11 @@ const state = {
   view: ALL_ITEMS[0].key,
 };
 function identity(){ return IDENTITIES[state.identityIdx]; }
-function interopHab(){ return identity().interop; }
+function interopLevel(){ return habLevel(identity(), "interop"); }   // null | "lecture" | "ecriture"
 
 function renderSidebar() {
   const nav = el("sidebar-nav");
-  const denied = !interopHab();
+  const denied = !interopLevel();
 
   let html = `<a class="nav-item nav-portal" href="${urlWithIdentity("index.html", state.identityIdx)}">
       <span class="fr-icon-arrow-left-line" aria-hidden="true"></span>Portail
@@ -56,10 +56,10 @@ function renderSidebar() {
 
 function render() {
   renderSidebar();
-  const hab = interopHab();
+  const level = interopLevel();
   const main = el("interop-view");
 
-  if (!hab) {
+  if (!level) {
     main.innerHTML = `
       <div class="fr-alert fr-alert--warning" style="margin-top:1rem;">
         <h1 class="fr-alert__title" style="font-size:1.1rem;">Accès non autorisé</h1>
@@ -76,7 +76,7 @@ function render() {
         <h1 class="fr-h4" style="margin:0;">${esc(item.label)}</h1>
         <p class="page-sub">Gestion comptes régulateurs</p>
       </div>
-      <span class="fr-badge fr-badge--sm fr-badge--info">${esc(INTEROP_ROLE_LABEL[hab.role] || hab.role)}</span>
+      <span class="lvl ${level==="ecriture"?"lvl--write":"lvl--read"}">${esc(levelLabel(level))}</span>
     </div>
     <div class="stub">
       <div class="stub__icon ${esc(item.icon)}" aria-hidden="true"></div>

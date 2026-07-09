@@ -11,20 +11,26 @@ localement dans « vendor/ »).
 
 STRUCTURE DE LA SUITE (un arrière-guichet par composant technique)
 ------------------------------------------------------------------
-- index.html        → Portail : tuiles vers les arrière-guichets accessibles
-                      selon le profil connecté (habilitations par périmètre).
+- index.html         → Portail : tuiles vers les arrière-guichets habilités.
 - acces.html?component=keycloak → Keycloak : gestion des utilisateurs.
 - acces.html?component=sasdata  → SAS-DATA : territoires, départements, support.
-- opensearch.html   → Open-Search : offre de soins (professionnels de santé et
-                      adresses d'activité de l'index sas_consultation_place).
-- interop.html      → Interopérabilité : gestion des flux d'API — coquille
-                      « Gestion comptes régulateurs » (6 onglets en pages vides).
+- opensearch.html    → Open-Search : offre de soins (index sas_consultation_place).
+- interop.html       → Interopérabilité : flux d'API (coquille, 6 onglets vides).
+- gestion-acces.html → Gestion des accès (réservé à l'Admin BO).
 
-IDENTITÉ (compte unique multi-périmètres)
------------------------------------------
-Une identité porte des habilitations par application :
-  - acces   : { role, territoire }  → rôles du BO Accès
-  - interop : { role }              → rôles du BO Interop
+HABILITATIONS (niveau par arrière-guichet)
+------------------------------------------
+Chaque identité porte, par arrière-guichet, un niveau : Aucun / Lecture / Écriture.
+  - Admin BO : super-rôle, écriture partout + écran « Gestion des accès »
+    (crée les comptes d'administration et fixe leurs niveaux).
+  - Admin    : niveaux Lecture/Écriture par guichet. En Lecture, on consulte
+    mais les boutons créer/éditer/enregistrer/supprimer sont masqués.
+  - Gestionnaire de compte : profil territorial (périmètre par territoire).
+Le portail n'affiche que les guichets habilités et indique le niveau.
+
+  (Ancien modèle remplacé) — pour mémoire, l'identité portait auparavant :
+  - acces   : { role, territoire }
+  - interop : { role }
               (ROLE_AUTHENTICATED_USER, ROLE_MANAGER, ROLE_ADMINISTRATOR)
 Le portail n'affiche que les BO habilités ; un profil non habilité voit un
 écran « Accès non autorisé » avec retour au portail. Le sélecteur « Connecté

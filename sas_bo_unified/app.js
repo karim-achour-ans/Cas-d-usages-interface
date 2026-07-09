@@ -215,24 +215,29 @@ function formFromUser(u) {
   return f;
 }
 function identity() { return IDENTITIES[state.identityIdx]; }
-function acAcc()  { return identity().acces; }                  // habilitation « acces » (ou null)
-function acRole() { return acAcc() ? acAcc().role : null; }      // rôle dans l'arrière-guichet
-function acTerr() { return acAcc() ? acAcc().territoire : null; }// territoire du gestionnaire de compte
+function acRole() { return identity().role || null; }            // administrateur | gestionnaire_compte
+function acTerr() { return identity().territoire || null; }      // territoire du gestionnaire de compte
 
 /* Composant technique ouvert (Keycloak / SAS-DATA), passé par l'URL depuis le portail */
 const AC_COMPONENTS = {
-  all:      { title: "Arrière-guichet SAS", sub: "Accès & données",            views: ["list","create","territoires","departements","support"] },
-  keycloak: { title: "Keycloak",            sub: "Gestion des utilisateurs",   views: ["list","create"] },
-  sasdata:  { title: "SAS-DATA",            sub: "Territoires · Départements · Support", views: ["territoires","departements","support"] },
+  keycloak: { key: "utilisateurs", title: "Keycloak", sub: "Gestion des utilisateurs",           views: ["list","create"] },
+  sasdata:  { key: "sasdata",      title: "SAS-DATA", sub: "Territoires · Départements · Support", views: ["territoires","departements","support"] },
 };
 function currentComponent() {
   try { const c = new URLSearchParams(location.search).get("component"); if (c && AC_COMPONENTS[c]) return c; } catch (e) {}
-  return "all";
+  return "keycloak";
 }
-function acPage() { return "acces.html?component=" + currentComponent(); }
+function acCompKey() { return AC_COMPONENTS[currentComponent()].key; }   // "utilisateurs" | "sasdata"
+function acLevel()   { return habLevel(identity(), acCompKey()); }       // null | "lecture" | "ecriture"
+function acHasAccess() { return acLevel() != null; }
+function acWrite()   { return acLevel() === "ecriture"; }
+function acPage()    { return "acces.html?component=" + currentComponent(); }
 function allowedViews() {
-  const comp = AC_COMPONENTS[currentComponent()];
-  return comp.views.filter(v => v !== "territoires" || acRole() === "administrateur");
+  return AC_COMPONENTS[currentComponent()].views.filter(v => {
+    if (v === "territoires" && acRole() !== "administrateur") return false; // territoires = admin uniquement
+    if (v === "create" && !acWrite()) return false;                        // création = écriture uniquement
+    return true;
+  });
 }
 
 /* ---------------------------------------------------------------- *
@@ -270,7 +275,6 @@ function showModal({ title, bodyHtml, confirmLabel = "Confirmer", cancelLabel = 
  * ---------------------------------------------------------------- */
 function renderSidebar() {
   const nav = el("sidebar-nav");
-  const isAdmin = acRole() === "administrateur";
 
   // Marque selon le composant technique ouvert
   const comp = AC_COMPONENTS[currentComponent()];
@@ -285,12 +289,13 @@ function renderSidebar() {
     departements: { view:"departements", icon:"fr-icon-building-line",  label:"Départements" },
     support:      { view:"support",      icon:"fr-icon-mail-line",      label:"Gestion Support" },
   };
-  const items = acAcc() ? allowedViews().map(v => ALL_ITEMS[v]) : [];
+  const items = acHasAccess() ? allowedViews().map(v => ALL_ITEMS[v]) : [];
 
   nav.innerHTML =
     `<a class="nav-item nav-portal" href="${urlWithIdentity("index.html", state.identityIdx)}">
        <span class="fr-icon-arrow-left-line" aria-hidden="true"></span>Portail
      </a>` +
+    (acHasAccess() ? `<div class="nav-level lvl ${acWrite()?"lvl--write":"lvl--read"}">${acWrite()?"Écriture":"Lecture seule"}</div>` : "") +
     items.map(i => {
       const active = state.view === i.view && !(i.view === "create" && state.editId);
       return `<button class="nav-item ${active?"is-active":""}" data-view="${i.view}">
@@ -362,11 +367,11 @@ function userRow(u) {
           ${esc(u.email)} · ${esc(u.ville)}${u.territoire ? " · " + esc(u.territoire) : ""}${extra}
         </div>
       </div>
-      <div class="user-row__actions">
+      ${acWrite() ? `<div class="user-row__actions">
         <button class="act-edit"   data-edit="${u.id}">Modifier</button>
         <button class="act-toggle" data-toggle="${u.id}">${u.actif ? "Désactiver" : "Activer"}</button>
         <button class="act-del"    data-del="${u.id}">Supprimer</button>
-      </div>
+      </div>` : ""}
     </div>`;
 }
 
@@ -398,7 +403,7 @@ function renderList() {
           ? "Vue administrateur — tous les territoires."
           : "Vue gestionnaire de compte — territoire <strong>"+esc(acTerr())+"</strong>."}</p>
       </div>
-      <button class="fr-btn fr-btn--sm fr-btn--icon-left fr-icon-user-add-line" data-goto="create">Créer un utilisateur</button>
+      ${acWrite() ? `<button class="fr-btn fr-btn--sm fr-btn--icon-left fr-icon-user-add-line" data-goto="create">Créer un utilisateur</button>` : ""}
     </div>
 
     <div class="filters">
@@ -419,7 +424,7 @@ function renderList() {
     <div class="user-list" id="user-list">${renderRows(list)}</div>
 
     <p class="mock-note" style="margin-top:1.5rem;">
-      Données de démonstration (navigateur). <a href="#" id="reset-seed">Réinitialiser le jeu de démonstration</a>
+      Données de démonstration (navigateur).${acWrite() ? ` <a href="#" id="reset-seed">Réinitialiser le jeu de démonstration</a>` : ""}
     </p>`;
 
   bindListEvents();
@@ -447,7 +452,8 @@ function bindRowActions(root) {
 
 function bindListEvents() {
   const root = el("view-list");
-  root.querySelector("[data-goto='create']").onclick = () => { state.view="create"; state.form=newForm(); state.editId=null; render(); };
+  const gotoCreate = root.querySelector("[data-goto='create']");
+  if (gotoCreate) gotoCreate.onclick = () => { state.view="create"; state.form=newForm(); state.editId=null; render(); };
 
   root.querySelector("#flt-q").oninput = (e) => {
     state.filters.q = e.target.value;
@@ -464,7 +470,8 @@ function bindListEvents() {
   root.querySelectorAll("[data-filter]").forEach(sel => sel.onchange = () => { state.filters[sel.dataset.filter] = sel.value; render(); });
   const reset = root.querySelector("#reset-filters");
   if (reset) reset.onclick = () => { state.filters = { ...EMPTY_FILTERS }; render(); };
-  root.querySelector("#reset-seed").onclick = (e) => {
+  const resetSeed = root.querySelector("#reset-seed");
+  if (resetSeed) resetSeed.onclick = (e) => {
     e.preventDefault();
     if (confirm("Réinitialiser toutes les données de démonstration ?")) {
       state.users = SEED_USERS.map(u=>({...u}));
@@ -730,8 +737,8 @@ function renderTerritoires() {
       <td>${esc(x.dep)}</td>
       <td>${n}</td>
       <td>
-        <button class="fr-link" data-terr-edit="${esc(x.code)}">Modifier</button>
-        <button class="fr-link" style="color:#ce0500" data-terr-del="${esc(x.code)}">Supprimer</button>
+        ${acWrite() ? `<button class="fr-link" data-terr-edit="${esc(x.code)}">Modifier</button>
+        <button class="fr-link" style="color:#ce0500" data-terr-del="${esc(x.code)}">Supprimer</button>` : `<span class="mock-note">—</span>`}
       </td>
     </tr>`;
   }).join("");
@@ -768,7 +775,7 @@ function renderTerritoires() {
         <h1 class="fr-h4" style="margin:0;">Territoires SAS</h1>
         <p class="page-sub">Référentiel des territoires — format SAS-[n° département].</p>
       </div>
-      ${t ? "" : `<button class="fr-btn fr-btn--sm fr-btn--icon-left fr-icon-user-add-line" id="terr-add">Ajouter un territoire</button>`}
+      ${(t || !acWrite()) ? "" : `<button class="fr-btn fr-btn--sm fr-btn--icon-left fr-icon-user-add-line" id="terr-add">Ajouter un territoire</button>`}
     </div>
     ${formHtml}
     <table class="terr-table">
@@ -866,8 +873,8 @@ function depRows(list) {
       <td>${esc(d.region)}</td>
       <td>${esc((d.territory||[]).map(t=>t.name).join(", "))}</td>
       <td class="num">${esc(d.area)}</td>
-      <td class="num"><input class="dep-radius-input ${depChanged(d.code,'countyRadius',d.countyRadius)?'changed':''}" type="number" min="0" step="1" value="${esc(depPending(d.code,'countyRadius',d.countyRadius))}" data-dep-county="${esc(d.code)}"></td>
-      <td class="num"><input class="dep-radius-input ${depChanged(d.code,'cityDefaultRadius',d.cityDefaultRadius)?'changed':''}" type="number" min="0" step="0.5" value="${esc(depPending(d.code,'cityDefaultRadius',d.cityDefaultRadius))}" data-dep-city="${esc(d.code)}"></td>
+      <td class="num"><input class="dep-radius-input ${depChanged(d.code,'countyRadius',d.countyRadius)?'changed':''}" type="number" min="0" step="1" value="${esc(depPending(d.code,'countyRadius',d.countyRadius))}" data-dep-county="${esc(d.code)}" ${acWrite()?"":"readonly"}></td>
+      <td class="num"><input class="dep-radius-input ${depChanged(d.code,'cityDefaultRadius',d.cityDefaultRadius)?'changed':''}" type="number" min="0" step="0.5" value="${esc(depPending(d.code,'cityDefaultRadius',d.cityDefaultRadius))}" data-dep-city="${esc(d.code)}" ${acWrite()?"":"readonly"}></td>
     </tr>`).join("");
 }
 
@@ -879,11 +886,11 @@ function renderDepartements() {
 
   el("view-departements").innerHTML = `
     <h1 class="fr-h4" style="margin:0;">Départements</h1>
-    <p class="page-sub">${isAdmin ? "Tous les territoires SAS." : "Territoire <strong>"+esc(acTerr())+"</strong>."} Paramétrez les rayons de recherche par défaut.</p>
-    <div class="save-bar">
+    <p class="page-sub">${isAdmin ? "Tous les territoires SAS." : "Territoire <strong>"+esc(acTerr())+"</strong>."} ${acWrite() ? "Paramétrez les rayons de recherche par défaut." : "Consultation en lecture seule."}</p>
+    ${acWrite() ? `<div class="save-bar">
       <button class="fr-btn fr-btn--sm" id="dep-save" ${n?"":"disabled"}>Enregistrer</button>
       <span class="mock-note" id="dep-pending">${n ? `${n} modification${n>1?"s":""} en attente` : "Aucune modification"}</span>
-    </div>
+    </div>` : ""}
     <div class="fr-input-group" style="max-width:340px;margin:.25rem 0 .25rem;">
       <label class="fr-label" for="dep-q">Rechercher</label>
       <input class="fr-input" type="search" id="dep-q" placeholder="Code, département, région…" value="${esc(state.depSearch)}">
@@ -939,7 +946,8 @@ function bindDepartementsEvents() {
     el("dep-count").textContent = `${list.length} département${list.length>1?"s":""}`;
     bindDepRowInputs(el("dep-body"));
   };
-  root.querySelector("#dep-save").onclick = () => {
+  const depSaveBtn = root.querySelector("#dep-save");
+  if (depSaveBtn) depSaveBtn.onclick = () => {
     const items = [];
     for (const code in state.depEdits) {
       const d = state.departements.find(x => x.code === code);
@@ -991,7 +999,7 @@ function supRows(cat, list) {
     return `<tr>
       <td class="terr">${esc(entry.territory)}</td>
       <td><input class="sup-emails-input ${changed?'changed':''}" value="${esc(supDisplay(cat.reorientation_key, entry))}"
-        data-sup-territory="${esc(entry.territory)}" placeholder="email1@ex.fr, email2@ex.fr"></td>
+        data-sup-territory="${esc(entry.territory)}" placeholder="email1@ex.fr, email2@ex.fr" ${acWrite()?"":"readonly"}></td>
     </tr>`;
   }).join("");
 }
@@ -1011,10 +1019,10 @@ function renderSupport() {
     <div class="sup-tabs">
       ${state.support.map(c => `<button class="sup-tab ${c.reorientation_key===state.supCat?'is-active':''}" data-sup-cat="${esc(c.reorientation_key)}">${esc(c.reorientation_name)}</button>`).join("")}
     </div>
-    <div class="save-bar">
+    ${acWrite() ? `<div class="save-bar">
       <button class="fr-btn fr-btn--sm" id="sup-save" ${n?"":"disabled"}>Enregistrer</button>
       <span class="mock-note" id="sup-pending">${n ? `${n} modification${n>1?"s":""} en attente` : "Aucune modification"}</span>
-    </div>
+    </div>` : ""}
     <div class="fr-input-group" style="max-width:340px;margin:.25rem 0;">
       <label class="fr-label" for="sup-q">Rechercher</label>
       <input class="fr-input" type="search" id="sup-q" placeholder="Territoire ou email…" value="${esc(state.supSearch)}">
@@ -1059,7 +1067,8 @@ function bindSupportEvents() {
     el("sup-count").textContent = `${list.length} territoire${list.length>1?"s":""}`;
     bindSupRowInputs(el("sup-body"));
   };
-  root.querySelector("#sup-save").onclick = () => {
+  const supSaveBtn = root.querySelector("#sup-save");
+  if (supSaveBtn) supSaveBtn.onclick = () => {
     const items = [];
     for (const k in state.supEdits) {
       const [catKey, territory] = k.split("||");
@@ -1091,13 +1100,13 @@ function bindSupportEvents() {
  *  RENDU GLOBAL
  * ================================================================ */
 function render() {
-  // Restreindre la vue active au composant technique ouvert
-  if (acAcc()) {
+  const denied = !acHasAccess();
+  if (!denied) {
+    // Restreindre la vue active au composant technique ouvert et au niveau d'habilitation
     const allowed = allowedViews();
     if (!allowed.includes(state.view)) state.view = allowed[0];
   }
   renderSidebar();
-  const denied = !acAcc();
   el("view-list").hidden        = denied || state.view !== "list";
   el("view-create").hidden      = denied || state.view !== "create";
   el("view-territoires").hidden = denied || state.view !== "territoires";
@@ -1108,8 +1117,7 @@ function render() {
     el("view-denied").innerHTML = `
       <div class="fr-alert fr-alert--warning" style="margin-top:1rem;">
         <h1 class="fr-alert__title" style="font-size:1.1rem;">Accès non autorisé</h1>
-        <p>Le profil « ${esc(identity().label)} » n'a pas d'habilitation sur cet arrière-guichet.
-           ${identity().interop ? "Ce profil dispose en revanche d'un accès à l'arrière-guichet Interopérabilité." : ""}</p>
+        <p>Le profil « ${esc(identity().label)} » n'a pas d'habilitation sur ${esc(AC_COMPONENTS[currentComponent()].title)} (${esc(AC_COMPONENTS[currentComponent()].sub)}).</p>
         <p><a class="fr-link" href="${urlWithIdentity("index.html", state.identityIdx)}">← Retour au portail</a></p>
       </div>`;
     return;

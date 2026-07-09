@@ -1,8 +1,7 @@
 /* ==================================================================
    Open-Search — offre de soins (index « sas_consultation_place »)
    Un document = un professionnel de santé À UNE ADRESSE (place).
-   Un même RPPS présent sur plusieurs adresses = plusieurs documents.
-   Structure fidèle à l'index (champs `_source` principaux).
+   Un même RPPS sur plusieurs adresses = plusieurs documents.
    Le champ `modalite` (via MSP / via CPTS) est ajouté pour la maquette.
    ================================================================== */
 const OS_INDEX = [
@@ -77,12 +76,7 @@ const OS_INDEX = [
     agreements:"c1", mssante:"", modalite:"CPTS" },
 ];
 
-// Libellés des codes profession (référentiel RPPS, extrait)
 const OS_PROFESSION_LABEL = {
-  "10": "Médecin",
-  "40": "Chirurgien-dentiste",
-  "50": "Sage-femme",
-  "60": "Infirmier",
-  "70": "Masseur-kinésithérapeute",
-  "21": "Pharmacien",
+  "10": "Médecin", "40": "Chirurgien-dentiste", "50": "Sage-femme",
+  "60": "Infirmier", "70": "Masseur-kinésithérapeute", "21": "Pharmacien",
 };

@@ -1,9 +1,7 @@
 /* ==================================================================
    Open-Search — offre de soins.
    Documents « place » regroupés par RPPS → un PS et ses adresses.
-   Édition d'une adresse : téléphone, adresse normalisée, géolocalisation
-   (+ modalité de participation MSP / CPTS).
-   Accessible aux identités portant l'habilitation « acces ».
+   Habilitation « offre_soins » : lecture (consultation) ou écriture (édition).
    ================================================================== */
 "use strict";
 
@@ -16,26 +14,21 @@ function saveIndex(){ try { localStorage.setItem(OS_KEY, JSON.stringify(state.do
 
 const state = {
   identityIdx: currentIdentityIdx(),
-  docs: loadIndex(),   // documents « place »
-  view: "list",        // "list" | "detail"
-  rpps: null,          // PS affiché
-  editPsa: null,       // adresse (psa) en cours d'édition
+  docs: loadIndex(),
+  view: "list",
+  rpps: null,
+  editPsa: null,
   search: "",
   form: null,
 };
 function identity(){ return IDENTITIES[state.identityIdx]; }
-function acAcc(){ return identity().acces; }
+function osLevel(){ return habLevel(identity(), "offre_soins"); }   // null | lecture | ecriture
+function osWrite(){ return osLevel() === "ecriture"; }
 
-// Regroupe les documents par RPPS → { rpps, nom, prenom, title, professionId, participationSAS, places[] }
 function groupByPS() {
   const map = new Map();
   state.docs.forEach(d => {
-    if (!map.has(d.rpps)) {
-      map.set(d.rpps, {
-        rpps: d.rpps, lastname: d.lastname, firstname: d.firstname, title: d.title,
-        profession: d.profession, places: [],
-      });
-    }
+    if (!map.has(d.rpps)) map.set(d.rpps, { rpps:d.rpps, lastname:d.lastname, firstname:d.firstname, title:d.title, profession:d.profession, places:[] });
     map.get(d.rpps).places.push(d);
   });
   const arr = [...map.values()];
@@ -43,30 +36,22 @@ function groupByPS() {
   return arr;
 }
 function currentPS() { return groupByPS().find(p => p.rpps === state.rpps); }
-
 function professionLabel(id){ return OS_PROFESSION_LABEL[id] || ("Profession " + id); }
 function phoneOf(d){ return (d.phones && d.phones[0] && d.phones[0].number) || ""; }
-function modaliteBadge(m){
-  const cls = m === "MSP" ? "fr-badge--info" : "fr-badge--purple";
-  return `<span class="fr-badge fr-badge--sm ${cls}">Via ${esc(m)}</span>`;
-}
-function participationBadge(ok){
-  return ok
-    ? `<span class="fr-badge fr-badge--sm fr-badge--success">Participe au SAS</span>`
-    : `<span class="fr-badge fr-badge--sm">Hors SAS</span>`;
-}
+function modaliteBadge(m){ return `<span class="fr-badge fr-badge--sm ${m==="MSP"?"fr-badge--info":"fr-badge--purple"}">Via ${esc(m)}</span>`; }
+function participationBadge(ok){ return ok ? `<span class="fr-badge fr-badge--sm fr-badge--success">Participe au SAS</span>` : `<span class="fr-badge fr-badge--sm">Hors SAS</span>`; }
 
-/* ── Menu ────────────────────────────────────────────────── */
 function renderSidebar() {
   const nav = el("sidebar-nav");
+  const lvl = osLevel();
   nav.innerHTML =
     `<a class="nav-item nav-portal" href="${urlWithIdentity("index.html", state.identityIdx)}">
        <span class="fr-icon-arrow-left-line" aria-hidden="true"></span>Portail
-     </a>
-     <button class="nav-item is-active" id="nav-os">
-       <span class="fr-icon-search-line" aria-hidden="true"></span>Offre de soins
-     </button>`;
-  el("nav-os").onclick = () => { state.view = "list"; state.rpps = null; render(); };
+     </a>` +
+    (lvl ? `<div class="nav-level lvl ${osWrite()?"lvl--write":"lvl--read"}">${osWrite()?"Écriture":"Lecture seule"}</div>
+     <button class="nav-item is-active" id="nav-os"><span class="fr-icon-search-line" aria-hidden="true"></span>Offre de soins</button>` : "");
+  const b = el("nav-os");
+  if (b) b.onclick = () => { state.view = "list"; state.rpps = null; render(); };
 
   const sel = el("identity-select");
   sel.innerHTML = IDENTITIES.map((i, k) => `<option value="${k}">${esc(i.label)}</option>`).join("");
@@ -74,7 +59,6 @@ function renderSidebar() {
   sel.onchange = () => gotoWithIdentity("opensearch.html", Number(sel.value));
 }
 
-/* ── Vue liste des professionnels ────────────────────────── */
 function filteredPS(){
   const q = state.search.trim().toLowerCase();
   const list = groupByPS();
@@ -123,11 +107,9 @@ function bindPsRows(){
   });
 }
 
-/* ── Vue détail : adresses d'activité ────────────────────── */
 function renderDetail() {
   const p = currentPS();
   if (!p) { state.view = "list"; renderList(); return; }
-
   const addrs = p.places.map(d => state.editPsa === d.psa ? addrEditForm(d) : addrCard(d)).join("");
   el("os-view").innerHTML = `
     <nav class="fr-breadcrumb" style="margin:0 0 .5rem;">
@@ -142,7 +124,6 @@ function renderDetail() {
     </div>
     <h2 class="fr-h6" style="margin:1.25rem 0 .5rem;">Adresses d'activité (${p.places.length})</h2>
     <div class="os-addrs">${addrs}</div>`;
-
   el("os-back").onclick = () => { state.view = "list"; state.rpps = null; render(); };
   bindDetailEvents();
 }
@@ -156,10 +137,9 @@ function addrCard(d){
           <span><strong>Tél. :</strong> ${tel ? esc(tel) : '<span class="mock-note">non renseigné</span>'}</span>
           <span><strong>Modalité :</strong> ${modaliteBadge(d.modalite)}</span>
           <span class="mock-note">Géo : ${esc(d.coordinates.lat)}, ${esc(d.coordinates.lon)}</span>
-          <span class="mock-note">FINESS/ETB : ${esc(d.etbGuid.split("-").pop())}</span>
         </div>
       </div>
-      <button class="act-edit" data-addr-edit="${esc(d.psa)}">Éditer</button>
+      ${osWrite() ? `<button class="act-edit" data-addr-edit="${esc(d.psa)}">Éditer</button>` : ""}
     </div>`;
 }
 function addrEditForm(d){
@@ -244,11 +224,10 @@ function bindDetailEvents(){
   }
 }
 
-/* ── Rendu global ────────────────────────────────────────── */
 function render() {
   renderSidebar();
   const main = el("os-view");
-  if (!acAcc()) {
+  if (!osLevel()) {
     main.innerHTML = `
       <div class="fr-alert fr-alert--warning" style="margin-top:1rem;">
         <h1 class="fr-alert__title" style="font-size:1.1rem;">Accès non autorisé</h1>
