@@ -53,20 +53,23 @@ const STRUCTURE_LABEL = Object.fromEntries(STRUCTURE_TYPES.map(s => [s.value, s.
 /* Libellés courts pour la liste (SOS Médecins / CDS / CPTS-MSP) */
 const STRUCTURE_SHORT = { sos_medecins: "SOS Médecins", cds: "CDS", cpts_msp: "CPTS/MSP" };
 
-/* Territoires SAS — format « SAS-[n° département] » (référentiel modifiable) */
+/* Territoires SAS — format « SAS-[n° département] ».
+   Un territoire peut couvrir PLUSIEURS départements et porte une liste de
+   codes INSEE (communes) — référentiel modifiable. */
 const SEED_TERRITOIRES = [
-  { code: "SAS-75", dep: "Paris" },
-  { code: "SAS-92", dep: "Hauts-de-Seine" },
-  { code: "SAS-93", dep: "Seine-Saint-Denis" },
-  { code: "SAS-69", dep: "Rhône" },
-  { code: "SAS-13", dep: "Bouches-du-Rhône" },
-  { code: "SAS-33", dep: "Gironde" },
-  { code: "SAS-31", dep: "Haute-Garonne" },
-  { code: "SAS-59", dep: "Nord" },
-  { code: "SAS-44", dep: "Loire-Atlantique" },
-  { code: "SAS-35", dep: "Ille-et-Vilaine" },
-  { code: "SAS-67", dep: "Bas-Rhin" },
-  { code: "SAS-34", dep: "Hérault" },
+  { code: "SAS-75", departements: ["Paris"],                              insee: ["75056"] },
+  { code: "SAS-92", departements: ["Hauts-de-Seine"],                     insee: ["92012","92050","92062"] },
+  { code: "SAS-93", departements: ["Seine-Saint-Denis"],                  insee: ["93048","93066","93070"] },
+  { code: "SAS-69", departements: ["Rhône", "Métropole de Lyon"],         insee: ["69123","69029","69264"] }, // multi-départements
+  { code: "SAS-13", departements: ["Bouches-du-Rhône"],                   insee: ["13055","13001"] },
+  { code: "SAS-33", departements: ["Gironde"],                            insee: ["33063","33281"] },
+  { code: "SAS-31", departements: ["Haute-Garonne"],                      insee: ["31555","31424"] },
+  { code: "SAS-59", departements: ["Nord"],                               insee: ["59350","59512"] },
+  { code: "SAS-44", departements: ["Loire-Atlantique"],                   insee: ["44109","44184"] },
+  { code: "SAS-35", departements: ["Ille-et-Vilaine"],                    insee: ["35238","35047"] },
+  { code: "SAS-67", departements: ["Bas-Rhin"],                           insee: ["67482"] },
+  { code: "SAS-34", departements: ["Hérault"],                            insee: ["34172","34301"] },
+  { code: "SAS-20", departements: ["Corse-du-Sud", "Haute-Corse"],        insee: ["2A004","2B033"] }, // multi-départements
 ];
 
 /* Annuaire FINESS (mock) */
@@ -191,14 +194,37 @@ const CGU_SEED = {
   ].join("\n"),
 };
 
+/* Bandeaux d'information (Lot 4) — deux audiences par périmètre :
+   « connecte » (utilisateur connecté) et « non_connecte » (page de connexion).
+   Éditables au niveau national et par territoire, avec plage d'affichage (début/fin). */
+const BANDEAU_AUDIENCES = [
+  { key: "connecte",     label: "Utilisateur connecté" },
+  { key: "non_connecte", label: "Page de connexion (non connecté)" },
+];
+const BANDEAU_SEED = [
+  { id:"ban-nat-c",  scope:"national", audience:"connecte",     active:true,
+    title:"Fenêtre de maintenance planifiée",
+    message:"Une maintenance de la plateforme SAS aura lieu le 28/07 de 22h à 23h. Les services pourront être momentanément indisponibles.",
+    start:"2026-07-20T08:00", end:"2026-07-28T23:00" },
+  { id:"ban-nat-nc", scope:"national", audience:"non_connecte", active:true,
+    title:"Bienvenue sur l'arrière-guichet SAS",
+    message:"L'accès est réservé aux professionnels habilités. Connectez-vous via Pro Santé Connect ou avec vos identifiants.",
+    start:"2026-01-01T00:00", end:"2026-12-31T23:59" },
+  { id:"ban-75-c",   scope:"SAS-75",   audience:"connecte",     active:true,
+    title:"SAS-75 — nouvelle procédure de réorientation",
+    message:"À compter du 21/07, les réorientations de nuit sont centralisées. Consultez la note dans la Gestion Support.",
+    start:"2026-07-18T06:00", end:"2026-08-15T20:00" },
+];
+
 /* ---------------------------------------------------------------- *
  *  ÉTAT
  * ---------------------------------------------------------------- */
 const USERS_KEY = "bo-sas-users-v8";
-const TERR_KEY  = "bo-sas-territoires-v1";
+const TERR_KEY  = "bo-sas-territoires-v2";
 const DEP_KEY   = "bo-sas-departements-v1";
 const SUP_KEY   = "bo-sas-support-v1";
 const CGU_KEY   = "bo-sas-cgu-v1";
+const BAN_KEY   = "bo-sas-bandeaux-v1";
 
 const EMPTY_FILTERS = { q: "", role: "", territoire: "", region: "", ville: "", profSpec: "", structure: "", statut: "" };
 
@@ -208,8 +234,9 @@ const state = {
   departements: loadDepartements(),
   support: loadSupport(),
   cgu: loadCgu(),
+  bandeaux: loadBandeaux(),
   identityIdx: currentIdentityIdx(),
-  view: "list",   // "list" | "create" | "statistiques" | "cgu" | "territoires" | "departements" | "support"
+  view: "list",   // "list" | "create" | "statistiques" | "cgu" | "bandeaux" | "territoires" | "departements" | "support"
   editId: null,   // utilisateur en cours de modification
   filters: { ...EMPTY_FILTERS },
   form: newForm(),
@@ -221,6 +248,9 @@ const state = {
   supEdits: {},   // { [`${catKey}||${territory}`]: "email1, email2" } — modifications en attente
   stat: { level: "national", region: "", territoire: "" }, // périmètre de la page Statistiques
   cguDraft: null, // { body, version } — édition CGU en attente
+  banScope: "national", // périmètre actif de la page Bandeaux
+  banEdits: {},   // { [`${scope}||${audience}`]: {active,title,message,start,end} } — modifications en attente
+  supFilter: "",  // filtre par SAS (territoire) de la Gestion Support
 };
 
 function normalizeUser(u) {
@@ -233,9 +263,16 @@ function loadUsers() {
   return SEED_USERS.map(u => ({ ...u }));
 }
 function saveUsers() { try { localStorage.setItem(USERS_KEY, JSON.stringify(state.users)); } catch (e) {} }
+function normalizeTerritoire(t) {
+  // Rétro-compatibilité : ancien modèle mono-département { code, dep }
+  if (!Array.isArray(t.departements)) t.departements = t.dep ? [t.dep] : [];
+  if (!Array.isArray(t.insee)) t.insee = [];
+  t.dep = t.departements.join(", ");   // libellé dérivé (affichage / options)
+  return t;
+}
 function loadTerritoires() {
-  try { const raw = localStorage.getItem(TERR_KEY); if (raw) return JSON.parse(raw); } catch (e) {}
-  return SEED_TERRITOIRES.map(t => ({ ...t }));
+  try { const raw = localStorage.getItem(TERR_KEY); if (raw) return JSON.parse(raw).map(normalizeTerritoire); } catch (e) {}
+  return SEED_TERRITOIRES.map(t => normalizeTerritoire({ ...t }));
 }
 function saveTerritoires() { try { localStorage.setItem(TERR_KEY, JSON.stringify(state.territoires)); } catch (e) {} }
 function loadDepartements() {
@@ -253,6 +290,11 @@ function loadCgu() {
   return JSON.parse(JSON.stringify(CGU_SEED));
 }
 function saveCgu() { try { localStorage.setItem(CGU_KEY, JSON.stringify(state.cgu)); } catch (e) {} }
+function loadBandeaux() {
+  try { const raw = localStorage.getItem(BAN_KEY); if (raw) return JSON.parse(raw); } catch (e) {}
+  return JSON.parse(JSON.stringify(BANDEAU_SEED));
+}
+function saveBandeaux() { try { localStorage.setItem(BAN_KEY, JSON.stringify(state.bandeaux)); } catch (e) {} }
 
 function newForm() {
   return { roles: [], idNational:"", email:"", nom:"", prenom:"", ville:"", territoire:"",
@@ -296,7 +338,7 @@ function acTerr() { return identity().territoire || null; }      // territoire d
 /* Composant technique ouvert (Keycloak / SAS-DATA), passé par l'URL depuis le portail */
 const AC_COMPONENTS = {
   keycloak: { key: "utilisateurs", title: "Keycloak", sub: "Gestion des utilisateurs",           views: ["list","create","statistiques","cgu"] },
-  sasdata:  { key: "sasdata",      title: "SAS-DATA", sub: "Territoires · Départements · Support", views: ["territoires","departements","support"] },
+  sasdata:  { key: "sasdata",      title: "SAS-DATA", sub: "Bandeaux · Territoires · Départements · Support", views: ["bandeaux","territoires","departements","support"] },
 };
 function currentComponent() {
   try { const c = new URLSearchParams(location.search).get("component"); if (c && AC_COMPONENTS[c]) return c; } catch (e) {}
@@ -363,6 +405,7 @@ function renderSidebar() {
     create:       { view:"create",       icon:"fr-icon-user-add-line",     label:"Créer un utilisateur" },
     statistiques: { view:"statistiques", icon:"fr-icon-line-chart-line",   label:"Statistiques" },
     cgu:          { view:"cgu",          icon:"fr-icon-file-text-line",    label:"Édition des CGU" },
+    bandeaux:     { view:"bandeaux",     icon:"fr-icon-info-line",         label:"Bandeaux d'information" },
     territoires:  { view:"territoires",  icon:"fr-icon-map-pin-2-line",    label:"Territoires SAS" },
     departements: { view:"departements", icon:"fr-icon-building-line",     label:"Départements" },
     support:      { view:"support",      icon:"fr-icon-mail-line",         label:"Gestion Support" },
@@ -640,12 +683,14 @@ function bindListEvents() {
     e.preventDefault();
     if (confirm("Réinitialiser toutes les données de démonstration ?")) {
       state.users = SEED_USERS.map(u=>({...u}));
-      state.territoires = SEED_TERRITOIRES.map(t=>({...t}));
+      state.territoires = SEED_TERRITOIRES.map(t=>normalizeTerritoire({...t}));
       state.departements = DEPARTEMENTS.map(d=>({...d}));
       state.support = JSON.parse(JSON.stringify(SUPPORT_REORIENTATIONS));
       state.cgu = JSON.parse(JSON.stringify(CGU_SEED));
       state.cguDraft = null;
-      saveUsers(); saveTerritoires(); saveDepartements(); saveSupport(); saveCgu(); render();
+      state.bandeaux = JSON.parse(JSON.stringify(BANDEAU_SEED));
+      state.banEdits = {};
+      saveUsers(); saveTerritoires(); saveDepartements(); saveSupport(); saveCgu(); saveBandeaux(); render();
     }
   };
   bindRowActions(root);
@@ -967,9 +1012,13 @@ function renderTerritoires() {
   const t = state.terr;
   const rows = state.territoires.map(x => {
     const n = usersInTerritoire(x.code);
+    const deps = (x.departements || []).join(", ") || esc(x.dep);
+    const multi = (x.departements || []).length > 1;
+    const insee = x.insee || [];
     return `<tr>
       <td><strong>${esc(x.code)}</strong></td>
-      <td>${esc(x.dep)}</td>
+      <td>${esc(deps)} ${multi ? `<span class="fr-badge fr-badge--sm badge-role" style="background:#e3e3fd;color:#000091;">multi-départements</span>` : ""}</td>
+      <td>${insee.length ? `<span class="terr-insee" title="${esc(insee.join(', '))}">${esc(insee.slice(0,3).join(', '))}${insee.length>3?` +${insee.length-3}`:""}</span>` : `<span class="mock-note">—</span>`}</td>
       <td>${n}</td>
       <td>
         ${acWrite() ? `<button class="fr-link" data-terr-edit="${esc(x.code)}">Modifier</button>
@@ -987,13 +1036,19 @@ function renderTerritoires() {
         <h2 class="fr-h6" style="margin-top:0;">${editing ? "Modifier le territoire" : "Nouveau territoire"}</h2>
         <div class="row">
           <div class="fr-input-group ${t.error&&!t.num?'fr-input-group--error':''}" style="flex:0 0 150px;">
-            <label class="fr-label" for="terr-num">N° département <span style="color:#ce0500">*</span></label>
-            <input class="fr-input" id="terr-num" inputmode="text" placeholder="Ex : 75, 2A" value="${esc(t.num)}">
+            <label class="fr-label" for="terr-num">N° du territoire <span style="color:#ce0500">*</span></label>
+            <input class="fr-input" id="terr-num" inputmode="text" placeholder="Ex : 75, 2A, 20" value="${esc(t.num)}">
           </div>
-          <div class="fr-input-group" style="flex:1 1 220px;">
-            <label class="fr-label" for="terr-dep">Nom du département <span style="color:#ce0500">*</span></label>
-            <input class="fr-input" id="terr-dep" placeholder="Ex : Paris" value="${esc(t.dep)}">
+          <div class="fr-input-group" style="flex:1 1 260px;">
+            <label class="fr-label" for="terr-dep">Département(s) <span style="color:#ce0500">*</span>
+              <span class="fr-hint-text">Un ou plusieurs, séparés par des virgules</span></label>
+            <input class="fr-input" id="terr-dep" placeholder="Ex : Corse-du-Sud, Haute-Corse" value="${esc(t.dep)}">
           </div>
+        </div>
+        <div class="fr-input-group">
+          <label class="fr-label" for="terr-insee">Codes INSEE des communes
+            <span class="fr-hint-text">Liste séparée par des virgules (ex : 75056, 92012)</span></label>
+          <input class="fr-input" id="terr-insee" placeholder="Ex : 2A004, 2B033" value="${esc(t.insee)}">
         </div>
         <p class="terr-code-preview">Code du territoire : ${codePreview}</p>
         ${t.error ? `<p class="fr-error-text">${esc(t.error)}</p>` : ""}
@@ -1008,13 +1063,13 @@ function renderTerritoires() {
     <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:1rem;">
       <div>
         <h1 class="fr-h4" style="margin:0;">Territoires SAS</h1>
-        <p class="page-sub">Référentiel des territoires — format SAS-[n° département].</p>
+        <p class="page-sub">Référentiel des territoires — un territoire peut couvrir plusieurs départements et porte une liste de codes INSEE.</p>
       </div>
       ${(t || !acWrite()) ? "" : `<button class="fr-btn fr-btn--sm fr-btn--icon-left fr-icon-user-add-line" id="terr-add">Ajouter un territoire</button>`}
     </div>
     ${formHtml}
     <table class="terr-table">
-      <thead><tr><th>Code</th><th>Département</th><th>Utilisateurs</th><th>Actions</th></tr></thead>
+      <thead><tr><th>Code</th><th>Département(s)</th><th>Codes INSEE</th><th>Utilisateurs</th><th>Actions</th></tr></thead>
       <tbody>${rows}</tbody>
     </table>`;
 
@@ -1024,11 +1079,12 @@ function renderTerritoires() {
 function bindTerritoiresEvents() {
   const root = el("view-territoires");
   const add = root.querySelector("#terr-add");
-  if (add) add.onclick = () => { state.terr = { mode:"create", code:null, num:"", dep:"", error:"" }; render(); };
+  if (add) add.onclick = () => { state.terr = { mode:"create", code:null, num:"", dep:"", insee:"", error:"" }; render(); };
 
   root.querySelectorAll("[data-terr-edit]").forEach(b => b.onclick = () => {
     const x = state.territoires.find(v => v.code === b.dataset.terrEdit);
-    if (x) { state.terr = { mode:"edit", code:x.code, num:x.code.replace(/^SAS-/,""), dep:x.dep, error:"" }; render(); }
+    if (x) { state.terr = { mode:"edit", code:x.code, num:x.code.replace(/^SAS-/,""),
+                            dep:(x.departements||[]).join(", "), insee:(x.insee||[]).join(", "), error:"" }; render(); }
   });
   root.querySelectorAll("[data-terr-del]").forEach(b => b.onclick = () => {
     const code = b.dataset.terrDel;
@@ -1041,8 +1097,10 @@ function bindTerritoiresEvents() {
   if (t) {
     const numI = root.querySelector("#terr-num");
     const depI = root.querySelector("#terr-dep");
+    const insI = root.querySelector("#terr-insee");
     numI.oninput = () => { t.num = numI.value; root.querySelector(".terr-code-preview").textContent = "Code du territoire : SAS-" + (t.num.trim() || "…"); };
     depI.oninput = () => { t.dep = depI.value; };
+    if (insI) insI.oninput = () => { t.insee = insI.value; };
     root.querySelector("#terr-cancel").onclick = () => { state.terr = null; render(); };
     root.querySelector("#terr-save").onclick = () => saveTerritoireForm();
   }
@@ -1051,8 +1109,9 @@ function bindTerritoiresEvents() {
 function saveTerritoireForm() {
   const t = state.terr;
   const num = t.num.trim().toUpperCase();
-  const dep = t.dep.trim();
-  if (!num || !dep) { t.error = "Renseignez le numéro et le nom du département."; render(); return; }
+  const departements = t.dep.split(",").map(s => s.trim()).filter(Boolean);
+  const insee = (t.insee || "").split(",").map(s => s.trim()).filter(Boolean);
+  if (!num || !departements.length) { t.error = "Renseignez le numéro et au moins un département."; render(); return; }
   const code = "SAS-" + num;
   const clash = state.territoires.find(x => x.code === code && code !== t.code);
   if (clash) { t.error = `Le territoire ${code} existe déjà.`; render(); return; }
@@ -1060,12 +1119,12 @@ function saveTerritoireForm() {
   if (t.mode === "edit") {
     const x = state.territoires.find(v => v.code === t.code);
     const oldCode = x.code;
-    x.code = code; x.dep = dep;
+    x.code = code; x.departements = departements; x.insee = insee; x.dep = departements.join(", ");
     // Répercuter le changement de code sur les utilisateurs rattachés
     if (oldCode !== code) state.users.forEach(u => { if (u.territoire === oldCode) u.territoire = code; });
     saveUsers();
   } else {
-    state.territoires.push({ code, dep });
+    state.territoires.push({ code, departements, insee, dep: departements.join(", ") });
   }
   state.territoires.sort((a,b) => a.code.localeCompare(b.code, "fr", { numeric:true }));
   saveTerritoires();
@@ -1226,47 +1285,64 @@ function supDisplay(catKey, entry) {
 function supEditCount() { return Object.keys(state.supEdits).length; }
 function supParseEmails(str) { return str.split(/[;,]/).map(s => s.trim()).filter(Boolean); }
 
-function supRows(cat, list) {
-  if (!list.length) return `<tr><td colspan="2" style="padding:1rem;color:#666;">Aucun territoire.</td></tr>`;
-  return list.map(entry => {
-    const k = supKey(cat.reorientation_key, entry.territory);
-    const changed = (k in state.supEdits) && state.supEdits[k] !== entry.emails.join(", ");
-    return `<tr>
-      <td class="terr">${esc(entry.territory)}</td>
-      <td><input class="sup-emails-input ${changed?'changed':''}" value="${esc(supDisplay(cat.reorientation_key, entry))}"
-        data-sup-territory="${esc(entry.territory)}" placeholder="email1@ex.fr, email2@ex.fr" ${acWrite()?"":"readonly"}></td>
-    </tr>`;
-  }).join("");
+/* Territoires visibles (noms) — communs à toutes les catégories */
+function supVisibleTerritoryNames() {
+  return supVisibleTerritories(state.support[0]).map(e => e.territory);
+}
+function supEntry(catKey, territory) {
+  const cat = state.support.find(c => c.reorientation_key === catKey);
+  return cat ? cat.territories.find(x => x.territory === territory) : null;
+}
+
+/* Ligne du tableau matriciel : Territoire + une colonne par support */
+function supMatrixRows(territories) {
+  if (!territories.length) return `<tr><td colspan="${state.support.length + 1}" style="padding:1rem;color:#666;">Aucun territoire.</td></tr>`;
+  return territories.map(tn => `<tr>
+    <td class="terr">${esc(tn)}</td>
+    ${state.support.map(cat => {
+      const entry = cat.territories.find(x => x.territory === tn);
+      const k = supKey(cat.reorientation_key, tn);
+      const changed = (k in state.supEdits) && state.supEdits[k] !== entry.emails.join(", ");
+      return `<td><input class="sup-emails-input ${changed?'changed':''}" value="${esc(supDisplay(cat.reorientation_key, entry))}"
+        data-sup-cat="${esc(cat.reorientation_key)}" data-sup-territory="${esc(tn)}" placeholder="email@ex.fr" ${acWrite()?"":"readonly"}></td>`;
+    }).join("")}
+  </tr>`).join("");
+}
+
+function supFilteredTerritories() {
+  const q = state.supFilter.trim().toLowerCase();
+  let names = supVisibleTerritoryNames();
+  if (q) names = names.filter(tn => tn.toLowerCase().includes(q));
+  return names;
 }
 
 function renderSupport() {
-  const id = identity();
   const isAdmin = acRole() === "administrateur";
-  const cat = supCurrentCat();
-  const q = state.supSearch.trim().toLowerCase();
-  let list = supVisibleTerritories(cat);
-  if (q) list = list.filter(x => x.territory.toLowerCase().includes(q) || x.emails.join(" ").toLowerCase().includes(q));
+  const names = supFilteredTerritories();
   const n = supEditCount();
 
   el("view-support").innerHTML = `
     <h1 class="fr-h4" style="margin:0;">Gestion Support</h1>
-    <p class="page-sub">${isAdmin ? "Tous les territoires." : "Territoire <strong>"+esc(acTerr())+"</strong>."} Mails de réorientation par catégorie.</p>
-    <div class="sup-tabs">
-      ${state.support.map(c => `<button class="sup-tab ${c.reorientation_key===state.supCat?'is-active':''}" data-sup-cat="${esc(c.reorientation_key)}">${esc(c.reorientation_name)}</button>`).join("")}
-    </div>
+    <p class="page-sub">${isAdmin ? "Tous les territoires." : "Territoire <strong>"+esc(acTerr())+"</strong>."}
+      Mails de réorientation — tous les supports en colonnes. Toute modification déclenche une notification de changement.</p>
     ${acWrite() ? `<div class="save-bar">
       <button class="fr-btn fr-btn--sm" id="sup-save" ${n?"":"disabled"}>Enregistrer</button>
       <span class="mock-note" id="sup-pending">${n ? `${n} modification${n>1?"s":""} en attente` : "Aucune modification"}</span>
     </div>` : ""}
     <div class="fr-input-group" style="max-width:340px;margin:.25rem 0;">
-      <label class="fr-label" for="sup-q">Rechercher</label>
-      <input class="fr-input" type="search" id="sup-q" placeholder="Territoire ou email…" value="${esc(state.supSearch)}">
+      <label class="fr-label" for="sup-q">Filtrer par SAS (territoire)</label>
+      <input class="fr-input" type="search" id="sup-q" placeholder="Ex : SAS-75, Paris…" value="${esc(state.supFilter)}">
     </div>
-    <p class="result-count" id="sup-count">${list.length} territoire${list.length>1?"s":""}</p>
-    <table class="sup-table">
-      <thead><tr><th>Territoire</th><th>Emails (séparés par une virgule)</th></tr></thead>
-      <tbody id="sup-body">${supRows(cat, list)}</tbody>
-    </table>`;
+    <p class="result-count" id="sup-count">${names.length} territoire${names.length>1?"s":""}</p>
+    <div class="sup-wrap">
+      <table class="sup-table sup-table--matrix">
+        <thead><tr>
+          <th>Territoire (SAS)</th>
+          ${state.support.map(c => `<th>${esc(c.reorientation_name)}</th>`).join("")}
+        </tr></thead>
+        <tbody id="sup-body">${supMatrixRows(names)}</tbody>
+      </table>
+    </div>`;
 
   bindSupportEvents();
 }
@@ -1277,11 +1353,12 @@ function supUpdateSaveBar() {
   const info = el("sup-pending"); if (info) info.textContent = n ? `${n} modification${n>1?"s":""} en attente` : "Aucune modification";
 }
 function bindSupRowInputs(root) {
-  const cat = supCurrentCat();
   root.querySelectorAll("[data-sup-territory]").forEach(inp => inp.oninput = () => {
+    const catKey = inp.dataset.supCat;
     const territory = inp.dataset.supTerritory;
-    const entry = cat.territories.find(x => x.territory === territory);
-    const k = supKey(cat.reorientation_key, territory);
+    const entry = supEntry(catKey, territory);
+    if (!entry) return;
+    const k = supKey(catKey, territory);
     const original = entry.emails.join(", ");
     if (inp.value === original) delete state.supEdits[k];
     else state.supEdits[k] = inp.value;
@@ -1291,30 +1368,30 @@ function bindSupRowInputs(root) {
 }
 function bindSupportEvents() {
   const root = el("view-support");
-  root.querySelectorAll("[data-sup-cat]").forEach(b => b.onclick = () => { state.supCat = b.dataset.supCat; render(); });
   root.querySelector("#sup-q").oninput = (e) => {
-    state.supSearch = e.target.value;
-    const cat = supCurrentCat();
-    const q = state.supSearch.trim().toLowerCase();
-    let list = supVisibleTerritories(cat);
-    if (q) list = list.filter(x => x.territory.toLowerCase().includes(q) || x.emails.join(" ").toLowerCase().includes(q));
-    el("sup-body").innerHTML = supRows(cat, list);
-    el("sup-count").textContent = `${list.length} territoire${list.length>1?"s":""}`;
+    state.supFilter = e.target.value;
+    const names = supFilteredTerritories();
+    el("sup-body").innerHTML = supMatrixRows(names);
+    el("sup-count").textContent = `${names.length} territoire${names.length>1?"s":""}`;
     bindSupRowInputs(el("sup-body"));
   };
   const supSaveBtn = root.querySelector("#sup-save");
   if (supSaveBtn) supSaveBtn.onclick = () => {
     const items = [];
+    const notified = new Set();
     for (const k in state.supEdits) {
       const [catKey, territory] = k.split("||");
       const cat = state.support.find(c => c.reorientation_key === catKey);
       const entry = cat.territories.find(x => x.territory === territory);
+      notified.add(territory);
       items.push(`<li><strong>${esc(cat.reorientation_name)} — ${esc(territory)}</strong><br><span class="old">${esc(entry.emails.join(", "))}</span> → <span class="new">${esc(supParseEmails(state.supEdits[k]).join(", "))}</span></li>`);
     }
     showModal({
       title: "Confirmer l'enregistrement",
-      bodyHtml: `<p class="fr-text--sm">Les mails suivants vont être enregistrés :</p><ul class="modal-changes">${items.join("")}</ul>`,
-      confirmLabel: "Enregistrer",
+      bodyHtml: `<p class="fr-text--sm">Les mails suivants vont être enregistrés :</p>
+                 <ul class="modal-changes">${items.join("")}</ul>
+                 <p class="fr-text--sm" style="margin-top:.5rem;"><strong>Notification de changement</strong> envoyée aux référents de ${notified.size} territoire${notified.size>1?"s":""}.</p>`,
+      confirmLabel: "Enregistrer & notifier",
       onConfirm: () => {
         for (const k in state.supEdits) {
           const [catKey, territory] = k.split("||");
@@ -1322,9 +1399,11 @@ function bindSupportEvents() {
           const entry = cat.territories.find(x => x.territory === territory);
           entry.emails = supParseEmails(state.supEdits[k]);
         }
+        const count = notified.size;
         state.supEdits = {};
         saveSupport();
         render();
+        showToast(`Modifications enregistrées — notification de changement envoyée (${count} territoire${count>1?"s":""}).`);
       },
     });
   };
@@ -1535,6 +1614,168 @@ function bindCguEvents() {
 }
 
 /* ================================================================ *
+ *  VUE BANDEAUX D'INFORMATION (national + par territoire)
+ * ================================================================ */
+function banKey(scope, audience) { return scope + "||" + audience; }
+function bandeauOf(scope, audience) { return state.bandeaux.find(x => x.scope === scope && x.audience === audience) || null; }
+function banDefault(field) { return field === "active" ? false : ""; }
+function banField(scope, audience, field) {
+  const k = banKey(scope, audience);
+  if (state.banEdits[k] && field in state.banEdits[k]) return state.banEdits[k][field];
+  const b = bandeauOf(scope, audience);
+  return b ? b[field] : banDefault(field);
+}
+function banSetEdit(scope, audience, field, val) {
+  const k = banKey(scope, audience);
+  const b = bandeauOf(scope, audience);
+  const orig = b ? b[field] : banDefault(field);
+  state.banEdits[k] = state.banEdits[k] || {};
+  if (val === orig) { delete state.banEdits[k][field]; if (!Object.keys(state.banEdits[k]).length) delete state.banEdits[k]; }
+  else state.banEdits[k][field] = val;
+}
+function banEditCount() { let n = 0; for (const k in state.banEdits) n += Object.keys(state.banEdits[k]).length; return n; }
+function banScopesForIdentity() {
+  if (acRole() === "administrateur") return ["national", ...state.territoires.map(t => t.code)];
+  return ["national", acTerr()];    // gestionnaire de compte : national + son territoire
+}
+function banCanEdit(scope) {
+  if (!acWrite()) return false;
+  if (acRole() === "administrateur") return true;
+  return scope === acTerr();          // gestionnaire : uniquement son territoire (national en lecture)
+}
+function banScopeLabel(scope) {
+  if (scope === "national") return "National (tous les territoires)";
+  const t = state.territoires.find(x => x.code === scope);
+  return t ? `${t.code} · ${t.dep}` : scope;
+}
+function fmtBanRange(start, end) {
+  if (!start && !end) return "Aucune plage d'affichage définie";
+  return `Du ${start ? fmtDateTime(start) : "…"} au ${end ? fmtDateTime(end) : "…"}`;
+}
+
+function banCard(scope, audience) {
+  const aud = BANDEAU_AUDIENCES.find(a => a.key === audience);
+  const editable = banCanEdit(scope);
+  const active = banField(scope, audience, "active");
+  const title = banField(scope, audience, "title");
+  const message = banField(scope, audience, "message");
+  const start = banField(scope, audience, "start");
+  const end = banField(scope, audience, "end");
+  const dis = editable ? "" : "disabled";
+  const ro = editable ? "" : "readonly";
+  return `
+    <section class="ban-card ${active ? "is-active" : ""}">
+      <div class="ban-card__head">
+        <span class="ban-card__aud">${esc(aud.label)}</span>
+        <label class="ban-toggle">
+          <input type="checkbox" data-ban-field="active" data-ban-scope="${esc(scope)}" data-ban-aud="${audience}" ${active ? "checked" : ""} ${dis}>
+          <span>${active ? "Actif" : "Inactif"}</span>
+        </label>
+      </div>
+      <div class="fr-input-group">
+        <label class="fr-label" for="ban-title-${audience}">Titre</label>
+        <input class="fr-input" id="ban-title-${audience}" value="${esc(title)}" data-ban-field="title" data-ban-scope="${esc(scope)}" data-ban-aud="${audience}" ${ro} placeholder="Titre du bandeau">
+      </div>
+      <div class="fr-input-group">
+        <label class="fr-label" for="ban-msg-${audience}">Message</label>
+        <textarea class="fr-input" id="ban-msg-${audience}" rows="3" data-ban-field="message" data-ban-scope="${esc(scope)}" data-ban-aud="${audience}" ${ro} placeholder="Contenu affiché à l'utilisateur">${esc(message)}</textarea>
+      </div>
+      <div class="fr-grid-row fr-grid-row--gutters">
+        <div class="fr-col-6"><div class="fr-input-group">
+          <label class="fr-label" for="ban-start-${audience}">Début d'affichage</label>
+          <input class="fr-input" type="datetime-local" id="ban-start-${audience}" value="${esc(start)}" data-ban-field="start" data-ban-scope="${esc(scope)}" data-ban-aud="${audience}" ${ro}>
+        </div></div>
+        <div class="fr-col-6"><div class="fr-input-group">
+          <label class="fr-label" for="ban-end-${audience}">Fin d'affichage</label>
+          <input class="fr-input" type="datetime-local" id="ban-end-${audience}" value="${esc(end)}" data-ban-field="end" data-ban-scope="${esc(scope)}" data-ban-aud="${audience}" ${ro}>
+        </div></div>
+      </div>
+      <p class="ban-range mock-note">${esc(fmtBanRange(start, end))}</p>
+    </section>`;
+}
+
+function renderBandeaux() {
+  const scopes = banScopesForIdentity();
+  if (!scopes.includes(state.banScope)) state.banScope = scopes[0];
+  const scope = state.banScope;
+  const editable = banCanEdit(scope);
+  const n = banEditCount();
+  const isAdmin = acRole() === "administrateur";
+
+  el("view-bandeaux").innerHTML = `
+    <h1 class="fr-h4" style="margin:0;">Bandeaux d'information</h1>
+    <p class="page-sub">Deux bandeaux par périmètre : utilisateur connecté et page de connexion. Éditables au national et par territoire, avec plage d'affichage.
+      ${editable ? "" : "Périmètre en lecture seule."}</p>
+
+    <div class="filters" style="margin-bottom:.5rem;">
+      <div class="f-field" style="min-width:280px;">
+        <label class="fr-label" for="ban-scope">Périmètre</label>
+        <select class="fr-select" id="ban-scope">
+          ${scopes.map(s => `<option value="${esc(s)}" ${s === scope ? "selected" : ""}>${esc(banScopeLabel(s))}</option>`).join("")}
+        </select>
+      </div>
+    </div>
+
+    ${editable ? `<div class="save-bar">
+      <button class="fr-btn fr-btn--sm" id="ban-save" ${n ? "" : "disabled"}>Enregistrer</button>
+      <span class="mock-note" id="ban-pending">${n ? `${n} modification${n > 1 ? "s" : ""} en attente` : "Aucune modification"}</span>
+    </div>` : (isAdmin ? "" : `<p class="mock-note">Le périmètre « National » est géré au niveau central ; vous pouvez éditer le bandeau de votre territoire.</p>`)}
+
+    <div class="ban-grid">
+      ${BANDEAU_AUDIENCES.map(a => banCard(scope, a.key)).join("")}
+    </div>`;
+
+  bindBandeauxEvents();
+}
+
+function banUpdateSaveBar() {
+  const n = banEditCount();
+  const btn = el("ban-save"); if (btn) btn.disabled = n === 0;
+  const info = el("ban-pending"); if (info) info.textContent = n ? `${n} modification${n > 1 ? "s" : ""} en attente` : "Aucune modification";
+}
+function bindBandeauxEvents() {
+  const root = el("view-bandeaux");
+  const sel = root.querySelector("#ban-scope");
+  if (sel) sel.onchange = () => { state.banScope = sel.value; render(); };
+
+  root.querySelectorAll("[data-ban-field]").forEach(inp => {
+    const handler = () => {
+      const val = inp.type === "checkbox" ? inp.checked : inp.value;
+      banSetEdit(inp.dataset.banScope, inp.dataset.banAud, inp.dataset.banField, val);
+      if (inp.dataset.banField === "active") render(); else banUpdateSaveBar();
+    };
+    if (inp.type === "checkbox") inp.onchange = handler; else inp.oninput = handler;
+  });
+
+  const saveBtn = root.querySelector("#ban-save");
+  if (saveBtn) saveBtn.onclick = () => {
+    const items = [];
+    for (const k in state.banEdits) {
+      const [scope, audience] = k.split("||");
+      const aud = BANDEAU_AUDIENCES.find(a => a.key === audience);
+      items.push(`<li><strong>${esc(banScopeLabel(scope))} — ${esc(aud.label)}</strong> : ${Object.keys(state.banEdits[k]).map(f => ({active:"statut",title:"titre",message:"message",start:"début",end:"fin"}[f] || f)).join(", ")}</li>`);
+    }
+    showModal({
+      title: "Publier les bandeaux",
+      bodyHtml: `<p class="fr-text--sm">Les bandeaux suivants vont être mis à jour :</p><ul class="modal-changes">${items.join("")}</ul>`,
+      confirmLabel: "Publier",
+      onConfirm: () => {
+        for (const k in state.banEdits) {
+          const [scope, audience] = k.split("||");
+          let b = bandeauOf(scope, audience);
+          if (!b) { b = { id: "ban-" + Math.random().toString(36).slice(2, 7), scope, audience, active: false, title: "", message: "", start: "", end: "" }; state.bandeaux.push(b); }
+          Object.assign(b, state.banEdits[k]);
+        }
+        state.banEdits = {};
+        saveBandeaux();
+        render();
+        showToast("Bandeaux publiés (données de démonstration).");
+      },
+    });
+  };
+}
+
+/* ================================================================ *
  *  RENDU GLOBAL
  * ================================================================ */
 function render() {
@@ -1549,6 +1790,7 @@ function render() {
   el("view-create").hidden      = denied || state.view !== "create";
   el("view-statistiques").hidden= denied || state.view !== "statistiques";
   el("view-cgu").hidden         = denied || state.view !== "cgu";
+  el("view-bandeaux").hidden    = denied || state.view !== "bandeaux";
   el("view-territoires").hidden = denied || state.view !== "territoires";
   el("view-departements").hidden= denied || state.view !== "departements";
   el("view-support").hidden     = denied || state.view !== "support";
@@ -1566,6 +1808,7 @@ function render() {
   else if (state.view === "create") renderCreate();
   else if (state.view === "statistiques") renderStatistiques();
   else if (state.view === "cgu") renderCgu();
+  else if (state.view === "bandeaux") renderBandeaux();
   else if (state.view === "territoires") renderTerritoires();
   else if (state.view === "departements") renderDepartements();
   else if (state.view === "support") renderSupport();

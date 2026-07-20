@@ -13,7 +13,7 @@ STRUCTURE DE LA SUITE (un arrière-guichet par composant technique)
 ------------------------------------------------------------------
 - index.html         → Portail : tuiles vers les arrière-guichets habilités.
 - acces.html?component=keycloak → Keycloak : gestion des utilisateurs.
-- acces.html?component=sasdata  → SAS-DATA : territoires, départements, support.
+- acces.html?component=sasdata  → SAS-DATA : bandeaux, territoires, départements, support.
 - opensearch.html    → Open-Search : offre de soins (index sas_consultation_place).
 - interop.html       → Interopérabilité : flux d'API (coquille, 6 onglets vides).
 - gestion-acces.html → Gestion des accès (réservé à l'Admin BO).
@@ -98,14 +98,25 @@ CE QUE FAIT LA MAQUETTE
      horodatée automatiquement à la publication.
    - Administrateur en lecture seule : consultation sans édition.
 
-5. TERRITOIRES SAS (menu « Territoires SAS », administrateur uniquement)
+5. BANDEAUX D'INFORMATION (menu « Bandeaux d'information », SAS-DATA)
+   - Deux bandeaux par périmètre : « utilisateur connecté » et « page de
+     connexion (non connecté) ».
+   - Éditables au niveau NATIONAL et PAR TERRITOIRE (sélecteur de périmètre).
+   - Chaque bandeau : statut actif/inactif, titre, message et PLAGE
+     D'AFFICHAGE (début / fin au format date-heure).
+   - Administrateur : édite le national et tous les territoires. Gestionnaire
+     de compte : édite le bandeau de SON territoire (national en lecture).
+   - Bouton « Enregistrer » désactivé sans changement + modale « Publier ».
+
+6. TERRITOIRES SAS (menu « Territoires SAS », administrateur uniquement)
    - Affichage, création, modification et suppression des territoires.
-   - Format imposé SAS-[n° département] ; le nombre d'utilisateurs rattachés
-     est indiqué. Renommer un code répercute le changement sur les utilisateurs.
+   - Format SAS-[n°] ; un territoire peut couvrir PLUSIEURS DÉPARTEMENTS
+     (ex. SAS-69 : Rhône + Métropole de Lyon ; SAS-20 : Corse-du-Sud +
+     Haute-Corse) et porte une LISTE DE CODES INSEE (communes).
+   - Le nombre d'utilisateurs rattachés est indiqué. Renommer un code
+     répercute le changement sur les utilisateurs.
 
-   - Le rôle administrateur seul n'a pas besoin de territoire (accès à tous).
-
-6. DÉPARTEMENTS (menu « Départements »)
+7. DÉPARTEMENTS (menu « Départements »)
    - Accessible aux administrateurs (tous les territoires SAS) et aux
      gestionnaires de compte (uniquement le département de leur territoire).
    - Deux champs éditables par département :
@@ -115,14 +126,30 @@ CE QUE FAIT LA MAQUETTE
      clic, une modale liste les valeurs modifiées avant validation.
    - Données conformes au format JSON de sauvegarde (fichier departements.js).
 
-7. GESTION SUPPORT (menu « Gestion Support »)
-   - Gère les mails de réorientation par catégorie (Support N1, Support N3,
-     Gestionnaire de compte, Référent territorial) et par territoire.
-   - Administrateur : tous les mails ; gestionnaire de compte : uniquement les
-     mails de son territoire.
+8. GESTION SUPPORT (menu « Gestion Support »)
+   - TABLEAU MATRICIEL : une ligne par territoire (SAS), une COLONNE PAR
+     SUPPORT (Support N1, Support N3, Gestionnaire de compte, Référent
+     territorial) — tous les supports visibles d'un coup.
+   - FILTRE PAR SAS (territoire) au-dessus du tableau.
+   - Administrateur : tous les territoires ; gestionnaire de compte :
+     uniquement son territoire.
    - Édition en ligne (emails séparés par des virgules) ; bouton « Enregistrer »
-     désactivé sans changement, modale de confirmation listant les changements.
+     désactivé sans changement ; modale de confirmation qui indique la
+     NOTIFICATION DE CHANGEMENT envoyée aux référents des territoires modifiés.
    - Données conformes au format JSON fourni (fichier support.js).
+
+9. OFFRE DE SOINS (page opensearch.html, arrière-guichet Open-Search)
+   - Liste des professionnels indexés (sas_consultation_place) avec le type de
+     STRUCTURE porteuse (CDS = 1 adresse · SOS Médecins = multi-adresses
+     PFG/PFC · MMG = 1 adresse), la participation SAS et le statut de
+     DISPONIBILITÉ (disponible / indisponible). Filtres structure + disponibilité.
+   - Fiche détaillée : bloc « Structure porteuse », dates d'INSCRIPTION et de
+     PARTICIPATION au SAS, AGENDA SAS hebdomadaire (lecture seule).
+   - Chaque adresse affiche un SCORE DE GÉOLOCALISATION (0–100 + libellé).
+   - ÉDITION DE L'INDEX (habilitation écriture) : adresse, téléphone, modalité,
+     géolocalisation et score. Toute modification d'Adresse / Géoloc / Score /
+     Téléphone exige une DESCRIPTION (qui / quoi) et alimente l'HISTORIQUE
+     DES MODIFICATIONS (date, auteur, champs, description).
 
 Interface : épurée pour une lecture confortable sur écran 15 pouces.
 

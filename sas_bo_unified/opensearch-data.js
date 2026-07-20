@@ -80,3 +80,99 @@ const OS_PROFESSION_LABEL = {
   "10": "Médecin", "40": "Chirurgien-dentiste", "50": "Sage-femme",
   "60": "Infirmier", "70": "Masseur-kinésithérapeute", "21": "Pharmacien",
 };
+
+/* ------------------------------------------------------------------ *
+ *  Enrichissement maquette (Lot 3) — structure porteuse, statut de
+ *  disponibilité, dates SAS, score de géolocalisation, agenda (lecture)
+ *  et historique des modifications.
+ * ------------------------------------------------------------------ */
+const OS_STRUCTURE_LABEL = {
+  cds: "Centre de Santé (CDS)",
+  sos: "SOS Médecins",
+  mmg: "Maison Médicale de Garde (MMG)",
+};
+/* SOS Médecins : multi-adresses — chaque adresse est un point fixe. */
+const OS_SOS_POINT_LABEL = { PFG: "Point fixe de garde (PFG)", PFC: "Point fixe de consultation (PFC)" };
+const OS_JOURS = ["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi", "Dimanche"];
+
+/* Type de structure par RPPS (CDS = 1 adresse · SOS = multi-adresses PFG/PFC · MMG = 1 adresse) */
+const OS_STRUCTURE_BY_RPPS = {
+  "10005294912": "sos",   // Poullain — 2 adresses (PFG + PFC)
+  "10108275248": "cds",
+  "10002875374": "cds",
+  "10111259189": "cds",
+  "10109340603": "cds",
+  "10106917841": "mmg",
+  "10002921293": "mmg",
+  "10107871880": "mmg",
+  "10107646639": "mmg",
+};
+
+function osGeoScoreLabel(score) {
+  if (score == null) return "—";
+  if (score >= 90) return "Excellent";
+  if (score >= 75) return "Bon";
+  if (score >= 50) return "Moyen";
+  return "Faible";
+}
+
+/* Agenda SAS hebdomadaire déterministe (créneaux déclarés, en lecture seule) */
+function osAgendaSeed(i, dispo) {
+  if (!dispo) return OS_JOURS.map(j => ({ jour: j, creneaux: [] }));
+  const patterns = [
+    { matin: "08:00–12:00", aprem: "14:00–18:00" },
+    { matin: "09:00–12:30", aprem: "14:00–17:00" },
+    { matin: "08:30–12:00", aprem: "" },
+  ];
+  const p = patterns[i % patterns.length];
+  return OS_JOURS.map((j, k) => {
+    if (k === 6) return { jour: j, creneaux: [] };                 // dimanche fermé
+    if (k === 5) return { jour: j, creneaux: p.matin ? [p.matin] : [] }; // samedi matin
+    const c = []; if (p.matin) c.push(p.matin); if (p.aprem) c.push(p.aprem);
+    return { jour: j, creneaux: c };
+  });
+}
+
+function osIso(y, m, d) { return new Date(y, m, d).toISOString(); }
+
+OS_INDEX.forEach((doc, i) => {
+  // Structure porteuse
+  const type = OS_STRUCTURE_BY_RPPS[doc.rpps] || (i % 2 ? "cds" : "mmg");
+  const structure = { type, name: "" };
+  if (type === "cds") structure.name = "Centre de Santé " + doc.address.city;
+  else if (type === "mmg") structure.name = "MMG " + doc.address.city;
+  else structure.name = "SOS Médecins " + doc.region.replace("FR-", "");
+  // SOS multi-adresses : 1re adresse = PFG, suivantes = PFC
+  if (type === "sos") {
+    const sameRpps = OS_INDEX.filter(x => x.rpps === doc.rpps);
+    structure.point = (sameRpps.indexOf(doc) === 0) ? "PFG" : "PFC";
+  }
+  doc.structure = structure;
+
+  // Statut de disponibilité SAS (dispo / indispo)
+  doc.dispo = (i % 4 !== 2);
+
+  // Score de géolocalisation (0–100)
+  doc.geoScore = [98, 86, 72, 45, 91, 79, 88, 63, 95, 81][i % 10];
+
+  // Dates SAS : inscription + participations récentes
+  doc.sas = {
+    inscription: osIso(2024, (i % 10), 3 + (i % 20)),
+    participations: doc.dispo
+      ? [ osIso(2026, 5, 2 + (i % 20)), osIso(2026, 6, 5 + (i % 15)) ]
+      : [ osIso(2026, 3, 4 + (i % 18)) ],
+  };
+
+  // Agenda SAS (lecture seule)
+  doc.agenda = osAgendaSeed(i, doc.dispo);
+
+  // Historique des modifications (qui / quoi)
+  doc.history = [
+    { at: osIso(2025, 10, 5 + (i % 15)), author: "Import annuaire (RPPS)", fields: ["Adresse", "Géolocalisation"],
+      description: "Création de la fiche à partir de l'annuaire santé." },
+  ];
+  if (i % 3 === 0) doc.history.unshift({
+    at: osIso(2026, 1, 8 + (i % 12)), author: "gestionnaire.offre@sas.gouv.fr", fields: ["Téléphone"],
+    description: "Mise à jour du numéro de téléphone signalée par la structure.",
+  });
+});
