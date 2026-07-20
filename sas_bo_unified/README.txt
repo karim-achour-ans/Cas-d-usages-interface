@@ -39,12 +39,23 @@ en tant que » est partagé entre les pages (via l'URL) pour la démo.
 CE QUE FAIT LA MAQUETTE
 -----------------------
 1. LISTE DES UTILISATEURS (menu « Utilisateurs »)
-   - Affichage en lignes (une à deux lignes par utilisateur).
+   - Affichage en lignes (chaque ligne indique le nom, les rôles, le statut,
+     le mode de connexion, l'email, la ville, le territoire, la région, la
+     date de création et la dernière connexion).
    - Visible par l'Administrateur (tous les territoires) et par le
      Gestionnaire de Compte (uniquement les utilisateurs de SON territoire) ;
      utilisez le sélecteur de profil en bas du menu de gauche.
-   - Recherche libre + filtres : Rôle, Territoire, Ville, Profession/Spécialité,
-     Structure, Statut.
+   - Recherche libre + filtres : Rôle, Territoire, Région, Ville,
+     Profession/Spécialité, Structure, Statut.
+   - STATUT à 3 états : Actif · Inactif · Aucune connexion (compte jamais
+     activé). Un bouton « Renvoyer le mail d'activation » apparaît sur les
+     comptes jamais connectés.
+   - MODE DE CONNEXION affiché : PSC (France Connect / Pro Santé Connect) ou
+     Mot de passe.
+   - EXPORT CSV (bouton « Exporter (CSV) ») : email, rôle(s), région,
+     territoire, structure(s), statut, mode de connexion, liste de diffusion,
+     dates. Sert de liste de diffusion et distingue les comptes login/mot de
+     passe des comptes PSC. L'export respecte les filtres actifs.
    - Pour les gestionnaires de structure, le type (SOS Médecins / CDS / CPTS/MSP)
      est indiqué dans le libellé de chaque structure.
 
@@ -57,7 +68,13 @@ CE QUE FAIT LA MAQUETTE
      portent l'un de ces rôles ne sont visibles et filtrables que par les
      administrateurs (masqués aux gestionnaires de compte).
    - Champs communs : identifiant national, email, nom, prénom, ville (Base
-     Adresse Nationale), territoire SAS (format SAS-[n° département]).
+     Adresse Nationale), territoire SAS (format SAS-[n° département]), RÉGION
+     (préremplie automatiquement d'après le territoire, modifiable) et MODE
+     DE CONNEXION (PSC ou mot de passe).
+   - ENVIRONNEMENT(S) — Production, PréProduction, Intégration, Formation :
+     création multi-environnement réservée à l'Admin BO (cases à cocher).
+   - GESTIONNAIRE DE STRUCTURE + CDS : l'ajout d'un Centre de Santé (CDS)
+     préremplit la ville et le territoire s'ils sont encore vides.
    - Effecteur : n° RPPS -> pré-remplit nom, prénom, profession et spécialité
      (essayez 10001234567, 10002345678, 10003456789…).
    - Gestionnaire de Structure : rattachement à PLUSIEURS structures, y
@@ -95,8 +112,12 @@ Interface : épurée pour une lecture confortable sur écran 15 pouces.
 
 RÔLES GÉRÉS
 -----------
-Administrateur · Gestionnaire de Compte · Gestionnaire de Structure
-(SOS Médecins, CDS, CPTS/MSP) · Régulateur OSNP · Effecteur
+Gestionnaire de Compte · Gestionnaire de Structure (SOS Médecins, CDS,
+CPTS/MSP) · Régulateur OSNP · Régulateur SU (droits identiques au Régulateur
+OSNP) · Effecteur.
+Le rôle « Administrateur » a été retiré de la gestion des utilisateurs :
+l'administrateur du BO dispose par défaut de l'accès national (voir les
+habilitations par arrière-guichet ci-dessus).
 
 DONNÉES
 -------

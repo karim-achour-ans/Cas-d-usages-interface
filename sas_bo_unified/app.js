@@ -8,14 +8,31 @@
 /* ---------------------------------------------------------------- *
  *  RÉFÉRENTIELS
  * ---------------------------------------------------------------- */
+/* Rôles gérés. Le rôle « Administrateur » a été retiré : l'administrateur du BO
+   a par défaut l'accès national (voir habilitations, identities.js). */
 const ROLES = [
-  { value: "administrateur",        label: "Administrateur",           desc: "Accès complet à la plateforme et à tous les territoires." },
   { value: "gestionnaire_compte",   label: "Gestionnaire de Compte",   desc: "Gère les utilisateurs rattachés à son territoire SAS." },
   { value: "gestionnaire_structure",label: "Gestionnaire de Structure",desc: "Gère une ou plusieurs structures d'effection (SOS, CDS, CPTS/MSP)." },
-  { value: "regulateur_osnp",       label: "Régulateur OSNP",          desc: "Régulation des soins non programmés." },
+  { value: "regulateur_osnp",       label: "Régulateur OSNP",          desc: "Régulation des soins non programmés (OSNP)." },
+  { value: "regulateur_su",         label: "Régulateur SU",            desc: "Régulation SU — droits identiques au Régulateur OSNP." },
   { value: "effecteur",             label: "Effecteur",                desc: "Professionnel de santé effecteur, identifié par son n° RPPS." },
 ];
 const ROLE_LABEL = Object.fromEntries(ROLES.map(r => [r.value, r.label]));
+
+/* Environnements (rattachement d'un compte, fixé par l'administrateur du BO) */
+const ENVIRONNEMENTS = ["Production", "PréProduction", "Intégration", "Formation"];
+
+/* Régions (référentiel) + dérivation territoire SAS → région via les départements */
+const REGIONS = [
+  "Auvergne-Rhône-Alpes","Bourgogne-Franche-Comté","Bretagne","Centre-Val de Loire","Corse",
+  "Grand Est","Hauts-de-France","Ile-de-France","Normandie","Nouvelle-Aquitaine","Occitanie",
+  "Pays de la Loire","Provence-Alpes-Côte d'Azur","Guadeloupe","Martinique","Guyane","La Réunion","Mayotte",
+];
+function territoireRegion(code) {
+  const d = (typeof DEPARTEMENTS !== "undefined" ? DEPARTEMENTS : []).find(x => (x.territory||[]).some(t => t.name === code));
+  return d ? d.region : "";
+}
+const MODE_CONNEXION = { PSC: "France Connect / PSC", MdP: "Login / mot de passe" };
 
 // Rôles/tags réservés : assignables uniquement par un administrateur,
 // et les utilisateurs qui les portent ne sont visibles/filtrables que par les admins.
@@ -136,17 +153,33 @@ const SEED_USERS = [
   { id:"u-018", idNational:"SASN-100018", email:"regul.osnp.marseille@sas.gouv.fr", nom:"Barbier", prenom:"Léa",   roles:["regulateur_osnp"], ville:"13008 Marseille", territoire:"SAS-13", actif:true },
   { id:"u-019", idNational:"SASN-100019", email:"regul.osnp.paris2@sas.gouv.fr", nom:"Colin",    prenom:"Maxime",   roles:["regulateur_osnp"], ville:"75015 Paris",     territoire:"SAS-75", actif:false },
   { id:"u-020", idNational:"SASN-100020", email:"regul.osnp.rennes@sas.gouv.fr", nom:"Guerin",   prenom:"Sophie",   roles:["regulateur_osnp"], ville:"35000 Rennes",    territoire:"SAS-35", actif:true },
+  // Régulateurs SU
+  { id:"u-021", idNational:"SASN-100021", email:"regul.su.paris@sas.gouv.fr",  nom:"Lambert",  prenom:"Inès",     roles:["regulateur_su"],  ville:"75012 Paris",     territoire:"SAS-75", actif:true },
+  { id:"u-022", idNational:"SASN-100022", email:"regul.su.lyon@sas.gouv.fr",   nom:"Marchand", prenom:"Karim",    roles:["regulateur_su"],  ville:"69002 Lyon",      territoire:"SAS-69", actif:true },
 ];
+
+/* Enrichissement des comptes de démonstration (champs Lot 1 : région, environnements,
+   mode de connexion, date de création, dernière connexion — variété déterministe). */
+SEED_USERS.forEach((u, i) => {
+  u.roles = (u.roles || []).filter(r => r !== "administrateur");
+  if (!u.roles.length) u.roles = ["gestionnaire_compte"];
+  u.region = u.region || territoireRegion(u.territoire);
+  u.environnements = u.environnements || (i % 4 === 0 ? ["Production", "Formation"] : ["Production"]);
+  u.modeConnexion = u.modeConnexion || (i % 3 === 0 ? "PSC" : "MdP");
+  u.created_at = u.created_at || new Date(2025, i % 12, 1 + (i % 27)).toISOString();
+  // Quelques comptes ne se sont jamais connectés
+  u.derniereConnexion = (i % 5 === 2) ? null : new Date(2026, i % 6, 2 + (i % 25)).toISOString();
+});
 
 /* ---------------------------------------------------------------- *
  *  ÉTAT
  * ---------------------------------------------------------------- */
-const USERS_KEY = "bo-sas-users-v7";
+const USERS_KEY = "bo-sas-users-v8";
 const TERR_KEY  = "bo-sas-territoires-v1";
 const DEP_KEY   = "bo-sas-departements-v1";
 const SUP_KEY   = "bo-sas-support-v1";
 
-const EMPTY_FILTERS = { q: "", role: "", territoire: "", ville: "", profSpec: "", structure: "", statut: "" };
+const EMPTY_FILTERS = { q: "", role: "", territoire: "", region: "", ville: "", profSpec: "", structure: "", statut: "" };
 
 const state = {
   users: loadUsers(),
@@ -194,9 +227,11 @@ function saveSupport() { try { localStorage.setItem(SUP_KEY, JSON.stringify(stat
 
 function newForm() {
   return { roles: [], idNational:"", email:"", nom:"", prenom:"", ville:"", territoire:"",
+           region:"", environnements:[], modeConnexion:"MdP",
            rpps:"", pro:null,
            structures: [],            // [{ type, finess, nom, ville }] — plusieurs par type possible
            draftType: "sos_medecins", // type sélectionné dans le sélecteur d'ajout
+           regionAuto:true,           // la région suit le territoire tant qu'on ne la modifie pas à la main
            errors:{}, success:null };
 }
 function formFromUser(u) {
@@ -204,6 +239,10 @@ function formFromUser(u) {
   f.roles = [...(u.roles || [])];
   f.idNational = u.idNational || "";
   f.email = u.email; f.nom = u.nom; f.prenom = u.prenom; f.ville = u.ville; f.territoire = u.territoire;
+  f.region = u.region || territoireRegion(u.territoire);
+  f.regionAuto = !u.region || u.region === territoireRegion(u.territoire);
+  f.environnements = [...(u.environnements || [])];
+  f.modeConnexion = u.modeConnexion || "MdP";
   if (u.roles && u.roles.includes("effecteur") && u.profession) {
     f.rpps = u.rpps || "";
     f.pro = { nom: u.nom, prenom: u.prenom, profession: u.profession, specialite: u.specialite, rpps: u.rpps };
@@ -213,6 +252,13 @@ function formFromUser(u) {
     return { type: s.type, finess: s.finess, nom: (e ? e.nom : s.nom), ville: (e ? e.ville : (s.ville || "")) };
   });
   return f;
+}
+/* Ville par défaut d'un CDS pour préremplissage (première structure CDS trouvée) */
+function cdsPrefillVille(structures) {
+  const cds = (structures || []).find(s => s.type === "cds");
+  if (!cds) return "";
+  const e = FINESS_BY_ID[cds.finess];
+  return (e && e.ville) || cds.ville || "";
 }
 function identity() { return IDENTITIES[state.identityIdx]; }
 function acRole() { return identity().role || null; }            // administrateur | gestionnaire_compte
@@ -332,11 +378,11 @@ function filteredUsers() {
   return visibleUsers().filter(u => {
     if (f.role && !rolesOf(u).includes(f.role)) return false;
     if (f.territoire && u.territoire !== f.territoire) return false;
+    if (f.region && (u.region || territoireRegion(u.territoire)) !== f.region) return false;
     if (f.ville && u.ville !== f.ville) return false;
     if (f.profSpec && u.profession !== f.profSpec && u.specialite !== f.profSpec) return false;
     if (f.structure && !structuresOf(u).some(s => s.type === f.structure)) return false;
-    if (f.statut === "actif" && !u.actif) return false;
-    if (f.statut === "inactif" && u.actif) return false;
+    if (f.statut && statutEtat(u).key !== f.statut) return false;
     if (!q) return true;
     const hay = [u.nom,u.prenom,u.email,u.idNational,u.ville,u.territoire,u.rpps,u.profession,u.specialite,
       ...rolesOf(u).map(r => ROLE_LABEL[r]),
@@ -348,27 +394,52 @@ function filteredUsers() {
 
 function roleBadge(role) { return `<span class="fr-badge fr-badge--sm badge-role badge-${role}">${esc(ROLE_LABEL[role])}</span>`; }
 
+/* Statut à 3 états : Aucune connexion (jamais connecté) / Actif / Inactif.
+   Badges plats (sans icône) pour rester cohérent avec les badges de rôle. */
+function statutEtat(u) {
+  if (!u.derniereConnexion) return { key: "aucune", label: "Aucune connexion", cls: "badge-statut-aucune" };
+  if (u.actif) return { key: "actif", label: "Actif", cls: "badge-statut-actif" };
+  return { key: "inactif", label: "Inactif", cls: "badge-statut-inactif" };
+}
+const STATUT_OPTS = [
+  { value: "actif",   label: "Actif" },
+  { value: "inactif", label: "Inactif" },
+  { value: "aucune",  label: "Aucune connexion" },
+];
+function fmtDate(iso) {
+  if (!iso) return "—";
+  try { return new Date(iso).toLocaleDateString("fr-FR", { day: "2-digit", month: "2-digit", year: "numeric" }); }
+  catch (e) { return "—"; }
+}
+function modeConnexionLabel(m) { return MODE_CONNEXION[m] || MODE_CONNEXION.MdP; }
+
 function userRow(u) {
-  const statut = u.actif
-    ? `<span class="fr-badge fr-badge--sm fr-badge--success">Actif</span>`
-    : `<span class="fr-badge fr-badge--sm">Inactif</span>`;
+  const et = statutEtat(u);
+  const statut = `<span class="fr-badge fr-badge--sm ${et.cls}">${et.label}</span>`;
+  const modeBadge = `<span class="fr-badge fr-badge--sm badge-mode badge-mode-${(u.modeConnexion||"MdP")}" title="Mode de connexion">${u.modeConnexion === "PSC" ? "PSC" : "Mot de passe"}</span>`;
   const parts = [];
   if (u.specialite) parts.push(`${esc(u.profession || "")} — ${esc(u.specialite)}`);
   if (structuresOf(u).length) parts.push(structuresOf(u).map(s => `${STRUCTURE_SHORT[s.type]} : ${esc(s.nom)}`).join(", "));
   const extra = parts.length ? " · " + parts.join(" · ") : "";
+  const region = u.region || territoireRegion(u.territoire);
+  const canResend = acWrite() && !u.derniereConnexion;
   return `
     <div class="user-row">
       <div class="user-row__body">
         <div class="user-row__l1">
           <span class="user-row__name">${esc(u.prenom)} ${esc(u.nom)}</span>
-          ${rolesOf(u).map(roleBadge).join(" ")} ${statut}
+          ${rolesOf(u).map(roleBadge).join(" ")} ${statut} ${modeBadge}
         </div>
         <div class="user-row__l2" title="${esc(u.email)}">
-          ${esc(u.email)} · ${esc(u.ville)}${u.territoire ? " · " + esc(u.territoire) : ""}${extra}
+          ${esc(u.email)} · ${esc(u.ville)}${u.territoire ? " · " + esc(u.territoire) : ""}${region ? " · " + esc(region) : ""}${extra}
+        </div>
+        <div class="user-row__meta">
+          Créé le ${fmtDate(u.created_at)} · ${u.derniereConnexion ? "Dernière connexion le " + fmtDate(u.derniereConnexion) : "Jamais connecté"}
         </div>
       </div>
       ${acWrite() ? `<div class="user-row__actions">
         <button class="act-edit"   data-edit="${u.id}">Modifier</button>
+        ${canResend ? `<button class="act-resend" data-resend="${u.id}">Renvoyer le mail d'activation</button>` : ""}
         <button class="act-toggle" data-toggle="${u.id}">${u.actif ? "Désactiver" : "Activer"}</button>
         <button class="act-del"    data-del="${u.id}">Supprimer</button>
       </div>` : ""}
@@ -390,10 +461,12 @@ function renderList() {
   const list = filteredUsers();
   const total = visibleUsers().length;
   const f = state.filters;
-  const hasFilters = f.q || f.role || f.territoire || f.ville || f.profSpec || f.structure || f.statut;
+  const hasFilters = f.q || f.role || f.territoire || f.region || f.ville || f.profSpec || f.structure || f.statut;
   const villes = [...new Set(visibleUsers().map(u => u.ville))].sort();
   // Professions + spécialités présentes dans le périmètre visible
   const profSpecs = [...new Set(visibleUsers().flatMap(u => [u.profession, u.specialite]).filter(Boolean))].sort();
+  // Régions présentes dans le périmètre visible
+  const regions = [...new Set(visibleUsers().map(u => u.region || territoireRegion(u.territoire)).filter(Boolean))].sort();
 
   el("view-list").innerHTML = `
     <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:1rem;">
@@ -403,7 +476,10 @@ function renderList() {
           ? "Vue administrateur — tous les territoires."
           : "Vue gestionnaire de compte — territoire <strong>"+esc(acTerr())+"</strong>."}</p>
       </div>
-      ${acWrite() ? `<button class="fr-btn fr-btn--sm fr-btn--icon-left fr-icon-user-add-line" data-goto="create">Créer un utilisateur</button>` : ""}
+      <div style="display:flex;gap:.5rem;flex-wrap:wrap;">
+        <button class="fr-btn fr-btn--sm fr-btn--secondary" id="export-csv">Exporter (CSV)</button>
+        ${acWrite() ? `<button class="fr-btn fr-btn--sm fr-btn--icon-left fr-icon-user-add-line" data-goto="create">Créer un utilisateur</button>` : ""}
+      </div>
     </div>
 
     <div class="filters">
@@ -413,10 +489,11 @@ function renderList() {
       </div>
       ${selectField("role", "Rôle", (isAdmin ? [...ROLES, ...ADMIN_TAGS] : ROLES).map(r => ({ value:r.value, label:r.label })))}
       ${isAdmin ? selectField("territoire", "Territoire", state.territoires.map(t => ({ value:t.code, label:`${t.code} · ${t.dep}` }))) : ""}
+      ${selectField("region", "Région", regions.map(v => ({ value:v, label:v })))}
       ${selectField("ville", "Ville", villes.map(v => ({ value:v, label:v })))}
       ${selectField("profSpec", "Profession / Spécialité", profSpecs.map(v => ({ value:v, label:v })))}
       ${selectField("structure", "Structure", STRUCTURE_TYPES.map(s => ({ value:s.value, label:s.label })))}
-      ${selectField("statut", "Statut", [{value:"actif",label:"Actif"},{value:"inactif",label:"Inactif"}])}
+      ${selectField("statut", "Statut", STATUT_OPTS)}
       ${hasFilters ? `<div class="f-field"><button class="fr-btn fr-btn--sm fr-btn--tertiary-no-outline" id="reset-filters">Réinitialiser</button></div>` : ""}
     </div>
 
@@ -435,6 +512,49 @@ function renderRows(list) {
   return list.map(userRow).join("");
 }
 
+/* Petit bandeau de confirmation éphémère (toast) */
+function showToast(msg) {
+  const root = el("modal-root");
+  if (!root) return;
+  const t = document.createElement("div");
+  t.className = "toast";
+  t.textContent = msg;
+  root.appendChild(t);
+  setTimeout(() => { t.classList.add("toast--out"); setTimeout(() => t.remove(), 400); }, 2600);
+}
+
+/* Export CSV — email, rôle(s), région, territoire, structure(s), statut (actif/inactif/aucune
+   connexion), mode de connexion. Sert notamment de liste de diffusion et distingue les
+   comptes login/mot de passe des comptes PSC/France Connect. */
+function exportUsersCsv(list) {
+  const cols = ["Email","Prénom","Nom","Identifiant national","Rôle(s)","Région","Territoire","Ville",
+                "Structure(s)","Statut","Mode de connexion","Liste de diffusion","Date de création","Dernière connexion"];
+  const cell = (v) => {
+    const s = String(v ?? "");
+    return /[";\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+  };
+  const rows = list.map(u => {
+    const et = statutEtat(u);
+    const structs = structuresOf(u).map(s => `${STRUCTURE_SHORT[s.type]} ${s.nom}`).join(" | ");
+    const roles = rolesOf(u).map(r => ROLE_LABEL[r] || r).join(" | ");
+    return [
+      u.email, u.prenom, u.nom, u.idNational || "", roles,
+      u.region || territoireRegion(u.territoire), u.territoire || "", u.ville || "",
+      structs, et.label, modeConnexionLabel(u.modeConnexion), u.email,
+      fmtDate(u.created_at), u.derniereConnexion ? fmtDate(u.derniereConnexion) : "Jamais",
+    ].map(cell).join(";");
+  });
+  const csv = "﻿" + [cols.join(";"), ...rows].join("\r\n");
+  const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  const stamp = new Date().toISOString().slice(0, 10);
+  a.href = url; a.download = `utilisateurs-sas-${stamp}.csv`;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+  showToast(`Export CSV — ${list.length} utilisateur${list.length > 1 ? "s" : ""}.`);
+}
+
 function bindRowActions(root) {
   root.querySelectorAll("[data-edit]").forEach(b => b.onclick = () => {
     const u = state.users.find(x => x.id === b.dataset.edit);
@@ -443,6 +563,16 @@ function bindRowActions(root) {
   root.querySelectorAll("[data-toggle]").forEach(b => b.onclick = () => {
     const u = state.users.find(x => x.id === b.dataset.toggle);
     if (u) { u.actif = !u.actif; saveUsers(); render(); }
+  });
+  root.querySelectorAll("[data-resend]").forEach(b => b.onclick = () => {
+    const u = state.users.find(x => x.id === b.dataset.resend);
+    if (u) showModal({
+      title: "Mail d'activation",
+      bodyHtml: `<p>Un nouveau mail d'activation va être envoyé à&nbsp;: <strong>${esc(u.email)}</strong>.</p>
+                 <p class="mock-note">Maquette&nbsp;: aucun mail n'est réellement envoyé.</p>`,
+      confirmLabel: "Envoyer",
+      onConfirm: () => showToast(`Mail d'activation renvoyé à ${u.email}.`),
+    });
   });
   root.querySelectorAll("[data-del]").forEach(b => b.onclick = () => {
     const u = state.users.find(x => x.id === b.dataset.del);
@@ -462,10 +592,13 @@ function bindListEvents() {
     bindRowActions(el("user-list"));
     const total = visibleUsers().length;
     const f = state.filters;
-    const hasFilters = f.q || f.role || f.territoire || f.ville || f.profSpec || f.structure || f.statut;
+    const hasFilters = f.q || f.role || f.territoire || f.region || f.ville || f.profSpec || f.structure || f.statut;
     root.querySelector(".result-count").textContent =
       `${list.length} utilisateur${list.length>1?"s":""}${hasFilters?` sur ${total}`:""}`;
   };
+
+  const exportBtn = root.querySelector("#export-csv");
+  if (exportBtn) exportBtn.onclick = () => exportUsersCsv(filteredUsers());
 
   root.querySelectorAll("[data-filter]").forEach(sel => sel.onchange = () => { state.filters[sel.dataset.filter] = sel.value; render(); });
   const reset = root.querySelector("#reset-filters");
@@ -562,6 +695,40 @@ function renderCreate() {
   const territoireOptions = `<option value="">— Sélectionner —</option>` +
     state.territoires.map(t => `<option value="${t.code}" ${f.territoire===t.code?"selected":""}>${esc(t.code)} · ${esc(t.dep)}</option>`).join("");
 
+  const regionOptions = `<option value="">— Sélectionner —</option>` +
+    REGIONS.map(r => `<option value="${esc(r)}" ${f.region===r?"selected":""}>${esc(r)}</option>`).join("");
+  const regionBlock = `
+    <div class="${grp('region')}">
+      <label class="fr-label" for="region">Région
+        <span class="fr-hint-text">Renseignée automatiquement d'après le territoire SAS ; modifiable.</span></label>
+      <select class="fr-select" id="region">${regionOptions}</select>${err('region')}
+    </div>`;
+
+  const modeBlock = `
+    <div class="fr-input-group">
+      <label class="fr-label" for="modeConnexion">Mode de connexion
+        <span class="fr-hint-text">France Connect / Pro Santé Connect (PSC) ou identifiant / mot de passe.</span></label>
+      <select class="fr-select" id="modeConnexion">
+        <option value="MdP" ${f.modeConnexion!=="PSC"?"selected":""}>${esc(MODE_CONNEXION.MdP)}</option>
+        <option value="PSC" ${f.modeConnexion==="PSC"?"selected":""}>${esc(MODE_CONNEXION.PSC)}</option>
+      </select>
+    </div>`;
+
+  // Environnement(s) — réservé à l'Admin BO (création multi-environnement)
+  const isAdminBOUser = isAdminBO(identity());
+  const envBlock = isAdminBOUser ? `
+    <div class="${grp('environnements')}">
+      <label class="fr-label">Environnement(s)
+        <span class="fr-hint-text">Création multi-environnement (réservé à l'Admin BO).</span></label>
+      <div class="roles-checkboxes">
+        ${ENVIRONNEMENTS.map(e => `
+          <div class="fr-checkbox-group">
+            <input type="checkbox" id="env-${esc(e)}" data-env="${esc(e)}" ${f.environnements.includes(e)?"checked":""}>
+            <label class="fr-label" for="env-${esc(e)}">${esc(e)}</label>
+          </div>`).join("")}
+      </div>${err('environnements')}
+    </div>` : "";
+
   el("view-create").innerHTML = `
     <h1 class="fr-h4" style="margin:0;">${editing ? "Modifier l'utilisateur" : "Créer un utilisateur"}</h1>
     <p class="page-sub" style="margin-bottom:1.25rem;">Les champs varient selon les rôles sélectionnés.</p>
@@ -610,8 +777,10 @@ function renderCreate() {
         <div class="${grp('territoire')}">
           <label class="fr-label" for="territoire">Territoire SAS${req}<span class="fr-hint-text">Format SAS-[n° département]</span></label>
           <select class="fr-select" id="territoire">${territoireOptions}</select>${err('territoire')}
-        </div>` : `
-        <p class="mock-note" style="margin:-.25rem 0 1rem;">Rôle administrateur : accès à tous les territoires, aucun territoire à renseigner.</p>`}
+        </div>` : ""}
+        ${regionBlock}
+        ${modeBlock}
+        ${envBlock}
       ` : ""}
       <div style="display:flex;gap:.5rem;margin-top:1rem;">
         <button class="fr-btn" type="submit">${editing ? "Enregistrer les modifications" : "Créer l'utilisateur"}</button>
@@ -642,7 +811,20 @@ function bindCreateEvents() {
   const bind = (id, key) => { const e = root.querySelector("#"+id); if (e) e.oninput = () => { f[key] = e.value; }; };
   bind("email","email"); bind("nom","nom"); bind("prenom","prenom"); bind("ville","ville"); bind("idNational","idNational");
   const terr = root.querySelector("#territoire");
-  if (terr) terr.onchange = () => { f.territoire = terr.value; };
+  if (terr) terr.onchange = () => {
+    f.territoire = terr.value;
+    // La région suit le territoire tant que l'utilisateur ne l'a pas modifiée à la main
+    if (f.regionAuto) { f.region = territoireRegion(terr.value); render(); }
+  };
+  const regionSel = root.querySelector("#region");
+  if (regionSel) regionSel.onchange = () => { f.region = regionSel.value; f.regionAuto = false; };
+  const modeSel = root.querySelector("#modeConnexion");
+  if (modeSel) modeSel.onchange = () => { f.modeConnexion = modeSel.value; };
+  root.querySelectorAll("[data-env]").forEach(cb => cb.onchange = () => {
+    const v = cb.dataset.env;
+    if (cb.checked) { if (!f.environnements.includes(v)) f.environnements.push(v); }
+    else f.environnements = f.environnements.filter(x => x !== v);
+  });
 
   const rppsInput = root.querySelector("#rpps");
   if (rppsInput) rppsInput.oninput = () => { f.rpps = rppsInput.value; f.pro = null; };
@@ -666,6 +848,18 @@ function bindCreateEvents() {
     if (f.structures.some(s => s.finess === entry.finess)) { f.errors.structures = "Cette structure est déjà rattachée."; render(); return; }
     f.structures.push({ type: entry.type, finess: entry.finess, nom: entry.nom, ville: entry.ville });
     delete f.errors.structures;
+    // GS CDS : préremplissage de la ville et du territoire d'après le CDS rattaché
+    if (entry.type === "cds") {
+      if (!f.ville.trim() && entry.ville) f.ville = entry.ville;
+      if (!f.territoire) {
+        const dep = (entry.ville.match(/^(\d{2,3})/) || [])[1];
+        const code = dep ? "SAS-" + dep.slice(0, 2) : "";
+        if (code && state.territoires.some(t => t.code === code)) {
+          f.territoire = code;
+          if (f.regionAuto) f.region = territoireRegion(code);
+        }
+      }
+    }
     render();
   };
   root.querySelectorAll("[data-struct-remove]").forEach(b => b.onclick = () => {
@@ -694,9 +888,13 @@ function submitForm() {
   f.errors = errors;
   if (Object.keys(errors).length) { render(); return; }
 
+  const terrValue = needsTerritoire ? f.territoire : "";
   const base = {
     idNational: f.idNational.trim(), email: f.email.trim(), nom: f.nom.trim(), prenom: f.prenom.trim(),
-    roles: [...f.roles], ville: f.ville.trim(), territoire: needsTerritoire ? f.territoire : "",
+    roles: [...f.roles], ville: f.ville.trim(), territoire: terrValue,
+    region: f.region || territoireRegion(terrValue),
+    environnements: [...f.environnements],
+    modeConnexion: f.modeConnexion === "PSC" ? "PSC" : "MdP",
   };
   if (isEffecteur && f.pro) { base.rpps = f.rpps.trim(); base.profession = f.pro.profession; base.specialite = f.pro.specialite; }
   if (isStructure) {
@@ -710,7 +908,9 @@ function submitForm() {
     Object.assign(u, base);
     saved = u;
   } else {
-    saved = { id: "u-" + Math.random().toString(36).slice(2, 8), actif: true, ...base };
+    // Nouveau compte : jamais connecté (statut « Aucune connexion »), date de création = aujourd'hui
+    saved = { id: "u-" + Math.random().toString(36).slice(2, 8), actif: true,
+              created_at: new Date().toISOString(), derniereConnexion: null, ...base };
     state.users.unshift(saved);
   }
   saveUsers();

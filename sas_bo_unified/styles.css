@@ -73,13 +73,14 @@ body { margin: 0; background: #fff; color: #1a1a1a; font-size: 14px; line-height
   font-size: .8rem; color: #666; margin-top: .1rem;
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
+.user-row__meta { font-size: .74rem; color: #929292; margin-top: .12rem; }
 .user-row__actions { flex-shrink: 0; display: flex; gap: .7rem; flex-wrap: wrap; }
 .user-row__actions button {
   font-size: .8rem; background: none; border: none; cursor: pointer;
-  font-family: inherit; padding: 0;
+  font-family: inherit; padding: 0; text-align: left;
 }
-.act-edit, .act-toggle { color: #000091; }
-.act-edit:hover, .act-toggle:hover { text-decoration: underline; }
+.act-edit, .act-toggle, .act-resend { color: #000091; }
+.act-edit:hover, .act-toggle:hover, .act-resend:hover { text-decoration: underline; }
 .act-del { color: #ce0500; }
 .act-del:hover { text-decoration: underline; }
 
@@ -89,7 +90,16 @@ body { margin: 0; background: #fff; color: #1a1a1a; font-size: 14px; line-height
 .badge-gestionnaire_compte    { background:#e3e3fd; color:#000091; }
 .badge-gestionnaire_structure { background:#e8edff; color:#0063cb; }
 .badge-regulateur_osnp        { background:#e3fdeb; color:#297254; }
+.badge-regulateur_su          { background:#d6f4ec; color:#0b6b58; }
 .badge-effecteur              { background:#f7f0e9; color:#695240; }
+/* Mode de connexion */
+.badge-mode { text-transform: none; font-weight: 500; }
+.badge-mode-PSC { background:#e8edff; color:#0063cb; }
+.badge-mode-MdP { background:#eee; color:#666; }
+/* Statut (3 états) — badges plats sans icône */
+.badge-statut-actif   { background:#b8fec9; color:#18753c; }
+.badge-statut-inactif { background:#ececec; color:#666; }
+.badge-statut-aucune  { background:#ffe9c6; color:#976a00; }
 /* Rôles réservés (administrateur) */
 .badge-referent_territoriale  { background:#fceeac; color:#716043; }
 .badge-ambassadeur            { background:#dee5fd; color:#2f4077; }
@@ -302,3 +312,12 @@ body { margin: 0; background: #fff; color: #1a1a1a; font-size: 14px; line-height
 .ga-draft-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:.5rem .9rem; }
 @media (max-width:600px){ .ga-draft-grid { grid-template-columns:1fr; } }
 .ga-draft-cell .fr-select { margin-top:.15rem; }
+
+/* ── Toast (confirmation éphémère) ───────────────────────── */
+.toast {
+  position: fixed; left: 50%; bottom: 1.5rem; transform: translateX(-50%);
+  background: #18753c; color: #fff; padding: .65rem 1.1rem; border-radius: 6px;
+  font-size: .85rem; box-shadow: 0 4px 14px rgba(0,0,0,.22); z-index: 2000;
+  max-width: 90vw; opacity: 1; transition: opacity .35s ease;
+}
+.toast--out { opacity: 0; }
