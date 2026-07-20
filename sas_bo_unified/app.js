@@ -171,6 +171,26 @@ SEED_USERS.forEach((u, i) => {
   u.derniereConnexion = (i % 5 === 2) ? null : new Date(2026, i % 6, 2 + (i % 25)).toISOString();
 });
 
+/* Conditions générales d'utilisation (texte éditable par l'administrateur) */
+const CGU_SEED = {
+  version: "1.3",
+  updatedAt: "2026-01-15T09:00:00.000Z",
+  title: "Conditions générales d'utilisation — Arrière-guichet SAS",
+  body: [
+    "1. Objet",
+    "Les présentes conditions générales d'utilisation (CGU) encadrent l'accès et l'usage des arrière-guichets du Service d'Accès aux Soins (SAS) par les utilisateurs habilités.",
+    "",
+    "2. Accès au service",
+    "L'accès est réservé aux professionnels habilités disposant d'un compte nominatif. La connexion s'effectue via Pro Santé Connect (PSC) ou par identifiant et mot de passe.",
+    "",
+    "3. Protection des données",
+    "Les données à caractère personnel sont traitées conformément au RGPD. Chaque utilisateur s'engage à ne consulter que les données nécessaires à l'exercice de ses missions.",
+    "",
+    "4. Responsabilités",
+    "L'utilisateur est responsable de la confidentialité de ses identifiants et des actions réalisées sous son compte.",
+  ].join("\n"),
+};
+
 /* ---------------------------------------------------------------- *
  *  ÉTAT
  * ---------------------------------------------------------------- */
@@ -178,6 +198,7 @@ const USERS_KEY = "bo-sas-users-v8";
 const TERR_KEY  = "bo-sas-territoires-v1";
 const DEP_KEY   = "bo-sas-departements-v1";
 const SUP_KEY   = "bo-sas-support-v1";
+const CGU_KEY   = "bo-sas-cgu-v1";
 
 const EMPTY_FILTERS = { q: "", role: "", territoire: "", region: "", ville: "", profSpec: "", structure: "", statut: "" };
 
@@ -186,8 +207,9 @@ const state = {
   territoires: loadTerritoires(),
   departements: loadDepartements(),
   support: loadSupport(),
+  cgu: loadCgu(),
   identityIdx: currentIdentityIdx(),
-  view: "list",   // "list" | "create" | "territoires" | "departements" | "support"
+  view: "list",   // "list" | "create" | "statistiques" | "cgu" | "territoires" | "departements" | "support"
   editId: null,   // utilisateur en cours de modification
   filters: { ...EMPTY_FILTERS },
   form: newForm(),
@@ -197,6 +219,8 @@ const state = {
   supCat: "support_n1", // catégorie active de Gestion Support
   supSearch: "",  // recherche dans la page Gestion Support
   supEdits: {},   // { [`${catKey}||${territory}`]: "email1, email2" } — modifications en attente
+  stat: { level: "national", region: "", territoire: "" }, // périmètre de la page Statistiques
+  cguDraft: null, // { body, version } — édition CGU en attente
 };
 
 function normalizeUser(u) {
@@ -224,6 +248,11 @@ function loadSupport() {
   return JSON.parse(JSON.stringify(SUPPORT_REORIENTATIONS));
 }
 function saveSupport() { try { localStorage.setItem(SUP_KEY, JSON.stringify(state.support)); } catch (e) {} }
+function loadCgu() {
+  try { const raw = localStorage.getItem(CGU_KEY); if (raw) return JSON.parse(raw); } catch (e) {}
+  return JSON.parse(JSON.stringify(CGU_SEED));
+}
+function saveCgu() { try { localStorage.setItem(CGU_KEY, JSON.stringify(state.cgu)); } catch (e) {} }
 
 function newForm() {
   return { roles: [], idNational:"", email:"", nom:"", prenom:"", ville:"", territoire:"",
@@ -266,7 +295,7 @@ function acTerr() { return identity().territoire || null; }      // territoire d
 
 /* Composant technique ouvert (Keycloak / SAS-DATA), passé par l'URL depuis le portail */
 const AC_COMPONENTS = {
-  keycloak: { key: "utilisateurs", title: "Keycloak", sub: "Gestion des utilisateurs",           views: ["list","create"] },
+  keycloak: { key: "utilisateurs", title: "Keycloak", sub: "Gestion des utilisateurs",           views: ["list","create","statistiques","cgu"] },
   sasdata:  { key: "sasdata",      title: "SAS-DATA", sub: "Territoires · Départements · Support", views: ["territoires","departements","support"] },
 };
 function currentComponent() {
@@ -281,6 +310,7 @@ function acPage()    { return "acces.html?component=" + currentComponent(); }
 function allowedViews() {
   return AC_COMPONENTS[currentComponent()].views.filter(v => {
     if (v === "territoires" && acRole() !== "administrateur") return false; // territoires = admin uniquement
+    if (v === "cgu" && acRole() !== "administrateur") return false;         // édition des CGU = admin uniquement
     if (v === "create" && !acWrite()) return false;                        // création = écriture uniquement
     return true;
   });
@@ -329,11 +359,13 @@ function renderSidebar() {
   if (bs) bs.textContent = comp.sub;
 
   const ALL_ITEMS = {
-    list:         { view:"list",         icon:"fr-icon-user-line",      label:"Utilisateurs" },
-    create:       { view:"create",       icon:"fr-icon-user-add-line",  label:"Créer un utilisateur" },
-    territoires:  { view:"territoires",  icon:"fr-icon-map-pin-2-line", label:"Territoires SAS" },
-    departements: { view:"departements", icon:"fr-icon-building-line",  label:"Départements" },
-    support:      { view:"support",      icon:"fr-icon-mail-line",      label:"Gestion Support" },
+    list:         { view:"list",         icon:"fr-icon-user-line",         label:"Utilisateurs" },
+    create:       { view:"create",       icon:"fr-icon-user-add-line",     label:"Créer un utilisateur" },
+    statistiques: { view:"statistiques", icon:"fr-icon-line-chart-line",   label:"Statistiques" },
+    cgu:          { view:"cgu",          icon:"fr-icon-file-text-line",    label:"Édition des CGU" },
+    territoires:  { view:"territoires",  icon:"fr-icon-map-pin-2-line",    label:"Territoires SAS" },
+    departements: { view:"departements", icon:"fr-icon-building-line",     label:"Départements" },
+    support:      { view:"support",      icon:"fr-icon-mail-line",         label:"Gestion Support" },
   };
   const items = acHasAccess() ? allowedViews().map(v => ALL_ITEMS[v]) : [];
 
@@ -610,7 +642,10 @@ function bindListEvents() {
       state.users = SEED_USERS.map(u=>({...u}));
       state.territoires = SEED_TERRITOIRES.map(t=>({...t}));
       state.departements = DEPARTEMENTS.map(d=>({...d}));
-      saveUsers(); saveTerritoires(); saveDepartements(); render();
+      state.support = JSON.parse(JSON.stringify(SUPPORT_REORIENTATIONS));
+      state.cgu = JSON.parse(JSON.stringify(CGU_SEED));
+      state.cguDraft = null;
+      saveUsers(); saveTerritoires(); saveDepartements(); saveSupport(); saveCgu(); render();
     }
   };
   bindRowActions(root);
@@ -1297,6 +1332,209 @@ function bindSupportEvents() {
 }
 
 /* ================================================================ *
+ *  VUE STATISTIQUES (nb par rôle / structure / profession)
+ * ================================================================ */
+function statScopeUsers() {
+  const base = visibleUsers();                      // admins : tous · gestionnaire : son territoire
+  if (acRole() !== "administrateur") return base;   // gestionnaire de compte : périmètre déjà limité
+  const s = state.stat;
+  if (s.level === "territoire" && s.territoire) return base.filter(u => u.territoire === s.territoire);
+  if (s.level === "region" && s.region) return base.filter(u => (u.region || territoireRegion(u.territoire)) === s.region);
+  return base;                                      // national
+}
+function statCountBy(users, keyFn) {
+  const m = {};
+  users.forEach(u => {
+    const ks = keyFn(u);
+    (Array.isArray(ks) ? ks : [ks]).forEach(k => { if (k != null && k !== "") m[k] = (m[k] || 0) + 1; });
+  });
+  return m;
+}
+function statBar(label, count, total, sub) {
+  const pct = total ? Math.round((count / total) * 100) : 0;
+  return `<div class="stat-bar">
+    <div class="stat-bar__label">${esc(label)}${sub ? `<span class="stat-bar__sub"> · ${esc(sub)}</span>` : ""}</div>
+    <div class="stat-bar__track"><div class="stat-bar__fill" style="width:${pct}%"></div></div>
+    <div class="stat-bar__val">${count}<span class="stat-bar__pct">${pct}%</span></div>
+  </div>`;
+}
+function statBlock(title, map, total, labelFn) {
+  const keys = Object.keys(map).sort((a, b) => map[b] - map[a]);
+  const bars = keys.length
+    ? keys.map(k => statBar(labelFn ? labelFn(k) : k, map[k], total)).join("")
+    : `<p class="mock-note">Aucune donnée.</p>`;
+  return `<section class="stat-card">
+    <h2 class="stat-card__title">${esc(title)}</h2>
+    <div class="stat-bars">${bars}</div>
+  </section>`;
+}
+
+function renderStatistiques() {
+  const isAdmin = acRole() === "administrateur";
+  const s = state.stat;
+  const users = statScopeUsers();
+  const total = users.length;
+
+  // Périmètre courant (libellé)
+  let scopeLabel = "National — tous les territoires";
+  if (!isAdmin) scopeLabel = "Territoire " + acTerr();
+  else if (s.level === "region" && s.region) scopeLabel = "Région " + s.region;
+  else if (s.level === "territoire" && s.territoire) scopeLabel = "Territoire " + s.territoire;
+
+  // KPI statut
+  const actifs   = users.filter(u => u.derniereConnexion && u.actif).length;
+  const inactifs = users.filter(u => u.derniereConnexion && !u.actif).length;
+  const aucune   = users.filter(u => !u.derniereConnexion).length;
+
+  // Répartitions
+  const byRole = statCountBy(users, u => rolesOf(u).filter(r => !ADMIN_TAG_KEYS.includes(r)));
+  const byStructType = statCountBy(users, u => [...new Set(structuresOf(u).map(x => x.type))]); // gestionnaires par type de structure
+  const byProfession = statCountBy(users.filter(u => rolesOf(u).includes("effecteur")), u => u.profession);
+  const bySpecialite = statCountBy(users.filter(u => rolesOf(u).includes("effecteur")), u => u.specialite);
+  const byMode = statCountBy(users, u => u.modeConnexion || "MdP");
+
+  // Contrôles de périmètre (admins uniquement)
+  const regions = [...new Set(visibleUsers().map(u => u.region || territoireRegion(u.territoire)).filter(Boolean))].sort();
+  const scopeControls = isAdmin ? `
+    <div class="stat-scope">
+      <div class="stat-scope__seg">
+        ${[["national","National"],["region","Par région"],["territoire","Par territoire"]].map(([v,l]) =>
+          `<button class="stat-seg ${s.level===v?"is-active":""}" data-stat-level="${v}">${l}</button>`).join("")}
+      </div>
+      ${s.level === "region" ? `
+        <select class="fr-select stat-scope__sel" id="stat-region">
+          <option value="">— Toutes les régions —</option>
+          ${regions.map(r => `<option value="${esc(r)}" ${s.region===r?"selected":""}>${esc(r)}</option>`).join("")}
+        </select>` : ""}
+      ${s.level === "territoire" ? `
+        <select class="fr-select stat-scope__sel" id="stat-territoire">
+          <option value="">— Tous les territoires —</option>
+          ${state.territoires.map(t => `<option value="${esc(t.code)}" ${s.territoire===t.code?"selected":""}>${esc(t.code)} · ${esc(t.dep)}</option>`).join("")}
+        </select>` : ""}
+    </div>` : `<p class="mock-note">Périmètre : territoire <strong>${esc(acTerr())}</strong> (gestionnaire de compte).</p>`;
+
+  el("view-statistiques").innerHTML = `
+    <h1 class="fr-h4" style="margin:0;">Statistiques</h1>
+    <p class="page-sub">Répartition des comptes — ${esc(scopeLabel)}.</p>
+    ${scopeControls}
+
+    <div class="stat-kpis">
+      <div class="stat-kpi"><span class="stat-kpi__n">${total}</span><span class="stat-kpi__l">Comptes</span></div>
+      <div class="stat-kpi stat-kpi--ok"><span class="stat-kpi__n">${actifs}</span><span class="stat-kpi__l">Actifs</span></div>
+      <div class="stat-kpi"><span class="stat-kpi__n">${inactifs}</span><span class="stat-kpi__l">Inactifs</span></div>
+      <div class="stat-kpi stat-kpi--warn"><span class="stat-kpi__n">${aucune}</span><span class="stat-kpi__l">Aucune connexion</span></div>
+    </div>
+
+    <div class="stat-grid">
+      ${statBlock("Comptes par rôle", byRole, total, k => ROLE_LABEL[k] || k)}
+      ${statBlock("Gestionnaires par type de structure", byStructType, total, k => STRUCTURE_LABEL[k] || k)}
+      ${statBlock("Effecteurs par profession", byProfession, total)}
+      ${statBlock("Effecteurs par spécialité", bySpecialite, total)}
+      ${statBlock("Comptes par mode de connexion", byMode, total, k => modeConnexionLabel(k))}
+    </div>
+    <p class="mock-note" style="margin-top:1rem;">Statistiques calculées sur le périmètre visible (données de démonstration).</p>`;
+
+  bindStatEvents();
+}
+
+function bindStatEvents() {
+  const root = el("view-statistiques");
+  root.querySelectorAll("[data-stat-level]").forEach(b => b.onclick = () => {
+    state.stat.level = b.dataset.statLevel;
+    render();
+  });
+  const rSel = root.querySelector("#stat-region");
+  if (rSel) rSel.onchange = () => { state.stat.region = rSel.value; render(); };
+  const tSel = root.querySelector("#stat-territoire");
+  if (tSel) tSel.onchange = () => { state.stat.territoire = tSel.value; render(); };
+}
+
+/* ================================================================ *
+ *  VUE ÉDITION DES CGU (administrateur)
+ * ================================================================ */
+function cguDirty() {
+  const d = state.cguDraft;
+  return !!d && (d.body !== state.cgu.body || d.version.trim() !== state.cgu.version);
+}
+function fmtDateTime(iso) {
+  if (!iso) return "—";
+  try { return new Date(iso).toLocaleString("fr-FR", { day:"2-digit", month:"2-digit", year:"numeric", hour:"2-digit", minute:"2-digit" }); }
+  catch (e) { return "—"; }
+}
+function renderCgu() {
+  const canEdit = acWrite();
+  if (!state.cguDraft) state.cguDraft = { body: state.cgu.body, version: state.cgu.version };
+  const d = state.cguDraft;
+  const dirty = cguDirty();
+
+  el("view-cgu").innerHTML = `
+    <h1 class="fr-h4" style="margin:0;">Édition des CGU</h1>
+    <p class="page-sub">Conditions générales d'utilisation présentées aux utilisateurs à la connexion.
+      ${canEdit ? "" : "Consultation en lecture seule."}</p>
+
+    <div class="cgu-meta">
+      <span><strong>Version en vigueur :</strong> ${esc(state.cgu.version)}</span>
+      <span><strong>Dernière mise à jour :</strong> ${esc(fmtDateTime(state.cgu.updatedAt))}</span>
+    </div>
+
+    ${canEdit ? `<div class="save-bar">
+      <button class="fr-btn fr-btn--sm" id="cgu-save" ${dirty?"":"disabled"}>Enregistrer</button>
+      <span class="mock-note" id="cgu-pending">${dirty ? "Modifications non enregistrées" : "Aucune modification"}</span>
+      ${dirty ? `<button class="fr-btn fr-btn--sm fr-btn--tertiary-no-outline" id="cgu-reset">Annuler les modifications</button>` : ""}
+    </div>` : ""}
+
+    <div class="fr-input-group" style="max-width:220px;">
+      <label class="fr-label" for="cgu-version">Numéro de version</label>
+      <input class="fr-input" id="cgu-version" value="${esc(d.version)}" ${canEdit?"":"readonly"}>
+    </div>
+    <div class="fr-input-group">
+      <label class="fr-label" for="cgu-body">Texte des CGU</label>
+      <textarea class="fr-input cgu-textarea" id="cgu-body" rows="18" ${canEdit?"":"readonly"}>${esc(d.body)}</textarea>
+    </div>`;
+
+  bindCguEvents();
+}
+function bindCguEvents() {
+  const root = el("view-cgu");
+  const body = root.querySelector("#cgu-body");
+  const ver  = root.querySelector("#cgu-version");
+  const refresh = () => {
+    const dirty = cguDirty();
+    const btn = root.querySelector("#cgu-save"); if (btn) btn.disabled = !dirty;
+    const info = root.querySelector("#cgu-pending"); if (info) info.textContent = dirty ? "Modifications non enregistrées" : "Aucune modification";
+  };
+  if (body) body.oninput = () => { state.cguDraft.body = body.value; refresh(); };
+  if (ver)  ver.oninput  = () => { state.cguDraft.version = ver.value; refresh(); };
+
+  const reset = root.querySelector("#cgu-reset");
+  if (reset) reset.onclick = () => { state.cguDraft = null; render(); };
+
+  const save = root.querySelector("#cgu-save");
+  if (save) save.onclick = () => {
+    const d = state.cguDraft;
+    if (!d.version.trim()) { showToast("Renseignez un numéro de version."); return; }
+    const changes = [];
+    if (d.version.trim() !== state.cgu.version) changes.push(`<li>Version : <span class="old">${esc(state.cgu.version)}</span> → <span class="new">${esc(d.version.trim())}</span></li>`);
+    if (d.body !== state.cgu.body) changes.push(`<li>Texte des CGU modifié (${d.body.length} caractères)</li>`);
+    showModal({
+      title: "Publier les nouvelles CGU",
+      bodyHtml: `<p class="fr-text--sm">Les modifications suivantes seront publiées et présentées aux utilisateurs :</p>
+                 <ul class="modal-changes">${changes.join("")}</ul>`,
+      confirmLabel: "Publier",
+      onConfirm: () => {
+        state.cgu.version = d.version.trim();
+        state.cgu.body = d.body;
+        state.cgu.updatedAt = new Date().toISOString();
+        saveCgu();
+        state.cguDraft = null;
+        render();
+        showToast("Nouvelles CGU publiées (version " + state.cgu.version + ").");
+      },
+    });
+  };
+}
+
+/* ================================================================ *
  *  RENDU GLOBAL
  * ================================================================ */
 function render() {
@@ -1309,6 +1547,8 @@ function render() {
   renderSidebar();
   el("view-list").hidden        = denied || state.view !== "list";
   el("view-create").hidden      = denied || state.view !== "create";
+  el("view-statistiques").hidden= denied || state.view !== "statistiques";
+  el("view-cgu").hidden         = denied || state.view !== "cgu";
   el("view-territoires").hidden = denied || state.view !== "territoires";
   el("view-departements").hidden= denied || state.view !== "departements";
   el("view-support").hidden     = denied || state.view !== "support";
@@ -1324,6 +1564,8 @@ function render() {
   }
   if (state.view === "list") renderList();
   else if (state.view === "create") renderCreate();
+  else if (state.view === "statistiques") renderStatistiques();
+  else if (state.view === "cgu") renderCgu();
   else if (state.view === "territoires") renderTerritoires();
   else if (state.view === "departements") renderDepartements();
   else if (state.view === "support") renderSupport();

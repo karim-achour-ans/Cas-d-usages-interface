@@ -82,14 +82,30 @@ CE QUE FAIT LA MAQUETTE
      autant de structures que voulu via Type + recherche + « Ajouter » (bloc
      situé juste sous le champ Rôle).
 
-3. TERRITOIRES SAS (menu « Territoires SAS », administrateur uniquement)
+3. STATISTIQUES (menu « Statistiques »)
+   - Répartition des comptes : par rôle, par type de structure (gestionnaires),
+     par profession et spécialité (effecteurs), par mode de connexion.
+   - Indicateurs de statut : comptes, actifs, inactifs, aucune connexion.
+   - PÉRIMÈTRE (administrateur) : National / Par région / Par territoire, avec
+     sélecteur dédié. Le gestionnaire de compte voit les statistiques de SON
+     territoire uniquement.
+
+4. ÉDITION DES CGU (menu « Édition des CGU », administrateur uniquement)
+   - Édition du numéro de version et du texte des Conditions générales
+     d'utilisation présentées aux utilisateurs à la connexion.
+   - Bouton « Enregistrer » désactivé sans changement ; modale de confirmation
+     (« Publier ») listant les modifications ; la date de mise à jour est
+     horodatée automatiquement à la publication.
+   - Administrateur en lecture seule : consultation sans édition.
+
+5. TERRITOIRES SAS (menu « Territoires SAS », administrateur uniquement)
    - Affichage, création, modification et suppression des territoires.
    - Format imposé SAS-[n° département] ; le nombre d'utilisateurs rattachés
      est indiqué. Renommer un code répercute le changement sur les utilisateurs.
 
    - Le rôle administrateur seul n'a pas besoin de territoire (accès à tous).
 
-4. DÉPARTEMENTS (menu « Départements »)
+6. DÉPARTEMENTS (menu « Départements »)
    - Accessible aux administrateurs (tous les territoires SAS) et aux
      gestionnaires de compte (uniquement le département de leur territoire).
    - Deux champs éditables par département :
@@ -99,7 +115,7 @@ CE QUE FAIT LA MAQUETTE
      clic, une modale liste les valeurs modifiées avant validation.
    - Données conformes au format JSON de sauvegarde (fichier departements.js).
 
-5. GESTION SUPPORT (menu « Gestion Support »)
+7. GESTION SUPPORT (menu « Gestion Support »)
    - Gère les mails de réorientation par catégorie (Support N1, Support N3,
      Gestionnaire de compte, Référent territorial) et par territoire.
    - Administrateur : tous les mails ; gestionnaire de compte : uniquement les
