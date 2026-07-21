@@ -784,16 +784,6 @@ function renderCreate() {
       <select class="fr-select" id="region">${regionOptions}</select>${err('region')}
     </div>`;
 
-  const modeBlock = `
-    <div class="fr-input-group">
-      <label class="fr-label" for="modeConnexion">Mode de connexion
-        <span class="fr-hint-text">France Connect / Pro Santé Connect (PSC) ou identifiant / mot de passe.</span></label>
-      <select class="fr-select" id="modeConnexion">
-        <option value="MdP" ${f.modeConnexion!=="PSC"?"selected":""}>${esc(MODE_CONNEXION.MdP)}</option>
-        <option value="PSC" ${f.modeConnexion==="PSC"?"selected":""}>${esc(MODE_CONNEXION.PSC)}</option>
-      </select>
-    </div>`;
-
   // Environnement(s) — réservé à l'Admin BO (création multi-environnement)
   const isAdminBOUser = isAdminBO(identity());
   const envBlock = isAdminBOUser ? `
@@ -859,7 +849,6 @@ function renderCreate() {
           <select class="fr-select" id="territoire">${territoireOptions}</select>${err('territoire')}
         </div>` : ""}
         ${regionBlock}
-        ${modeBlock}
         ${envBlock}
       ` : ""}
       <div style="display:flex;gap:.5rem;margin-top:1rem;">
@@ -898,8 +887,6 @@ function bindCreateEvents() {
   };
   const regionSel = root.querySelector("#region");
   if (regionSel) regionSel.onchange = () => { f.region = regionSel.value; f.regionAuto = false; };
-  const modeSel = root.querySelector("#modeConnexion");
-  if (modeSel) modeSel.onchange = () => { f.modeConnexion = modeSel.value; };
   root.querySelectorAll("[data-env]").forEach(cb => cb.onchange = () => {
     const v = cb.dataset.env;
     if (cb.checked) { if (!f.environnements.includes(v)) f.environnements.push(v); }
@@ -1468,8 +1455,6 @@ function renderStatistiques() {
   // Répartitions
   const byRole = statCountBy(users, u => rolesOf(u).filter(r => !ADMIN_TAG_KEYS.includes(r)));
   const byStructType = statCountBy(users, u => [...new Set(structuresOf(u).map(x => x.type))]); // gestionnaires par type de structure
-  const byProfession = statCountBy(users.filter(u => rolesOf(u).includes("effecteur")), u => u.profession);
-  const bySpecialite = statCountBy(users.filter(u => rolesOf(u).includes("effecteur")), u => u.specialite);
   const byMode = statCountBy(users, u => u.modeConnexion || "MdP");
 
   // Contrôles de périmètre (admins uniquement)
@@ -1507,8 +1492,6 @@ function renderStatistiques() {
     <div class="stat-grid">
       ${statBlock("Comptes par rôle", byRole, total, k => ROLE_LABEL[k] || k)}
       ${statBlock("Gestionnaires par type de structure", byStructType, total, k => STRUCTURE_LABEL[k] || k)}
-      ${statBlock("Effecteurs par profession", byProfession, total)}
-      ${statBlock("Effecteurs par spécialité", bySpecialite, total)}
       ${statBlock("Comptes par mode de connexion", byMode, total, k => modeConnexionLabel(k))}
     </div>
     <p class="mock-note" style="margin-top:1rem;">Statistiques calculées sur le périmètre visible (données de démonstration).</p>`;
@@ -1636,7 +1619,13 @@ function banSetEdit(scope, audience, field, val) {
 function banEditCount() { let n = 0; for (const k in state.banEdits) n += Object.keys(state.banEdits[k]).length; return n; }
 function banScopesForIdentity() {
   if (acRole() === "administrateur") return ["national", ...state.territoires.map(t => t.code)];
-  return ["national", acTerr()];    // gestionnaire de compte : national + son territoire
+  return ["national", acTerr()];    // gestionnaire de compte : national (lecture) + son territoire
+}
+/* Audiences visibles : le gestionnaire de compte n'a pas accès au bandeau
+   « non connecté » (réservé à l'administrateur). */
+function banAudiencesForIdentity() {
+  if (acRole() === "administrateur") return BANDEAU_AUDIENCES;
+  return BANDEAU_AUDIENCES.filter(a => a.key === "connecte");
 }
 function banCanEdit(scope) {
   if (!acWrite()) return false;
@@ -1722,7 +1711,7 @@ function renderBandeaux() {
     </div>` : (isAdmin ? "" : `<p class="mock-note">Le périmètre « National » est géré au niveau central ; vous pouvez éditer le bandeau de votre territoire.</p>`)}
 
     <div class="ban-grid">
-      ${BANDEAU_AUDIENCES.map(a => banCard(scope, a.key)).join("")}
+      ${banAudiencesForIdentity().map(a => banCard(scope, a.key)).join("")}
     </div>`;
 
   bindBandeauxEvents();

@@ -82,31 +82,26 @@ const OS_PROFESSION_LABEL = {
 };
 
 /* ------------------------------------------------------------------ *
- *  Enrichissement maquette (Lot 3) — structure porteuse, statut de
- *  disponibilité, dates SAS, score de géolocalisation, agenda (lecture)
- *  et historique des modifications.
+ *  Modèle « offre de soins » (Lot 3 + révision Lot 4).
+ *  Une offre est SOIT un professionnel de santé (PS, individuel),
+ *  SOIT une STRUCTURE autonome (CDS · SOS Médecins · MMG) — les
+ *  structures NE sont PAS rattachées à un professionnel : ce sont des
+ *  offres de soins à part entière.
+ *  Chaque offre porte : statut de disponibilité, dates SAS, agenda
+ *  (lecture), historique des modifications, et une ou plusieurs
+ *  adresses (« places ») avec score de géolocalisation.
  * ------------------------------------------------------------------ */
-const OS_STRUCTURE_LABEL = {
+const OS_KIND_LABEL = {
+  ps:  "Professionnel de santé",
   cds: "Centre de Santé (CDS)",
   sos: "SOS Médecins",
   mmg: "Maison Médicale de Garde (MMG)",
 };
+/* Rétro-compat : ancien libellé de structure (hors « ps ») */
+const OS_STRUCTURE_LABEL = { cds: OS_KIND_LABEL.cds, sos: OS_KIND_LABEL.sos, mmg: OS_KIND_LABEL.mmg };
 /* SOS Médecins : multi-adresses — chaque adresse est un point fixe. */
 const OS_SOS_POINT_LABEL = { PFG: "Point fixe de garde (PFG)", PFC: "Point fixe de consultation (PFC)" };
 const OS_JOURS = ["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi", "Dimanche"];
-
-/* Type de structure par RPPS (CDS = 1 adresse · SOS = multi-adresses PFG/PFC · MMG = 1 adresse) */
-const OS_STRUCTURE_BY_RPPS = {
-  "10005294912": "sos",   // Poullain — 2 adresses (PFG + PFC)
-  "10108275248": "cds",
-  "10002875374": "cds",
-  "10111259189": "cds",
-  "10109340603": "cds",
-  "10106917841": "mmg",
-  "10002921293": "mmg",
-  "10107871880": "mmg",
-  "10107646639": "mmg",
-};
 
 function osGeoScoreLabel(score) {
   if (score == null) return "—";
@@ -132,47 +127,84 @@ function osAgendaSeed(i, dispo) {
     return { jour: j, creneaux: c };
   });
 }
-
+const OS_GEO_SCORES = [98, 86, 72, 45, 91, 79, 88, 63, 95, 81, 92, 74];
 function osIso(y, m, d) { return new Date(y, m, d).toISOString(); }
 
-OS_INDEX.forEach((doc, i) => {
-  // Structure porteuse
-  const type = OS_STRUCTURE_BY_RPPS[doc.rpps] || (i % 2 ? "cds" : "mmg");
-  const structure = { type, name: "" };
-  if (type === "cds") structure.name = "Centre de Santé " + doc.address.city;
-  else if (type === "mmg") structure.name = "MMG " + doc.address.city;
-  else structure.name = "SOS Médecins " + doc.region.replace("FR-", "");
-  // SOS multi-adresses : 1re adresse = PFG, suivantes = PFC
-  if (type === "sos") {
-    const sameRpps = OS_INDEX.filter(x => x.rpps === doc.rpps);
-    structure.point = (sameRpps.indexOf(doc) === 0) ? "PFG" : "PFC";
-  }
-  doc.structure = structure;
-
-  // Statut de disponibilité SAS (dispo / indispo)
-  doc.dispo = (i % 4 !== 2);
-
-  // Score de géolocalisation (0–100)
-  doc.geoScore = [98, 86, 72, 45, 91, 79, 88, 63, 95, 81][i % 10];
-
-  // Dates SAS : inscription + participations récentes
-  doc.sas = {
+/* Attributs SAS communs (statut, dates, agenda, historique) — déterministe */
+function osEnrichOffre(o, i, importAuthor) {
+  o.dispo = (i % 4 !== 2);
+  o.sas = {
     inscription: osIso(2024, (i % 10), 3 + (i % 20)),
-    participations: doc.dispo
+    participations: o.dispo
       ? [ osIso(2026, 5, 2 + (i % 20)), osIso(2026, 6, 5 + (i % 15)) ]
       : [ osIso(2026, 3, 4 + (i % 18)) ],
   };
-
-  // Agenda SAS (lecture seule)
-  doc.agenda = osAgendaSeed(i, doc.dispo);
-
-  // Historique des modifications (qui / quoi)
-  doc.history = [
-    { at: osIso(2025, 10, 5 + (i % 15)), author: "Import annuaire (RPPS)", fields: ["Adresse", "Géolocalisation"],
-      description: "Création de la fiche à partir de l'annuaire santé." },
+  o.agenda = osAgendaSeed(i, o.dispo);
+  o.history = [
+    { at: osIso(2025, 10, 5 + (i % 15)), author: importAuthor, fields: ["Adresse", "Géolocalisation"],
+      description: "Création de la fiche dans l'index de l'offre de soins." },
   ];
-  if (i % 3 === 0) doc.history.unshift({
+  if (i % 3 === 0) o.history.unshift({
     at: osIso(2026, 1, 8 + (i % 12)), author: "gestionnaire.offre@sas.gouv.fr", fields: ["Téléphone"],
-    description: "Mise à jour du numéro de téléphone signalée par la structure.",
+    description: "Mise à jour du numéro de téléphone signalée sur le terrain.",
   });
-});
+  o.places.forEach((p, k) => { if (p.geoScore == null) p.geoScore = OS_GEO_SCORES[(i + k) % OS_GEO_SCORES.length]; });
+}
+
+/* --- Offres « professionnel de santé » (à partir de l'index brut, sans structure) --- */
+function osBuildProfessionals() {
+  const map = new Map();
+  OS_INDEX.forEach(d => {
+    if (!map.has(d.rpps)) {
+      map.set(d.rpps, { kind: "ps", id: "ps-" + d.rpps, rpps: d.rpps,
+        firstname: d.firstname, lastname: d.lastname, profession: d.profession,
+        participationSAS: false, places: [] });
+    }
+    const o = map.get(d.rpps);
+    if (d.agreements) o.participationSAS = true;
+    o.places.push({
+      psa: d.psa,
+      address: { ...d.address },
+      coordinates: { ...d.coordinates },
+      phones: (d.phones || []).map(p => ({ ...p })),
+      modalite: d.modalite,
+      geoScore: null,
+    });
+  });
+  const arr = [...map.values()];
+  arr.forEach((o, i) => osEnrichOffre(o, i, "Import annuaire santé (RPPS)"));
+  return arr;
+}
+
+/* --- Offres « structure » autonomes (CDS · SOS Médecins · MMG) --- */
+const OS_STRUCTURES_RAW = [
+  { kind: "cds", id: "str-cds-1", name: "Centre de Santé Bagatelle", places: [
+    { psa: "STR-CDS-1-01", address: { street: "203 Route de Toulouse", postalCode: "33400", city: "Talence", full: "203 Route de Toulouse 33400 Talence" },
+      coordinates: { lat: 44.80697, lon: -0.58801 }, phones: [{ number: "05 57 12 34 56", confidentialityLevel: "1" }] } ] },
+
+  { kind: "sos", id: "str-sos-1", name: "SOS Médecins Toulouse", places: [
+    { psa: "STR-SOS-1-PFG", point: "PFG", address: { street: "70 Rue du Colombier", postalCode: "31400", city: "Toulouse", full: "70 Rue du Colombier 31400 Toulouse" },
+      coordinates: { lat: 43.58122, lon: 1.45333 }, phones: [{ number: "05 61 33 00 00", confidentialityLevel: "1" }] },
+    { psa: "STR-SOS-1-PFC", point: "PFC", address: { street: "5 Allée du Comminges", postalCode: "31770", city: "Colomiers", full: "5 Allée du Comminges 31770 Colomiers" },
+      coordinates: { lat: 43.61098, lon: 1.33361 }, phones: [{ number: "05 61 33 00 01", confidentialityLevel: "1" }] } ] },
+
+  { kind: "mmg", id: "str-mmg-1", name: "Maison Médicale de Garde de Sète", places: [
+    { psa: "STR-MMG-1-01", address: { street: "2 Rue Docteur Paul Vieu", postalCode: "34200", city: "Sète", full: "2 Rue Docteur Paul Vieu 34200 Sète" },
+      coordinates: { lat: 43.40751, lon: 3.69512 }, phones: [{ number: "04 67 00 12 34", confidentialityLevel: "1" }] } ] },
+
+  { kind: "cds", id: "str-cds-2", name: "Centre Municipal de Santé de Montreuil", places: [
+    { psa: "STR-CDS-2-01", address: { street: "31 Rue Carnot", postalCode: "93100", city: "Montreuil", full: "31 Rue Carnot 93100 Montreuil" },
+      coordinates: { lat: 48.86200, lon: 2.44100 }, phones: [{ number: "01 48 00 56 78", confidentialityLevel: "1" }] } ] },
+
+  { kind: "mmg", id: "str-mmg-2", name: "MMG Lyon Croix-Rousse", places: [
+    { psa: "STR-MMG-2-01", address: { street: "93 Grande Rue de la Croix-Rousse", postalCode: "69004", city: "Lyon", full: "93 Grande Rue de la Croix-Rousse 69004 Lyon" },
+      coordinates: { lat: 45.77720, lon: 4.82760 }, phones: [{ number: "04 72 00 90 12", confidentialityLevel: "1" }] } ] },
+];
+function osBuildStructures() {
+  const arr = OS_STRUCTURES_RAW.map(s => JSON.parse(JSON.stringify(s)));
+  arr.forEach((o, i) => { o.participationSAS = true; osEnrichOffre(o, i + 2, "Référencement structure SAS"); });
+  return arr;
+}
+
+/* Index complet des offres de soins : structures + professionnels */
+const OS_OFFRES = [...osBuildStructures(), ...osBuildProfessionals()];

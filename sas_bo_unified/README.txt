@@ -68,9 +68,8 @@ CE QUE FAIT LA MAQUETTE
      portent l'un de ces rôles ne sont visibles et filtrables que par les
      administrateurs (masqués aux gestionnaires de compte).
    - Champs communs : identifiant national, email, nom, prénom, ville (Base
-     Adresse Nationale), territoire SAS (format SAS-[n° département]), RÉGION
-     (préremplie automatiquement d'après le territoire, modifiable) et MODE
-     DE CONNEXION (PSC ou mot de passe).
+     Adresse Nationale), territoire SAS (format SAS-[n° département]) et RÉGION
+     (préremplie automatiquement d'après le territoire, modifiable).
    - ENVIRONNEMENT(S) — Production, PréProduction, Intégration, Formation :
      création multi-environnement réservée à l'Admin BO (cases à cocher).
    - GESTIONNAIRE DE STRUCTURE + CDS : l'ajout d'un Centre de Santé (CDS)
@@ -83,8 +82,8 @@ CE QUE FAIT LA MAQUETTE
      situé juste sous le champ Rôle).
 
 3. STATISTIQUES (menu « Statistiques »)
-   - Répartition des comptes : par rôle, par type de structure (gestionnaires),
-     par profession et spécialité (effecteurs), par mode de connexion.
+   - Répartition des comptes : par rôle, par type de structure (gestionnaires)
+     et par mode de connexion.
    - Indicateurs de statut : comptes, actifs, inactifs, aucune connexion.
    - PÉRIMÈTRE (administrateur) : National / Par région / Par territoire, avec
      sélecteur dédié. Le gestionnaire de compte voit les statistiques de SON
@@ -104,8 +103,11 @@ CE QUE FAIT LA MAQUETTE
    - Éditables au niveau NATIONAL et PAR TERRITOIRE (sélecteur de périmètre).
    - Chaque bandeau : statut actif/inactif, titre, message et PLAGE
      D'AFFICHAGE (début / fin au format date-heure).
-   - Administrateur : édite le national et tous les territoires. Gestionnaire
-     de compte : édite le bandeau de SON territoire (national en lecture).
+   - Administrateur : édite le national et tous les territoires, pour les deux
+     audiences.
+   - Gestionnaire de compte : n'a PAS accès au bandeau « non connecté » et ne
+     peut PAS éditer le niveau national (consultation) ; il édite uniquement le
+     bandeau « connecté » de SON territoire.
    - Bouton « Enregistrer » désactivé sans changement + modale « Publier ».
 
 6. TERRITOIRES SAS (menu « Territoires SAS », administrateur uniquement)
@@ -139,12 +141,16 @@ CE QUE FAIT LA MAQUETTE
    - Données conformes au format JSON fourni (fichier support.js).
 
 9. OFFRE DE SOINS (page opensearch.html, arrière-guichet Open-Search)
-   - Liste des professionnels indexés (sas_consultation_place) avec le type de
-     STRUCTURE porteuse (CDS = 1 adresse · SOS Médecins = multi-adresses
-     PFG/PFC · MMG = 1 adresse), la participation SAS et le statut de
-     DISPONIBILITÉ (disponible / indisponible). Filtres structure + disponibilité.
-   - Fiche détaillée : bloc « Structure porteuse », dates d'INSCRIPTION et de
-     PARTICIPATION au SAS, AGENDA SAS hebdomadaire (lecture seule).
+   - Deux natures d'offres, INDÉPENDANTES, dans l'index sas_consultation_place :
+       * PROFESSIONNELS DE SANTÉ (offres individuelles, identifiées par RPPS) ;
+       * STRUCTURES autonomes — offres de soins à part entière, NON rattachées
+         à un professionnel : CDS (1 adresse) · SOS Médecins (multi-adresses
+         PFG/PFC) · MMG (1 adresse).
+   - Liste avec le type d'offre, la participation SAS et le statut de
+     DISPONIBILITÉ (disponible / indisponible). Filtres « Type d'offre » +
+     disponibilité.
+   - Fiche détaillée : bloc d'identité (professionnel OU structure), dates
+     d'INSCRIPTION et de PARTICIPATION au SAS, AGENDA SAS hebdomadaire (lecture).
    - Chaque adresse affiche un SCORE DE GÉOLOCALISATION (0–100 + libellé).
    - ÉDITION DE L'INDEX (habilitation écriture) : adresse, téléphone, modalité,
      géolocalisation et score. Toute modification d'Adresse / Géoloc / Score /

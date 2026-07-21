@@ -363,8 +363,9 @@ body { margin: 0; background: #fff; color: #1a1a1a; font-size: 14px; line-height
 .os-badge-struct-cds { background:#e8edff; color:#0063cb; }
 .os-badge-struct-sos { background:#fee7fc; color:#6e445a; }
 .os-badge-struct-mmg { background:#e3fdeb; color:#297254; }
+.os-badge-ps      { background:#f7f0e9; color:#695240; }
 .os-badge-point   { background:#f4f4f8; color:#3a3a3a; }
-.os-badge-struct, .os-badge-dispo, .os-badge-indispo, .os-badge-point { text-transform:none; }
+.os-badge-struct, .os-badge-kind, .os-badge-dispo, .os-badge-indispo, .os-badge-point { text-transform:none; }
 
 .os-panels { display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-top:1rem; }
 @media (max-width:720px){ .os-panels { grid-template-columns:1fr; } }
