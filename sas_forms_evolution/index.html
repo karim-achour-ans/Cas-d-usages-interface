@@ -1,267 +1,502 @@
-
-
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="fr" data-fr-scheme="system">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="../template_integration.css">
-    <link rel="stylesheet" href="form_evol_integration.css">
+    <title>Participation au SAS — Formulaire DSFR</title>
+
+    <!-- DSFR : Système de Design de l'État -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@gouvfr/dsfr@1.13.0/dist/dsfr.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@gouvfr/dsfr@1.13.0/dist/utility/utility.min.css">
+
+    <style>
+        .recap-panel { position: sticky; top: 1rem; }
+        .recap-line { margin: 0 0 .5rem; }
+        .data-preview { white-space: pre-wrap; font-family: monospace; font-size: .75rem; }
+        .modality-row { display: flex; gap: .75rem; align-items: flex-end; flex-wrap: wrap; }
+        .modality-row .fr-input-group { margin-bottom: 0; flex: 1 1 12rem; }
+    </style>
 </head>
 <body>
-    <header>
-        <div id="div_header">
-            <div class="state_logo">
-                <img src="../images\logo-ANS.svg" alt="logo-ANS">
-            </div>
-            <div class="state_logo">
-                <img src="../images/logo-min_sante_acces_soins.svg" alt="logo-ANS">
-            </div>
-            <div id="header_title">
-                <h1>Interface Plateforme numérique du SAS</h1>
-                <h2>Présentation des Cas d'usages</h2>
+
+<!-- ============ EN-TÊTE DSFR ============ -->
+<header role="banner" class="fr-header">
+    <div class="fr-header__body">
+        <div class="fr-container">
+            <div class="fr-header__body-row">
+                <div class="fr-header__brand fr-enlarge-link">
+                    <div class="fr-header__brand-top">
+                        <div class="fr-header__logo">
+                            <p class="fr-logo">République<br>Française</p>
+                        </div>
+                    </div>
+                    <div class="fr-header__service">
+                        <a href="#" title="Plateforme numérique du SAS — Accueil">
+                            <p class="fr-header__service-title">Plateforme numérique du SAS</p>
+                        </a>
+                        <p class="fr-header__service-tagline">Déclaration de participation au Service d'Accès aux Soins</p>
+                    </div>
+                </div>
             </div>
         </div>
-        <div>
-            <div id="sas_form_container">
-                <div id="div_sas_inscription_init">
-                    <p class="p_div_title">Veuillez indiquer votre participation au SAS</p>
-                    <label>Je participe au SAS</label>
-                    <select id="slct_participation" onchange="sas_inscription()">
-                        <option value="none">Veuillez renseigner votre participation au SAS</option>
-                        <option value="sas_ok">Je participe au SAS à titre individuel</option>
-                        <option value="sas_sos_med">Je participe au SAS via mon association SOS Médecins ou mon association de visites à domicile</option>
-                        <option value="sas_ko">Je ne participe pas au SAS</option>
-                        </select>
-                    <p id="sas_participation_p">Vous n'avez pas renseigné votre participation au SAS</p>
+    </div>
+</header>
+
+<!-- ============ CONTENU ============ -->
+<main role="main" id="contenu">
+    <div class="fr-container fr-my-4w">
+
+        <h1 class="fr-h3">Formulaire de participation au SAS</h1>
+        <p class="fr-text--sm fr-mb-4w">
+            <strong id="ps-name">NOM Prénom</strong> — RPPS&nbsp;: <span id="ps-rpps">10001234567</span>
+        </p>
+
+        <div class="fr-grid-row fr-grid-row--gutters">
+
+            <!-- ---------- COLONNE FORMULAIRE ---------- -->
+            <div class="fr-col-12 fr-col-lg-7">
+
+                <!-- SECTION 1 : Participation (PractitionerParticipation) -->
+                <div class="fr-mb-4w">
+                    <h2 class="fr-h5">Votre participation au SAS</h2>
+                    <fieldset class="fr-fieldset" id="participation_fieldset" role="radiogroup" aria-labelledby="participation_legend">
+                        <legend class="fr-fieldset__legend" id="participation_legend">
+                            Je participe au SAS
+                        </legend>
+                        <div class="fr-fieldset__element">
+                            <div class="fr-radio-group fr-radio-rich">
+                                <input type="radio" id="part_individual" name="participation" value="individual">
+                                <label class="fr-label" for="part_individual">
+                                    À titre individuel
+                                    <span class="fr-hint-text">J'accepte d'être contacté en sus de mes disponibilités par la régulation SAMU / SAS, pour l'ensemble de mes lieux d'activité.</span>
+                                </label>
+                            </div>
+                        </div>
+                        <div class="fr-fieldset__element">
+                            <div class="fr-radio-group fr-radio-rich">
+                                <input type="radio" id="part_association" name="participation" value="association">
+                                <label class="fr-label" for="part_association">
+                                    Via mon association SOS Médecins ou de visites à domicile
+                                    <span class="fr-hint-text">Ma participation est portée par mon association ; je n'ai pas d'action supplémentaire à réaliser.</span>
+                                </label>
+                            </div>
+                        </div>
+                        <div class="fr-fieldset__element">
+                            <div class="fr-radio-group fr-radio-rich">
+                                <input type="radio" id="part_none" name="participation" value="none">
+                                <label class="fr-label" for="part_none">
+                                    Je ne participe pas au SAS
+                                    <span class="fr-hint-text">Je refuse d'être contacté en sus de mes disponibilités par la régulation SAMU / SAS.</span>
+                                </label>
+                            </div>
+                        </div>
+                    </fieldset>
+
+                    <div class="fr-input-group fr-mt-2w" id="grp_finess" hidden>
+                        <label class="fr-label" for="npt_finess">
+                            N° FINESS de l'association SOS Médecins / VAD
+                            <span class="fr-hint-text">FINESS de la structure de rattachement — <code>PractitionerParticipation.finess</code></span>
+                        </label>
+                        <input class="fr-input" type="text" id="npt_finess" placeholder="Ex : 750000000">
+                    </div>
                 </div>
-                <br>
-                <div id="div_sas_agenda_indiv">
-                    <p class="p_div_title">Partage des disponibilités à titre individuel via un éditeur en ligne</p>
-                    <div>
-                        <div>
-                            <form>
-                                <label>
-                                    <input type="checkbox" id="npt_editor_exist" onclick="sas_availabilities_choice()">
+
+                <!-- SECTION 2 : Agenda individuel (PractitionerParticipation) -->
+                <div class="fr-mb-4w" id="div_sas_agenda_indiv" hidden>
+                    <h2 class="fr-h5">Partage de vos disponibilités à titre individuel</h2>
+
+                    <fieldset class="fr-fieldset" aria-labelledby="lgd_editor">
+                        <legend class="fr-fieldset__legend fr-text--regular" id="lgd_editor">
+                            Outil de prise de rendez-vous en ligne
+                        </legend>
+
+                        <div class="fr-fieldset__element">
+                            <div class="fr-checkbox-group">
+                                <input type="checkbox" id="npt_editor_exist">
+                                <label class="fr-label" for="npt_editor_exist">
                                     Je dispose d'un outil de prise de rendez-vous en ligne
+                                    <span class="fr-hint-text">hasEditorSoftware</span>
                                 </label>
-                                <br>
-                                <label>
-                                    <input type="checkbox" id="npt_editor_engagement" onclick="sas_availabilities_choice()" disabled>
-                                    J'accepte de partager à la régulation mes créneaux d'agenda en ligne, grand publics, professionnels et SNP
-                                </label>
-                            </form>
-                            <div id="div_editor_list">
-                                <label>Veuillez indiquer votre/vos outils d'agenda</label>
-                                <p>Doctolib, MAIIA</p>
                             </div>
                         </div>
-                        <br>
-                        <div>
-                            <form>
-                                <label>
-                                    <input type="checkbox" id="npt_editor_not_exist" onclick="sas_schedule_engagment()">
-                                    Je ne dispose pas d'un outil de rendez-vous en ligne pour l'ensemble de mes lieux d'activités
+
+                        <div class="fr-fieldset__element fr-ml-4w">
+                            <div class="fr-checkbox-group">
+                                <input type="checkbox" id="npt_editor_engagement" disabled>
+                                <label class="fr-label" for="npt_editor_engagement">
+                                    J'accepte de partager à la régulation mes créneaux d'agenda en ligne : grand public, professionnels et SNP
+                                    <span class="fr-hint-text">isEditorSlotDisplayed</span>
                                 </label>
-                                <br>
-                                <label>
-                                    <input type="checkbox" id="npt_sas_schedule_engagement" onclick="sas_schedule_engagment()" disabled>
-                                    Je m'engage à renseigner à minima 2h de disponibilité par semaine dans l'agenda de la plateforme numérique SAS. 
-                                </label>
-                            </form>
+                            </div>
                         </div>
-                    </div>
+
+                        <div class="fr-fieldset__element fr-ml-4w" id="div_editor_list" hidden>
+                            <div class="fr-highlight">
+                                <p class="fr-text--sm fr-mb-0"><strong>Vos outils d'agenda interfacés&nbsp;:</strong> Doctolib, MAIIA</p>
+                            </div>
+                        </div>
+                    </fieldset>
+
+                    <fieldset class="fr-fieldset fr-mt-2w" aria-labelledby="lgd_noeditor">
+                        <legend class="fr-fieldset__legend fr-text--regular" id="lgd_noeditor">
+                            Absence d'outil en ligne
+                        </legend>
+
+                        <div class="fr-fieldset__element">
+                            <div class="fr-checkbox-group">
+                                <input type="checkbox" id="npt_editor_not_exist">
+                                <label class="fr-label" for="npt_editor_not_exist">
+                                    Je ne dispose pas d'un outil de rendez-vous en ligne pour l'ensemble de mes lieux d'activité
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="fr-fieldset__element fr-ml-4w">
+                            <div class="fr-checkbox-group">
+                                <input type="checkbox" id="npt_sas_schedule_engagement" disabled>
+                                <label class="fr-label" for="npt_sas_schedule_engagement">
+                                    Je m'engage à renseigner à minima 2h de disponibilité par semaine dans l'agenda de la plateforme numérique SAS
+                                    <span class="fr-hint-text">hasConfirmHoursAvailability</span>
+                                </label>
+                            </div>
+                        </div>
+                    </fieldset>
                 </div>
-                <br>
-                <div id="div_sas_structure">
-                    <div>
-                        <p class="p_div_title">Participation via une ou des structure(s) de soins (CPTS, MSP)</p>
-                    </div>
-                    <div id="add_structure_container">
-                        <div class="div_add_structure_location">
-                            <div>
-                                <label>
-                                <input type="checkbox" class="chk_adress" id="location_a" onclick="sas_add_structure()"/>
-                                Adresse A Ville A
-                                </label>
-                            </div>
-                            <div class="div_add_structure_adress" id="div_add_structure_adress_a">
-                                <br>
-                                <div class="div_add_structure">
-                                    <label>
-                                        <input type="checkbox" id="cpts_location_a" class="cpts_location" onclick="cpts_location_inscription()">
-                                        Je participe au SAS via une/des CPTS* <br> <span>(Veuillez renseigner au moins 1 CPTS)</span></label>
-                                    <br>
-                                    <br>
-                                    <div class="add_cpts" id="div_add_cpts_location_a">
-                                        <div class="add_new_structure">
-                                            <label>
-                                                Renseigner votre CPTS :
-                                                <input type="text" placeholder="Renseigner votre CPTS" class="CPTS_location_a">
-                                            </label>
-                                            <div class="div_editor_orga_list">
-                                                <p class="p_editor_orga_list">Informer de la liste des éditeurs interfacés des CPTS</p>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <br>
-                                    <input type="button" value="Ajouter une CPTS" class="btn_form" id="btn_add_CPTS_location_a" onclick="create_div_sas_structure()">
-                                </div>
-                                <br>
-                                <div class="div_add_structure">
-                                    <label>
-                                        <input type="checkbox" id="msp_location_a" class="msp_location" onclick="msp_location_inscription()">
-                                        Je participe au SAS via une/des MSP* <br> <span>(Veuillez renseigner au moins 1 MSP)</span></label>
-                                            <br>
-                                            <br>
-                                            <div class="add_msp" id="div_add_msp_location_a">
-                                                <div class="add_new_structure">
-                                                <label>
-                                                Renseigner votre MSP :
-                                                <input type="text" placeholder="Renseigner votre MSP" class="MSP_location_a">
-                                            </label>
-                                            <div class="div_editor_orga_list">
-                                                <p class="p_editor_orga_list">Informer de la liste des éditeurs interfacés des MSP</p>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <br>
-                                    <input type="button" value="Ajouter une MSP" class="btn_form" id="btn_add_MSP_location_a" onclick="create_div_sas_structure()">
-                                </div>
-                            </div>
-                        </div>
-                            <div class="div_add_structure_location">
-                                <div>
-                                    <label>
-                                    <input type="checkbox" class="chk_adress" id="location_b" onclick="sas_add_structure()"/>
-                                    Adresse B Ville B
-                                    </label>
-                                                </div>
-                                                <div class="div_add_structure_adress" id="div_add_structure_adress_b">
-                                                    <br>
-                                                    <div class="div_add_structure">
-                                                        <label>
-                                                            <input type="checkbox" id="cpts_location_b" class="cpts_location" onclick="cpts_location_inscription()">
-                                                            Je participe au SAS via une/des CPTS* <br> <span>(Veuillez renseigner au moins 1 CPTS)</span></label>
-                                                        <br>
-                                                        <br>
-                                                        <div class="add_cpts" id="div_add_cpts_location_b">
-                                                            <div class="add_new_structure">
-                                                                <label>
-                                                    Renseigner votre CPTS :
-                                                    <input type="text" placeholder="Renseigner votre CPTS" class="CPTS_location_b">
-                                                </lable>
-                                            </div>
-                                        </div>
-                                        <br>
-                                        <input type="button" value="Ajouter une CPTS" class="btn_form" id="btn_add_CPTS_location_b" onclick="create_div_sas_structure()">
-                                    </div>
-                                    <br>
-                                    <div class="div_add_structure">
-                                        <label>
-                                            <input type="checkbox" id="msp_location_b" class="msp_location" onclick="msp_location_inscription()">
-                                            Je participe au SAS via une/des MSP* <br> <span>(Veuillez renseigner au moins 1 MSP)</span></label>
-                                                                <br>
-                                                                <br>
-                                                                <div class="add_msp" id="div_add_msp_location_b">
-                                                                    <div class="add_new_structure">
-                                                                        <label>
-                                                    Renseigner votre MSP :
-                                                    <input type="text" placeholder="Renseigner votre MSP" class="MSP_location_b">
-                                                </lable>
-                                            </div>
-                                        </div>
-                                        <br>
-                                        <input type="button" value="Ajouter une MSP" class="btn_form" id="btn_add_MSP_location_b" onclick="create_div_sas_structure()">
-                                    </div>
-                                </div>
-                            </div>
-                       
-                            <div class="div_add_structure_location">
-                                <div>
-                                    <label>
-                                    <input type="checkbox" class="chk_adress" id="location_c" onclick="sas_add_structure()"/>
-                                    Adresse C Ville C
-                                    </label>
-                                                                    </div>
-                                                                    <div class="div_add_structure_adress" id="div_add_structure_adress_c">
-                                                                        <br>
-                                                                        <div class="div_add_structure">
-                                                                            <label>
-                                        <input type="checkbox" id="cpts_location_c" class="cpts_location" onclick="cpts_location_inscription()">
-                                        Je participe au SAS via une/des CPTS* <br> <span>(Veuillez renseigner au moins 1 CPTS)</span></label>
-                                                                            <br>
-                                                                            <br>
-                                                                            <div class="add_cpts" id="div_add_cpts_location_c">
-                                                                                <div class="add_new_structure">
-                                                                                    <label>
-                                                     Renseigner votre CPTS :
-                                                    <input type="text" placeholder="Renseigner votre CPTS" class="CPTS_location_c">
-                                                </lable>
-                                            </div>
-                                        </div>
-                                        <br>
-                                        <input type="button" value="Ajouter une CPTS" class="btn_form" id="btn_add_CPTS_location_c" onclick="create_div_sas_structure()">
-                                    </div>
-                                    <br>
-                                    <div class="div_add_structure">
-                                        <label>
-                                            <input type="checkbox" id="msp_location_c" class="msp_location" onclick="msp_location_inscription()">
-                                            Je participe au SAS via une/des MSP* <br> <span>(Veuillez renseigner au moins 1 MSP)</span></label>
-                                                                                    <br>
-                                                                                    <br>
-                                                                                    <div class="add_msp" id="div_add_msp_location_c">
-                                                                                        <div class="add_new_structure">
-                                                                                            <label>
-                                                    Renseigner votre MSP :
-                                                    <input type="text" placeholder="Renseigner votre MSP" class="MSP_location_c">
-                                                </lable>
-                                            </div>
-                                        </div>
-                                        <br>
-                                        <input type="button" value="Ajouter une MSP" class="btn_form" id="btn_add_MSP_location_c" onclick="create_div_sas_structure()">
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <br>
-                    </div>
+
+                <!-- SECTION 3 : Structures (Location + Modality + StructureParticipation) -->
+                <div class="fr-mb-4w" id="div_sas_structure" hidden>
+                    <h2 class="fr-h5">Participation via une ou des structure(s) de soins</h2>
+                    <p class="fr-text--sm fr-mb-2w">Sélectionnez les adresses concernées, puis déclarez vos CPTS et/ou MSP (<code>Location</code> → <code>PractitionerParticipationModality</code>).</p>
+
+                    <div id="locations_container"></div>
                 </div>
-    
-                <div id="div_adress_container">
-                    <p>NOM PRENOM DU PS</p>
-                    <p id="adress_container_sas_description"></p>
-                    <p id="editor_interfaced_indiv_status"></p>
-                    <p id="sas_schedule_indiv_status"></p>
-                    <div class="adress_div" id="adress_div_a">
-                        <div class="ps_info">
-                            <div>
-                                <p class="p_div_title">Adresse A de la Ville A</p>
-                            </div>
-                            <div id="div_adress_a">
-                            </div>
+
+            </div>
+
+            <!-- ---------- COLONNE RÉCAPITULATIF ---------- -->
+            <div class="fr-col-12 fr-col-lg-5">
+                <div class="recap-panel">
+                    <div class="fr-callout">
+                        <h3 class="fr-callout__title fr-h6">Récapitulatif de la déclaration</h3>
+                        <div class="fr-callout__text">
+                            <p class="recap-line" id="recap_participation_badge">
+                                <span class="fr-badge fr-badge--info fr-badge--no-icon">Non renseigné</span>
+                            </p>
+                            <p class="recap-line fr-text--sm" id="recap_participation_text">
+                                Le professionnel n'a pas renseigné sa participation au SAS.
+                            </p>
+                            <p class="recap-line fr-text--sm" id="recap_editor_text"></p>
+                            <p class="recap-line fr-text--sm" id="recap_hours_text"></p>
+                            <hr class="fr-mt-2w fr-mb-2w" id="recap_sep" hidden>
+                            <div id="recap_structures"></div>
                         </div>
                     </div>
-    
-                    <div class="adress_div" id="adress_div_b">
-                        <div class="ps_info">
-                            <p class="p_div_title">Adresse B de la Ville B</p>
+
+                    <section class="fr-accordion fr-mt-2w">
+                        <h3 class="fr-accordion__title">
+                            <button type="button" class="fr-accordion__btn" aria-expanded="false" aria-controls="acc_data">
+                                Aperçu des données (modèle)
+                            </button>
+                        </h3>
+                        <div class="fr-collapse" id="acc_data">
+                            <pre class="data-preview" id="data_preview">{}</pre>
                         </div>
-                        <div id="div_adress_b">
-                                
-                        </div>
-                    </div>
-    
-                    <div class="adress_div" id="adress_div_c">
-                        <div class="ps_info">
-                            <p class="p_div_title">Adresse C de la Ville C</p>
-                        </div>
-                        <div id="div_adress_c">
-                                
-                        </div>
-                    </div>
+                    </section>
                 </div>
-    </header>
-    <script src="form_evol_front.js"></script>
+            </div>
+
+        </div>
+    </div>
+</main>
+
+<!-- ============ PIED DE PAGE DSFR ============ -->
+<footer class="fr-footer" role="contentinfo">
+    <div class="fr-container">
+        <div class="fr-footer__body">
+            <div class="fr-footer__brand fr-enlarge-link">
+                <p class="fr-logo">République<br>Française</p>
+            </div>
+            <div class="fr-footer__content">
+                <p class="fr-footer__content-desc">Plateforme numérique du Service d'Accès aux Soins (SAS).</p>
+            </div>
+        </div>
+    </div>
+</footer>
+
+<!-- DSFR JS (accordéons, thème…) -->
+<script type="module" src="https://cdn.jsdelivr.net/npm/@gouvfr/dsfr@1.13.0/dist/dsfr.module.min.js"></script>
+<script nomodule src="https://cdn.jsdelivr.net/npm/@gouvfr/dsfr@1.13.0/dist/dsfr.nomodule.min.js"></script>
+
+<script>
+/* ------------------------------------------------------------------
+   Données de référence : les lieux d'activité du praticien (Location)
+   ------------------------------------------------------------------ */
+const LOCATIONS = [
+    { id: "loc_a", label: "Adresse A — Ville A", geoFiness: "" },
+    { id: "loc_b", label: "Adresse B — Ville B", geoFiness: "" },
+    { id: "loc_c", label: "Adresse C — Ville C", geoFiness: "" },
+];
+
+/* ------------------------------------------------------------------
+   Construction dynamique des accordéons par lieu d'activité
+   ------------------------------------------------------------------ */
+function buildLocations() {
+    const container = document.getElementById("locations_container");
+    container.innerHTML = LOCATIONS.map((loc, i) => `
+        <section class="fr-accordion">
+            <h3 class="fr-accordion__title">
+                <button type="button" class="fr-accordion__btn" aria-expanded="false" aria-controls="acc_${loc.id}">
+                    ${loc.label}
+                </button>
+            </h3>
+            <div class="fr-collapse" id="acc_${loc.id}">
+                <div class="fr-input-group">
+                    <label class="fr-label" for="geo_${loc.id}">
+                        FINESS géographique du lieu
+                        <span class="fr-hint-text">Location.geoFiness</span>
+                    </label>
+                    <input class="fr-input" type="text" id="geo_${loc.id}" data-loc="${loc.id}" placeholder="FINESS géographique">
+                </div>
+
+                <fieldset class="fr-fieldset fr-mt-2w">
+                    <div class="fr-fieldset__element">
+                        <div class="fr-checkbox-group">
+                            <input type="checkbox" class="chk_cpts" id="cpts_${loc.id}" data-loc="${loc.id}">
+                            <label class="fr-label" for="cpts_${loc.id}">
+                                Je participe au SAS via une/des CPTS
+                                <span class="fr-hint-text">Renseignez au moins 1 CPTS</span>
+                            </label>
+                        </div>
+                    </div>
+                    <div class="fr-fieldset__element fr-ml-4w" id="wrap_cpts_${loc.id}" hidden>
+                        <div class="modalities" id="mods_cpts_${loc.id}"></div>
+                        <button type="button" class="fr-btn fr-btn--secondary fr-btn--sm fr-icon-add-line fr-btn--icon-left fr-mt-1w"
+                                data-loc="${loc.id}" data-type="CPTS">Ajouter une CPTS</button>
+                    </div>
+
+                    <div class="fr-fieldset__element fr-mt-2w">
+                        <div class="fr-checkbox-group">
+                            <input type="checkbox" class="chk_msp" id="msp_${loc.id}" data-loc="${loc.id}">
+                            <label class="fr-label" for="msp_${loc.id}">
+                                Je participe au SAS via une/des MSP
+                                <span class="fr-hint-text">Renseignez au moins 1 MSP</span>
+                            </label>
+                        </div>
+                    </div>
+                    <div class="fr-fieldset__element fr-ml-4w" id="wrap_msp_${loc.id}" hidden>
+                        <div class="modalities" id="mods_msp_${loc.id}"></div>
+                        <button type="button" class="fr-btn fr-btn--secondary fr-btn--sm fr-icon-add-line fr-btn--icon-left fr-mt-1w"
+                                data-loc="${loc.id}" data-type="MSP">Ajouter une MSP</button>
+                    </div>
+                </fieldset>
+            </div>
+        </section>
+    `).join("");
+
+    // Une première ligne pré-remplie par type/lieu
+    LOCATIONS.forEach(loc => {
+        addModality(loc.id, "CPTS");
+        addModality(loc.id, "MSP");
+    });
+}
+
+/* Ajoute une ligne de structure (PractitionerParticipationModality) */
+function addModality(locId, type) {
+    const list = document.getElementById(`mods_${type.toLowerCase()}_${locId}`);
+    const row = document.createElement("div");
+    row.className = "modality-row fr-mb-2w";
+    row.innerHTML = `
+        <div class="fr-input-group">
+            <label class="fr-label">Nom de la ${type}</label>
+            <input class="fr-input mod_name" type="text" data-loc="${locId}" data-type="${type}" placeholder="Renseigner votre ${type}">
+        </div>
+        <div class="fr-input-group">
+            <label class="fr-label">FINESS</label>
+            <input class="fr-input mod_finess" type="text" data-loc="${locId}" data-type="${type}" placeholder="FINESS structure">
+        </div>
+        <button type="button" class="fr-btn fr-btn--tertiary-no-outline fr-btn--sm fr-icon-delete-line remove-mod" title="Supprimer"></button>
+    `;
+    row.querySelector(".remove-mod").addEventListener("click", () => { row.remove(); render(); });
+    row.querySelectorAll("input").forEach(inp => inp.addEventListener("input", render));
+    list.appendChild(row);
+}
+
+/* ------------------------------------------------------------------
+   Rendu du récapitulatif + de l'aperçu du modèle de données
+   ------------------------------------------------------------------ */
+function render() {
+    const participation = document.querySelector('input[name="participation"]:checked')?.value || "";
+    const isSasParticipant = participation === "individual" || participation === "association";
+
+    const hasEditorSoftware       = document.getElementById("npt_editor_exist").checked;
+    const isEditorSlotDisplayed   = document.getElementById("npt_editor_engagement").checked;
+    const noEditor                = document.getElementById("npt_editor_not_exist").checked;
+    const hasConfirmHours         = document.getElementById("npt_sas_schedule_engagement").checked;
+
+    /* --- Affichage conditionnel des sections --- */
+    document.getElementById("div_sas_agenda_indiv").hidden = participation !== "individual";
+    document.getElementById("div_sas_structure").hidden    = participation !== "individual";
+    // Le FINESS ne concerne que la participation via association SOS Médecins / VAD
+    document.getElementById("grp_finess").hidden = participation !== "association";
+
+    /* --- Badge + description de participation --- */
+    const badge = document.getElementById("recap_participation_badge");
+    const ptext = document.getElementById("recap_participation_text");
+    if (participation === "individual") {
+        badge.innerHTML = `<span class="fr-badge fr-badge--success fr-badge--no-icon">Inscrit au SAS</span>`;
+        ptext.textContent = "Le professionnel est inscrit au SAS, il peut être contacté en sus des disponibilités pour l'ensemble de ses lieux d'activité.";
+    } else if (participation === "association") {
+        badge.innerHTML = `<span class="fr-badge fr-badge--info fr-badge--no-icon">Via association</span>`;
+        ptext.textContent = "Le professionnel participe via son association SOS Médecins / VAD, il n'a pas d'action supplémentaire à réaliser.";
+    } else if (participation === "none") {
+        badge.innerHTML = `<span class="fr-badge fr-badge--error fr-badge--no-icon">Non inscrit</span>`;
+        ptext.textContent = "Le professionnel n'est pas inscrit au SAS. Il refuse d'être contacté en sus de ses disponibilités par la régulation SAMU / SAS.";
+    } else {
+        badge.innerHTML = `<span class="fr-badge fr-badge--info fr-badge--no-icon">Non renseigné</span>`;
+        ptext.textContent = "Le professionnel n'a pas renseigné sa participation au SAS.";
+    }
+
+    /* --- Description agenda individuel --- */
+    const etext = document.getElementById("recap_editor_text");
+    const htext = document.getElementById("recap_hours_text");
+    etext.textContent = "";
+    htext.textContent = "";
+    if (participation === "individual") {
+        if (hasEditorSoftware && isEditorSlotDisplayed) {
+            etext.textContent = "Le professionnel accepte que la plateforme remonte ses créneaux individuels en ligne (grand public / Pro / SNP).";
+        } else if (hasEditorSoftware) {
+            etext.textContent = "Le professionnel dispose d'un éditeur en ligne mais n'a pas encore accepté le partage de ses créneaux.";
+        } else if (noEditor) {
+            etext.textContent = "Le professionnel déclare ne pas avoir d'éditeur en ligne.";
+        }
+        if (hasConfirmHours) {
+            htext.textContent = "Le professionnel s'engage à renseigner 2h par semaine dans l'agenda de la plateforme numérique SAS.";
+        }
+    }
+
+    /* --- Structures par adresse --- */
+    const structuresBox = document.getElementById("recap_structures");
+    const locationsData = [];
+    let structuresHtml = "";
+
+    LOCATIONS.forEach(loc => {
+        const cptsChecked = document.getElementById(`cpts_${loc.id}`)?.checked;
+        const mspChecked  = document.getElementById(`msp_${loc.id}`)?.checked;
+        const geoFiness   = document.getElementById(`geo_${loc.id}`)?.value || "";
+
+        // Activer / désactiver les blocs d'ajout
+        const wrapCpts = document.getElementById(`wrap_cpts_${loc.id}`);
+        const wrapMsp  = document.getElementById(`wrap_msp_${loc.id}`);
+        if (wrapCpts) wrapCpts.hidden = !cptsChecked;
+        if (wrapMsp)  wrapMsp.hidden  = !mspChecked;
+
+        const modalities = [];
+        if (cptsChecked) collectModalities(loc.id, "CPTS", modalities);
+        if (mspChecked)  collectModalities(loc.id, "MSP", modalities);
+
+        if (participation === "individual" && (cptsChecked || mspChecked)) {
+            structuresHtml += `<p class="recap-line fr-text--sm"><strong>${loc.label}</strong></p>`;
+            if (cptsChecked) structuresHtml += `<p class="recap-line fr-text--xs fr-ml-2w">Le professionnel participe via sa CPTS à cette adresse.</p>`;
+            if (mspChecked)  structuresHtml += `<p class="recap-line fr-text--xs fr-ml-2w">Le professionnel participe via sa MSP à cette adresse.</p>`;
+            modalities.forEach(m => {
+                if (m.name) structuresHtml += `<p class="recap-line fr-text--xs fr-ml-2w">Les créneaux de la structure « ${m.name} » (${m.type}) seront affichés à cette adresse via l'éditeur interfacé de la structure.</p>`;
+            });
+        }
+
+        locationsData.push({
+            id: loc.id,
+            geoFiness,
+            psActivity: null,
+            modalities: modalities.map(m => ({ type: m.type, geoFiness: m.geoFiness || null, name: m.name || null }))
+        });
+    });
+
+    structuresBox.innerHTML = structuresHtml;
+    document.getElementById("recap_sep").hidden = structuresHtml === "";
+
+    /* --- Aperçu du modèle de données (périmètre Practitioner uniquement) --- */
+    const now = "2026-07-23T00:00:00Z";
+    const model = {
+        PractitionerParticipation: {
+            practitionerId: "PRA-0001",
+            isSasParticipant,
+            modality: participation ? participation.toUpperCase() : null,
+            hasEditorSoftware,
+            isEditorSlotDisplayed,
+            hasConfirmHoursAvailability: hasConfirmHours,
+            finess: participation === "association" ? (document.getElementById("npt_finess").value || null) : null,
+            updatedAt: now,
+            lastAuthor: "rasoka380@gmail.com",
+        },
+        Locations: locationsData,
+    };
+    document.getElementById("data_preview").textContent = JSON.stringify(model, null, 2);
+}
+
+function collectModalities(locId, type, out) {
+    const list = document.getElementById(`mods_${type.toLowerCase()}_${locId}`);
+    if (!list) return;
+    list.querySelectorAll(".modality-row").forEach(row => {
+        out.push({
+            type,
+            name: row.querySelector(".mod_name").value.trim(),
+            geoFiness: row.querySelector(".mod_finess").value.trim(),
+        });
+    });
+}
+
+/* ------------------------------------------------------------------
+   Activation / désactivation en cascade des engagements
+   ------------------------------------------------------------------ */
+function wireDependencies() {
+    const editorExist   = document.getElementById("npt_editor_exist");
+    const editorEngage  = document.getElementById("npt_editor_engagement");
+    const editorList    = document.getElementById("div_editor_list");
+    const noEditor      = document.getElementById("npt_editor_not_exist");
+    const hoursEngage   = document.getElementById("npt_sas_schedule_engagement");
+
+    editorExist.addEventListener("change", () => {
+        editorEngage.disabled = !editorExist.checked;
+        if (!editorExist.checked) editorEngage.checked = false;
+        render();
+    });
+    editorEngage.addEventListener("change", () => {
+        editorList.hidden = !editorEngage.checked;
+        render();
+    });
+    noEditor.addEventListener("change", () => {
+        hoursEngage.disabled = !noEditor.checked;
+        if (!noEditor.checked) hoursEngage.checked = false;
+        render();
+    });
+}
+
+/* ------------------------------------------------------------------
+   Initialisation
+   ------------------------------------------------------------------ */
+document.addEventListener("DOMContentLoaded", () => {
+    buildLocations();
+    wireDependencies();
+
+    document.querySelectorAll('input[name="participation"]').forEach(r => r.addEventListener("change", render));
+    document.getElementById("npt_finess").addEventListener("input", render);
+    document.getElementById("npt_sas_schedule_engagement").addEventListener("change", render);
+
+    // Cases CPTS / MSP + champs FINESS géographiques
+    document.querySelectorAll(".chk_cpts, .chk_msp").forEach(c => c.addEventListener("change", render));
+    document.querySelectorAll('[id^="geo_"]').forEach(i => i.addEventListener("input", render));
+
+    // Boutons « Ajouter une CPTS / MSP »
+    document.getElementById("div_sas_structure").addEventListener("click", (e) => {
+        const btn = e.target.closest("button[data-type]");
+        if (!btn || !btn.dataset.loc) return;
+        addModality(btn.dataset.loc, btn.dataset.type);
+        render();
+    });
+
+    render();
+});
+</script>
+
 </body>
 </html>
