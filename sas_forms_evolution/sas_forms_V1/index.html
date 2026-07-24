@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="fr" data-fr-scheme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Service d'Accès aux Soins — Mes paramètres (V1)</title>
+
+    <!-- DSFR : Système de Design de l'État -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@gouvfr/dsfr@1.13.0/dist/dsfr.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@gouvfr/dsfr@1.13.0/dist/utility/utility.min.css">
+
+    <style>
+        .sas-blue-bar { height: 1.5rem; background: var(--blue-france-sun-113-625, #000091); }
+
+        .params-callout {
+            background: #fef4f3;
+            padding: 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 1.5rem;
+            flex-wrap: wrap;
+        }
+
+        .mock-card { border: 1px solid var(--border-default-grey, #ddd); background: #fff; height: 100%; display: flex; flex-direction: column; }
+        .mock-card__header { display: flex; align-items: center; gap: .5rem; padding: 1rem; font-weight: 700; border-bottom: 1px solid var(--border-default-grey, #ddd); }
+        .mock-card__body { flex: 1; background: var(--background-alt-blue-france, #f5f5fe); margin: 1rem; padding: 1.5rem; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1rem; text-align: center; min-height: 8rem; }
+        .mock-card__body p { color: var(--text-action-high-blue-france, #000091); margin: 0; }
+
+        /* Compactage de la modale pour gagner de la hauteur */
+        #modal-params .fr-fieldset { margin-bottom: 0; }
+        #modal-params .fr-fieldset__element { margin-bottom: .25rem; }
+    </style>
+</head>
+<body>
+
+<!-- ============ EN-TÊTE DSFR ============ -->
+<header role="banner" class="fr-header">
+    <div class="fr-header__body">
+        <div class="fr-container">
+            <div class="fr-header__body-row">
+                <div class="fr-header__brand fr-enlarge-link">
+                    <div class="fr-header__brand-top">
+                        <div class="fr-header__logo">
+                            <p class="fr-logo">Ministère<br>de la santé<br>et de la prévention</p>
+                        </div>
+                    </div>
+                    <div class="fr-header__service">
+                        <a href="#" title="Service d'Accès aux Soins — Accueil">
+                            <p class="fr-header__service-title">Service d'Accès aux Soins</p>
+                        </a>
+                        <p class="fr-header__service-tagline">Un service de Santé.fr</p>
+                    </div>
+                </div>
+                <div class="fr-header__tools">
+                    <div class="fr-header__tools-links">
+                        <ul class="fr-btns-group">
+                            <li><a class="fr-btn fr-icon-arrow-left-line fr-btn--icon-left" href="#">Espace de formation</a></li>
+                            <li><a class="fr-btn fr-icon-question-line fr-btn--icon-left" href="#">FAQ</a></li>
+                            <li><a class="fr-btn fr-icon-chat-3-line fr-btn--icon-left" href="#">Agent conversationnel</a></li>
+                            <li><a class="fr-btn fr-icon-account-circle-line fr-btn--icon-left" href="#">Karim Bendeddouche</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</header>
+
+<!-- ============ ONGLETS + TABLEAU DE BORD ============ -->
+<div class="fr-container fr-mt-2w">
+    <div class="fr-tabs">
+        <ul class="fr-tabs__list" role="tablist" aria-label="Navigation SAS">
+            <li role="presentation">
+                <button id="tab-adresses" class="fr-tabs__tab" tabindex="0" role="tab" aria-selected="true" aria-controls="panel-adresses">Vos adresses</button>
+            </li>
+            <li role="presentation">
+                <button id="tab-assoc" class="fr-tabs__tab" tabindex="-1" role="tab" aria-selected="false" aria-controls="panel-assoc">Vos associations SOS Médecins ou de visites à domicile</button>
+            </li>
+        </ul>
+
+        <div id="panel-adresses" class="fr-tabs__panel fr-tabs__panel--selected" role="tabpanel" aria-labelledby="tab-adresses" tabindex="0">
+            <div class="sas-blue-bar fr-mb-3w"></div>
+
+            <!-- Encart Mes paramètres -->
+            <div class="params-callout fr-mb-3w">
+                <div>
+                    <h2 class="fr-h5 fr-mb-1w">Mes paramètres</h2>
+                    <p class="fr-text--sm fr-mb-2w">Veuillez renseigner vos paramètres</p>
+                    <p class="fr-mb-0">
+                        <span class="fr-badge fr-badge--error fr-mr-1w">Participation au SAS</span>
+                        <span class="fr-badge fr-badge--error">Créneaux éditeurs non affichés</span>
+                    </p>
+                </div>
+                <div>
+                    <button class="fr-btn fr-icon-settings-5-line fr-btn--icon-right" data-fr-opened="false" aria-controls="modal-params">
+                        Gérer les paramètres
+                    </button>
+                </div>
+            </div>
+
+            <div class="fr-select-group fr-mb-3w" style="max-width: 22rem;">
+                <select class="fr-select" id="slct_adresse" aria-label="Sélectionner une adresse">
+                    <option value="" selected>Sélectionner une option</option>
+                    <option value="a">Adresse A — Ville A</option>
+                    <option value="b">Adresse B — Ville B</option>
+                    <option value="c">Adresse C — Ville C</option>
+                </select>
+            </div>
+
+            <div class="fr-grid-row fr-grid-row--gutters fr-mb-3w">
+                <div class="fr-col-12 fr-col-md-4">
+                    <div class="mock-card">
+                        <div class="mock-card__header"><span class="fr-icon-map-pin-2-line" aria-hidden="true"></span> Coordonnées</div>
+                        <div class="mock-card__body"></div>
+                    </div>
+                </div>
+                <div class="fr-col-12 fr-col-md-4">
+                    <div class="mock-card">
+                        <div class="mock-card__header"><span class="fr-icon-calendar-line" aria-hidden="true"></span> Périodes d'indisponibilités</div>
+                        <div class="mock-card__body">
+                            <p>Renseigner vos périodes d'indisponibilités</p>
+                            <button class="fr-btn fr-btn--secondary fr-icon-add-line fr-btn--icon-left">Ajouter une indisponibilité</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="fr-col-12 fr-col-md-4">
+                    <div class="mock-card">
+                        <div class="mock-card__header"><span class="fr-icon-file-text-line" aria-hidden="true"></span> Informations complémentaires</div>
+                        <div class="mock-card__body">
+                            <p>Renseigner vos informations complémentaires</p>
+                            <button class="fr-btn fr-btn--secondary fr-icon-add-line fr-btn--icon-left">Ajouter des informations complémentaires</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mock-card fr-mb-4w">
+                <div class="mock-card__header"><span class="fr-icon-calendar-2-line" aria-hidden="true"></span> Disponibilités</div>
+                <div class="mock-card__body" style="min-height: 16rem;">
+                    <p>Renseigner vos disponibilités</p>
+                    <button class="fr-btn fr-btn--secondary fr-icon-edit-line fr-btn--icon-left">Renseigner les informations</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="panel-assoc" class="fr-tabs__panel" role="tabpanel" aria-labelledby="tab-assoc" tabindex="0">
+            <div class="sas-blue-bar fr-mb-3w"></div>
+            <p class="fr-text--sm">Gérez ici votre participation via une association SOS Médecins ou de visites à domicile.</p>
+        </div>
+    </div>
+</div>
+
+<!-- ============ MODALE : GÉRER LES PARAMÈTRES ============ -->
+<dialog aria-labelledby="modal-params-title" id="modal-params" class="fr-modal" role="dialog">
+    <div class="fr-container fr-container--fluid fr-container-md">
+        <div class="fr-grid-row fr-grid-row--center">
+            <div class="fr-col-12 fr-col-md-10 fr-col-lg-8">
+                <div class="fr-modal__body">
+                    <div class="fr-modal__header">
+                        <button class="fr-btn--close fr-btn" title="Fermer la fenêtre" aria-controls="modal-params">Fermer</button>
+                    </div>
+                    <div class="fr-modal__content">
+                        <h1 id="modal-params-title" class="fr-modal__title">
+                            <span class="fr-icon-settings-5-line fr-icon--lg" aria-hidden="true"></span>
+                            Gérer mes paramètres
+                        </h1>
+
+                        <!-- SECTION 1 : Participation (radios compacts) -->
+                        <fieldset class="fr-fieldset fr-mb-1w" id="participation_fieldset" role="radiogroup" aria-labelledby="participation_legend">
+                            <legend class="fr-fieldset__legend" id="participation_legend"><strong>Votre participation au SAS</strong> <span aria-hidden="true">*</span></legend>
+                            <div class="fr-fieldset__element">
+                                <div class="fr-radio-group">
+                                    <input type="radio" name="participation" id="part_individual" value="individual">
+                                    <label class="fr-label" for="part_individual">À titre individuel</label>
+                                </div>
+                            </div>
+                            <div class="fr-fieldset__element">
+                                <div class="fr-radio-group">
+                                    <input type="radio" name="participation" id="part_association" value="association">
+                                    <label class="fr-label" for="part_association">Via mon association SOS Médecins ou de visites à domicile</label>
+                                </div>
+                            </div>
+                        </fieldset>
+                        <p class="fr-text--sm fr-mb-3w" id="participation_desc" style="color: var(--text-mention-grey, #666);"></p>
+
+                        <!-- FINESS (association uniquement) -->
+                        <div class="fr-input-group fr-mb-3w" id="grp_finess" hidden>
+                            <label class="fr-label" for="npt_finess">
+                                N° FINESS de l'association SOS Médecins / VAD
+                                <span class="fr-hint-text">FINESS de la structure de rattachement</span>
+                            </label>
+                            <input class="fr-input" type="text" id="npt_finess" placeholder="Ex : 750000000">
+                        </div>
+
+                        <!-- SECTION 2 : Agenda individuel -->
+                        <div class="fr-mb-3w" id="div_sas_agenda_indiv" hidden>
+                            <h2 class="fr-h6">Vos disponibilités à titre individuel</h2>
+
+                            <fieldset class="fr-fieldset" aria-labelledby="lgd_editor">
+                                <legend class="fr-fieldset__legend fr-text--regular" id="lgd_editor"><strong>Outil de prise de rendez-vous en ligne</strong></legend>
+                                <div class="fr-fieldset__element">
+                                    <div class="fr-checkbox-group">
+                                        <input type="checkbox" id="npt_editor_exist">
+                                        <label class="fr-label" for="npt_editor_exist">Je dispose d'un outil de prise de rendez-vous en ligne</label>
+                                    </div>
+                                </div>
+                                <div class="fr-fieldset__element fr-ml-4w">
+                                    <div id="grp_editor_select" hidden>
+                                        <div class="fr-select-group">
+                                            <label class="fr-label" for="slct_editor">Vos éditeurs de prise de rendez-vous
+                                                <span class="fr-hint-text">Sélectionnez un ou plusieurs éditeurs</span>
+                                            </label>
+                                            <select class="fr-select" id="slct_editor">
+                                                <option value="" selected disabled hidden>Ajouter un éditeur</option>
+                                                <option value="doctolib">Doctolib</option>
+                                                <option value="maiia">MAIIA</option>
+                                                <option value="cptsrendezvous">CPTS Rendez-vous</option>
+                                                <option value="editeurA">Éditeur A</option>
+                                                <option value="editeurB">Éditeur B</option>
+                                            </select>
+                                        </div>
+                                        <ul class="fr-tags-group fr-mt-2w" id="editors_list" aria-live="polite"></ul>
+                                    </div>
+                                </div>
+                                <div class="fr-fieldset__element fr-ml-4w">
+                                    <div class="fr-checkbox-group">
+                                        <input type="checkbox" id="npt_editor_engagement" disabled>
+                                        <label class="fr-label" for="npt_editor_engagement">J'accepte de partager à la régulation mes créneaux d'agenda en ligne : grand public, professionnels et SNP</label>
+                                    </div>
+                                </div>
+                                <div class="fr-fieldset__element fr-ml-4w" id="div_editor_list" hidden>
+                                    <div class="fr-highlight">
+                                        <p class="fr-text--sm fr-mb-0">Vos créneaux en ligne seront remontés à la régulation via votre éditeur interfacé.</p>
+                                    </div>
+                                </div>
+                            </fieldset>
+
+                            <fieldset class="fr-fieldset fr-mt-2w" aria-labelledby="lgd_noeditor">
+                                <legend class="fr-fieldset__legend fr-text--regular" id="lgd_noeditor"><strong>Absence d'outil en ligne</strong></legend>
+                                <div class="fr-fieldset__element">
+                                    <div class="fr-checkbox-group">
+                                        <input type="checkbox" id="npt_editor_not_exist">
+                                        <label class="fr-label" for="npt_editor_not_exist">Je ne dispose pas d'un outil de rendez-vous en ligne pour l'ensemble de mes lieux d'activité</label>
+                                    </div>
+                                </div>
+                                <div class="fr-fieldset__element fr-ml-4w">
+                                    <div class="fr-checkbox-group">
+                                        <input type="checkbox" id="npt_sas_schedule_engagement" disabled>
+                                        <label class="fr-label" for="npt_sas_schedule_engagement">Je m'engage à renseigner à minima 2h de disponibilité par semaine dans l'agenda de la plateforme numérique SAS</label>
+                                    </div>
+                                </div>
+                            </fieldset>
+                        </div>
+
+                        <!-- SECTION 3 : Structure (modèle intermédiaire : 1 structure -> 1..n adresses) -->
+                        <div class="fr-mb-2w" id="div_sas_structure" hidden>
+                            <h2 class="fr-h6">Participation via une structure de soins</h2>
+
+                            <div class="fr-alert fr-alert--info fr-alert--sm fr-mb-2w">
+                                <p>Vous pouvez déclarer <strong>une seule structure</strong> (CPTS <em>ou</em> MSP) et la rattacher à une ou plusieurs de vos adresses. La déclaration de plusieurs structures par adresse sera disponible prochainement.</p>
+                            </div>
+
+                            <fieldset class="fr-fieldset" id="structure_fieldset" role="radiogroup" aria-labelledby="lgd_structure_type">
+                                <legend class="fr-fieldset__legend" id="lgd_structure_type"><strong>Type de structure</strong></legend>
+                                <div class="fr-fieldset__element fr-fieldset__element--inline">
+                                    <div class="fr-radio-group">
+                                        <input type="radio" name="structure_type" id="struct_cpts" value="CPTS">
+                                        <label class="fr-label" for="struct_cpts">Une CPTS</label>
+                                    </div>
+                                </div>
+                                <div class="fr-fieldset__element fr-fieldset__element--inline">
+                                    <div class="fr-radio-group">
+                                        <input type="radio" name="structure_type" id="struct_msp" value="MSP">
+                                        <label class="fr-label" for="struct_msp">Une MSP</label>
+                                    </div>
+                                </div>
+                            </fieldset>
+
+                            <div id="struct_details" class="fr-mt-2w" hidden>
+                                <div class="fr-input-group">
+                                    <label class="fr-label" for="struct_name" id="struct_name_label">Nom de la structure</label>
+                                    <input class="fr-input" type="text" id="struct_name" placeholder="Renseigner votre structure">
+                                    <p class="fr-hint-text fr-mt-1w">La liste des éditeurs interfacés de la structure vous sera communiquée.</p>
+                                </div>
+
+                                <fieldset class="fr-fieldset fr-mt-2w" aria-labelledby="lgd_adresses">
+                                    <legend class="fr-fieldset__legend" id="lgd_adresses"><strong>Adresses concernées</strong> <span class="fr-hint-text">Sélectionnez une ou plusieurs adresses</span></legend>
+                                    <div class="fr-fieldset__element">
+                                        <div class="fr-checkbox-group">
+                                            <input type="checkbox" class="chk_struct_addr" id="struct_addr_a" value="loc_a">
+                                            <label class="fr-label" for="struct_addr_a">Adresse A — Ville A</label>
+                                        </div>
+                                    </div>
+                                    <div class="fr-fieldset__element">
+                                        <div class="fr-checkbox-group">
+                                            <input type="checkbox" class="chk_struct_addr" id="struct_addr_b" value="loc_b">
+                                            <label class="fr-label" for="struct_addr_b">Adresse B — Ville B</label>
+                                        </div>
+                                    </div>
+                                    <div class="fr-fieldset__element">
+                                        <div class="fr-checkbox-group">
+                                            <input type="checkbox" class="chk_struct_addr" id="struct_addr_c" value="loc_c">
+                                            <label class="fr-label" for="struct_addr_c">Adresse C — Ville C</label>
+                                        </div>
+                                    </div>
+                                </fieldset>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="fr-modal__footer">
+                        <ul class="fr-btns-group fr-btns-group--right fr-btns-group--inline-reverse fr-btns-group--inline-lg">
+                            <li><button class="fr-btn" aria-controls="modal-params">Enregistrer</button></li>
+                            <li><button class="fr-btn fr-btn--secondary" aria-controls="modal-params">Annuler</button></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</dialog>
+
+<!-- ============ PIED DE PAGE DSFR ============ -->
+<footer class="fr-footer fr-mt-4w" role="contentinfo">
+    <div class="fr-container">
+        <div class="fr-footer__body">
+            <div class="fr-footer__brand fr-enlarge-link">
+                <p class="fr-logo">Ministère<br>de la santé<br>et de la prévention</p>
+            </div>
+            <div class="fr-footer__content">
+                <p class="fr-footer__content-desc">Service d'Accès aux Soins — Un service de Santé.fr</p>
+            </div>
+        </div>
+    </div>
+</footer>
+
+<!-- DSFR JS (onglets, modale, thème…) -->
+<script type="module" src="https://cdn.jsdelivr.net/npm/@gouvfr/dsfr@1.13.0/dist/dsfr.module.min.js"></script>
+<script nomodule src="https://cdn.jsdelivr.net/npm/@gouvfr/dsfr@1.13.0/dist/dsfr.nomodule.min.js"></script>
+
+<script>
+const PARTICIPATION_DESC = {
+    individual:  "Vous acceptez d'être contacté en sus de vos disponibilités par la régulation SAMU / SAS, pour l'ensemble de vos lieux d'activité.",
+    association: "Votre participation est portée par votre association ; aucune action supplémentaire n'est requise.",
+};
+
+function getParticipation() {
+    return document.querySelector('input[name="participation"]:checked')?.value || "";
+}
+
+/* Affichage conditionnel selon la participation */
+function updateForm() {
+    const p = getParticipation();
+    document.getElementById("participation_desc").textContent = PARTICIPATION_DESC[p] || "";
+    document.getElementById("div_sas_agenda_indiv").hidden = p !== "individual";
+    document.getElementById("div_sas_structure").hidden    = p !== "individual";
+    document.getElementById("grp_finess").hidden           = p !== "association";
+}
+
+/* Type de structure -> détails (nom + adresses) */
+function updateStructure() {
+    const t = document.querySelector('input[name="structure_type"]:checked')?.value || "";
+    document.getElementById("struct_details").hidden = !t;
+    if (t) {
+        document.getElementById("struct_name_label").textContent = "Nom de la " + t;
+        document.getElementById("struct_name").placeholder = "Renseigner votre " + t;
+    }
+}
+
+/* Cascade des engagements de l'agenda individuel + éditeurs (multi-sélection) */
+function wireDependencies() {
+    const editorExist  = document.getElementById("npt_editor_exist");
+    const editorSelect = document.getElementById("grp_editor_select");
+    const editorSlct   = document.getElementById("slct_editor");
+    const editorsList  = document.getElementById("editors_list");
+    const editorEngage = document.getElementById("npt_editor_engagement");
+    const editorList   = document.getElementById("div_editor_list");
+    const noEditor     = document.getElementById("npt_editor_not_exist");
+    const hoursEngage  = document.getElementById("npt_sas_schedule_engagement");
+
+    // Ajoute un éditeur choisi sous forme d'étiquette supprimable
+    function addEditor(value) {
+        const opt = editorSlct.querySelector(`option[value="${value}"]`);
+        if (!opt || opt.disabled) return;
+        opt.disabled = true; // empêche de le sélectionner deux fois
+        const li = document.createElement("li");
+        li.innerHTML = `<button type="button" class="fr-tag fr-tag--dismiss" aria-label="Retirer ${opt.textContent}">${opt.textContent}</button>`;
+        li.querySelector("button").addEventListener("click", () => { li.remove(); opt.disabled = false; });
+        editorsList.appendChild(li);
+        editorSlct.value = ""; // réinitialise la liste déroulante
+    }
+
+    function resetEditors() {
+        editorsList.innerHTML = "";
+        editorSlct.value = "";
+        editorSlct.querySelectorAll("option").forEach(o => { if (o.value) o.disabled = false; });
+    }
+
+    editorSlct.addEventListener("change", () => { if (editorSlct.value) addEditor(editorSlct.value); });
+
+    editorExist.addEventListener("change", () => {
+        editorEngage.disabled = !editorExist.checked;
+        editorSelect.hidden = !editorExist.checked;
+        if (!editorExist.checked) { editorEngage.checked = false; editorList.hidden = true; resetEditors(); }
+    });
+    editorEngage.addEventListener("change", () => { editorList.hidden = !editorEngage.checked; });
+    noEditor.addEventListener("change", () => {
+        hoursEngage.disabled = !noEditor.checked;
+        if (!noEditor.checked) hoursEngage.checked = false;
+    });
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+    wireDependencies();
+    document.querySelectorAll('input[name="participation"]').forEach(r => r.addEventListener("change", updateForm));
+    document.querySelectorAll('input[name="structure_type"]').forEach(r => r.addEventListener("change", updateStructure));
+    updateForm();
+    updateStructure();
+});
+</script>
+
+</body>
+</html>
