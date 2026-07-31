@@ -251,6 +251,7 @@ const state = {
   banScope: "national", // périmètre actif de la page Bandeaux
   banEdits: {},   // { [`${scope}||${audience}`]: {active,title,message,start,end} } — modifications en attente
   supFilter: "",  // filtre par SAS (territoire) de la Gestion Support
+  _supNames: [],  // territoires actuellement affichés (Gestion Support)
 };
 
 function normalizeUser(u) {
@@ -1259,43 +1260,40 @@ function bindDepartementsEvents() {
  * ================================================================ */
 function supTerrToken(t) { return String(t).split(" ")[0]; }
 function supVisibleTerritories(cat) {
-  const id = identity();
   if (acRole() === "administrateur") return cat.territories;
   return cat.territories.filter(x => supTerrToken(x.territory) === acTerr());
 }
-function supCurrentCat() { return state.support.find(c => c.reorientation_key === state.supCat) || state.support[0]; }
 function supKey(catKey, territory) { return catKey + "||" + territory; }
-function supDisplay(catKey, entry) {
-  const k = supKey(catKey, entry.territory);
-  return (k in state.supEdits) ? state.supEdits[k] : entry.emails.join(", ");
-}
-function supEditCount() { return Object.keys(state.supEdits).length; }
-function supParseEmails(str) { return str.split(/[;,]/).map(s => s.trim()).filter(Boolean); }
-
-/* Territoires visibles (noms) — communs à toutes les catégories */
-function supVisibleTerritoryNames() {
-  return supVisibleTerritories(state.support[0]).map(e => e.territory);
-}
 function supEntry(catKey, territory) {
   const cat = state.support.find(c => c.reorientation_key === catKey);
   return cat ? cat.territories.find(x => x.territory === territory) : null;
 }
+function supClean(arr) { return (arr || []).map(s => String(s).trim()).filter(Boolean); }
 
-/* Ligne du tableau matriciel : Territoire + une colonne par support */
-function supMatrixRows(territories) {
-  if (!territories.length) return `<tr><td colspan="${state.support.length + 1}" style="padding:1rem;color:#666;">Aucun territoire.</td></tr>`;
-  return territories.map(tn => `<tr>
-    <td class="terr">${esc(tn)}</td>
-    ${state.support.map(cat => {
-      const entry = cat.territories.find(x => x.territory === tn);
-      const k = supKey(cat.reorientation_key, tn);
-      const changed = (k in state.supEdits) && state.supEdits[k] !== entry.emails.join(", ");
-      return `<td><input class="sup-emails-input ${changed?'changed':''}" value="${esc(supDisplay(cat.reorientation_key, entry))}"
-        data-sup-cat="${esc(cat.reorientation_key)}" data-sup-territory="${esc(tn)}" placeholder="email@ex.fr" ${acWrite()?"":"readonly"}></td>`;
-    }).join("")}
-  </tr>`).join("");
+/* Copie de travail (tableau d'emails) — depuis les modifications en attente, sinon l'entrée */
+function supWorking(catKey, territory) {
+  const k = supKey(catKey, territory);
+  if (k in state.supEdits) return state.supEdits[k];
+  const e = supEntry(catKey, territory);
+  return e ? e.emails.slice() : [];
 }
+function supEnsureEdit(catKey, territory) {
+  const k = supKey(catKey, territory);
+  if (!(k in state.supEdits)) { const e = supEntry(catKey, territory); state.supEdits[k] = e ? e.emails.slice() : []; }
+  return state.supEdits[k];
+}
+function supIsDirty(catKey, territory) {
+  const k = supKey(catKey, territory);
+  if (!(k in state.supEdits)) return false;
+  const e = supEntry(catKey, territory);
+  return JSON.stringify(supClean(state.supEdits[k])) !== JSON.stringify((e ? e.emails : []));
+}
+function supDirtyKeys() {
+  return Object.keys(state.supEdits).filter(k => { const [c, t] = k.split("||"); return supIsDirty(c, t); });
+}
+function supEditCount() { return supDirtyKeys().length; }
 
+function supVisibleTerritoryNames() { return supVisibleTerritories(state.support[0]).map(e => e.territory); }
 function supFilteredTerritories() {
   const q = state.supFilter.trim().toLowerCase();
   let names = supVisibleTerritoryNames();
@@ -1303,98 +1301,218 @@ function supFilteredTerritories() {
   return names;
 }
 
+/* Contenu d'une cellule : un champ input par email + suppression + ajout */
+function supCellHtml(catKey, territory) {
+  const emails = supWorking(catKey, territory);
+  if (!acWrite()) {
+    return emails.length ? emails.map(e => `<div class="sup-email-ro">${esc(e)}</div>`).join("") : `<span class="mock-note">—</span>`;
+  }
+  const rows = emails.map((em, i) => `
+    <div class="sup-email-row">
+      <input class="fr-input sup-email-input" value="${esc(em)}" data-ei="${i}" placeholder="email@ex.fr">
+      <button type="button" class="sup-email-del" data-ei="${i}" title="Supprimer cet email" aria-label="Supprimer cet email">&times;</button>
+    </div>`).join("");
+  return `${rows}<button type="button" class="sup-email-add">+ Ajouter un email</button>`;
+}
+function supRowsHtml(names) {
+  if (!names.length) return `<tr><td colspan="${state.support.length + 1}" style="padding:1rem;color:#666;">Aucun territoire.</td></tr>`;
+  return names.map((tn, ti) => `<tr>
+    <td class="terr">${esc(tn)}</td>
+    ${state.support.map((cat, ci) => `<td id="sc-${ci}-${ti}" class="sup-td ${supIsDirty(cat.reorientation_key, tn) ? "changed" : ""}">${supCellHtml(cat.reorientation_key, tn)}</td>`).join("")}
+  </tr>`).join("");
+}
+
+function renderSupBody() {
+  const names = supFilteredTerritories();
+  state._supNames = names;
+  const body = el("sup-body");
+  if (body) body.innerHTML = supRowsHtml(names);
+  const cnt = el("sup-count"); if (cnt) cnt.textContent = `${names.length} territoire${names.length > 1 ? "s" : ""}`;
+  names.forEach((tn, ti) => state.support.forEach((cat, ci) => { const td = el(`sc-${ci}-${ti}`); if (td) bindSupTd(td, ci, ti); }));
+  supUpdateSaveBar();
+}
+
 function renderSupport() {
   const isAdmin = acRole() === "administrateur";
-  const names = supFilteredTerritories();
-  const n = supEditCount();
 
   el("view-support").innerHTML = `
-    <h1 class="fr-h4" style="margin:0;">Gestion Support</h1>
-    <p class="page-sub">${isAdmin ? "Tous les territoires." : "Territoire <strong>"+esc(acTerr())+"</strong>."}
-      Mails de réorientation — tous les supports en colonnes. Toute modification déclenche une notification de changement.</p>
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:1rem;">
+      <div>
+        <h1 class="fr-h4" style="margin:0;">Gestion Support</h1>
+        <p class="page-sub">${isAdmin ? "Tous les territoires." : "Territoire <strong>"+esc(acTerr())+"</strong>."}
+          Mails de réorientation — tous les supports en colonnes. Un email par champ (ajout / suppression). Toute modification déclenche une notification de changement.</p>
+      </div>
+      ${isAdmin ? `<div style="display:flex;gap:.5rem;flex-wrap:wrap;">
+        ${acWrite() ? `<button class="fr-btn fr-btn--sm fr-btn--secondary" id="sup-import-btn">Importer un JSON</button>
+        <input type="file" id="sup-import-file" accept="application/json,.json" hidden>` : ""}
+        <button class="fr-btn fr-btn--sm fr-btn--secondary" id="sup-export-btn">Télécharger le JSON</button>
+      </div>` : ""}
+    </div>
     ${acWrite() ? `<div class="save-bar">
-      <button class="fr-btn fr-btn--sm" id="sup-save" ${n?"":"disabled"}>Enregistrer</button>
-      <span class="mock-note" id="sup-pending">${n ? `${n} modification${n>1?"s":""} en attente` : "Aucune modification"}</span>
+      <button class="fr-btn fr-btn--sm" id="sup-save" disabled>Enregistrer</button>
+      <span class="mock-note" id="sup-pending">Aucune modification</span>
     </div>` : ""}
     <div class="fr-input-group" style="max-width:340px;margin:.25rem 0;">
       <label class="fr-label" for="sup-q">Filtrer par SAS (territoire)</label>
       <input class="fr-input" type="search" id="sup-q" placeholder="Ex : SAS-75, Paris…" value="${esc(state.supFilter)}">
     </div>
-    <p class="result-count" id="sup-count">${names.length} territoire${names.length>1?"s":""}</p>
+    <p class="result-count" id="sup-count"></p>
     <div class="sup-wrap">
       <table class="sup-table sup-table--matrix">
         <thead><tr>
           <th>Territoire (SAS)</th>
           ${state.support.map(c => `<th>${esc(c.reorientation_name)}</th>`).join("")}
         </tr></thead>
-        <tbody id="sup-body">${supMatrixRows(names)}</tbody>
+        <tbody id="sup-body"></tbody>
       </table>
     </div>`;
 
+  renderSupBody();
   bindSupportEvents();
 }
 
 function supUpdateSaveBar() {
   const n = supEditCount();
   const btn = el("sup-save"); if (btn) btn.disabled = n === 0;
-  const info = el("sup-pending"); if (info) info.textContent = n ? `${n} modification${n>1?"s":""} en attente` : "Aucune modification";
+  const info = el("sup-pending"); if (info) info.textContent = n ? `${n} modification${n > 1 ? "s" : ""} en attente` : "Aucune modification";
 }
-function bindSupRowInputs(root) {
-  root.querySelectorAll("[data-sup-territory]").forEach(inp => inp.oninput = () => {
-    const catKey = inp.dataset.supCat;
-    const territory = inp.dataset.supTerritory;
-    const entry = supEntry(catKey, territory);
-    if (!entry) return;
-    const k = supKey(catKey, territory);
-    const original = entry.emails.join(", ");
-    if (inp.value === original) delete state.supEdits[k];
-    else state.supEdits[k] = inp.value;
-    inp.classList.toggle("changed", (k in state.supEdits));
+
+function renderSupCellInto(ci, ti) {
+  const td = el(`sc-${ci}-${ti}`);
+  if (!td) return;
+  const catKey = state.support[ci].reorientation_key;
+  const territory = state._supNames[ti];
+  td.className = "sup-td" + (supIsDirty(catKey, territory) ? " changed" : "");
+  td.innerHTML = supCellHtml(catKey, territory);
+  bindSupTd(td, ci, ti);
+}
+function bindSupTd(td, ci, ti) {
+  const catKey = state.support[ci].reorientation_key;
+  const territory = state._supNames[ti];
+  td.querySelectorAll(".sup-email-input").forEach(inp => inp.oninput = () => {
+    const arr = supEnsureEdit(catKey, territory);
+    arr[Number(inp.dataset.ei)] = inp.value;
+    td.classList.toggle("changed", supIsDirty(catKey, territory));
     supUpdateSaveBar();
   });
+  td.querySelectorAll(".sup-email-del").forEach(b => b.onclick = () => {
+    const arr = supEnsureEdit(catKey, territory);
+    arr.splice(Number(b.dataset.ei), 1);
+    renderSupCellInto(ci, ti);
+    supUpdateSaveBar();
+  });
+  const add = td.querySelector(".sup-email-add");
+  if (add) add.onclick = () => {
+    const arr = supEnsureEdit(catKey, territory);
+    arr.push("");
+    renderSupCellInto(ci, ti);
+    supUpdateSaveBar();
+    const inputs = td.querySelectorAll(".sup-email-input");
+    if (inputs.length) inputs[inputs.length - 1].focus();
+  };
 }
+
+/* Export JSON (format de référence : [{reorientation_key, reorientation_name, territories:[{territory, emails}]}]) */
+function supExportJson() {
+  const data = state.support.map(c => ({
+    reorientation_key: c.reorientation_key,
+    reorientation_name: c.reorientation_name,
+    territories: c.territories.map(t => ({ territory: t.territory, emails: t.emails.slice() })),
+  }));
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url; a.download = "support-reorientations.json";
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+  showToast("Fichier JSON téléchargé.");
+}
+function supValidateJson(data) {
+  if (!Array.isArray(data)) return "le fichier doit contenir un tableau de catégories.";
+  for (const c of data) {
+    if (!c || typeof c.reorientation_key !== "string" || typeof c.reorientation_name !== "string" || !Array.isArray(c.territories))
+      return "chaque catégorie doit avoir reorientation_key, reorientation_name et territories.";
+    for (const t of c.territories) {
+      if (!t || typeof t.territory !== "string" || !Array.isArray(t.emails)) return "chaque territoire doit avoir territory et un tableau emails.";
+      if (!t.emails.every(e => typeof e === "string")) return "les emails doivent être des chaînes de caractères.";
+    }
+  }
+  return null;
+}
+function supImportJson(file) {
+  const reader = new FileReader();
+  reader.onload = () => {
+    let data;
+    try { data = JSON.parse(reader.result); } catch (e) { showToast("JSON invalide : " + e.message); return; }
+    const err = supValidateJson(data);
+    if (err) { showToast("Format invalide : " + err); return; }
+    const nCat = data.length, nTerr = data.reduce((n, c) => n + c.territories.length, 0);
+    showModal({
+      title: "Importer le fichier JSON",
+      bodyHtml: `<p class="fr-text--sm">Remplacer l'intégralité des mails de réorientation par le contenu du fichier ?</p>
+                 <p class="mock-note">${nCat} catégorie${nCat > 1 ? "s" : ""} · ${nTerr} entrées territoire. Les modifications non enregistrées seront perdues.</p>`,
+      confirmLabel: "Importer",
+      onConfirm: () => {
+        state.support = data.map(c => ({
+          reorientation_key: c.reorientation_key, reorientation_name: c.reorientation_name,
+          territories: c.territories.map(t => ({ territory: t.territory, emails: t.emails.slice() })),
+        }));
+        state.supEdits = {};
+        saveSupport();
+        render();
+        showToast(`Import réalisé — ${nCat} catégorie${nCat > 1 ? "s" : ""}, ${nTerr} territoires.`);
+      },
+    });
+  };
+  reader.readAsText(file, "utf-8");
+}
+
 function bindSupportEvents() {
   const root = el("view-support");
-  root.querySelector("#sup-q").oninput = (e) => {
-    state.supFilter = e.target.value;
-    const names = supFilteredTerritories();
-    el("sup-body").innerHTML = supMatrixRows(names);
-    el("sup-count").textContent = `${names.length} territoire${names.length>1?"s":""}`;
-    bindSupRowInputs(el("sup-body"));
-  };
+  root.querySelector("#sup-q").oninput = (e) => { state.supFilter = e.target.value; renderSupBody(); };
+
+  const importBtn = root.querySelector("#sup-import-btn");
+  const importFile = root.querySelector("#sup-import-file");
+  if (importBtn && importFile) {
+    importBtn.onclick = () => importFile.click();
+    importFile.onchange = () => { if (importFile.files && importFile.files[0]) supImportJson(importFile.files[0]); importFile.value = ""; };
+  }
+  const exportBtn = root.querySelector("#sup-export-btn");
+  if (exportBtn) exportBtn.onclick = () => supExportJson();
+
   const supSaveBtn = root.querySelector("#sup-save");
   if (supSaveBtn) supSaveBtn.onclick = () => {
+    const keys = supDirtyKeys();
     const items = [];
     const notified = new Set();
-    for (const k in state.supEdits) {
+    keys.forEach(k => {
       const [catKey, territory] = k.split("||");
       const cat = state.support.find(c => c.reorientation_key === catKey);
       const entry = cat.territories.find(x => x.territory === territory);
       notified.add(territory);
-      items.push(`<li><strong>${esc(cat.reorientation_name)} — ${esc(territory)}</strong><br><span class="old">${esc(entry.emails.join(", "))}</span> → <span class="new">${esc(supParseEmails(state.supEdits[k]).join(", "))}</span></li>`);
-    }
+      items.push(`<li><strong>${esc(cat.reorientation_name)} — ${esc(territory)}</strong><br><span class="old">${esc(entry.emails.join(", ") || "—")}</span> → <span class="new">${esc(supClean(state.supEdits[k]).join(", ") || "—")}</span></li>`);
+    });
     showModal({
       title: "Confirmer l'enregistrement",
       bodyHtml: `<p class="fr-text--sm">Les mails suivants vont être enregistrés :</p>
                  <ul class="modal-changes">${items.join("")}</ul>
-                 <p class="fr-text--sm" style="margin-top:.5rem;"><strong>Notification de changement</strong> envoyée aux référents de ${notified.size} territoire${notified.size>1?"s":""}.</p>`,
+                 <p class="fr-text--sm" style="margin-top:.5rem;"><strong>Notification de changement</strong> envoyée aux référents de ${notified.size} territoire${notified.size > 1 ? "s" : ""}.</p>`,
       confirmLabel: "Enregistrer & notifier",
       onConfirm: () => {
-        for (const k in state.supEdits) {
+        keys.forEach(k => {
           const [catKey, territory] = k.split("||");
           const cat = state.support.find(c => c.reorientation_key === catKey);
           const entry = cat.territories.find(x => x.territory === territory);
-          entry.emails = supParseEmails(state.supEdits[k]);
-        }
+          entry.emails = supClean(state.supEdits[k]);
+        });
         const count = notified.size;
         state.supEdits = {};
         saveSupport();
         render();
-        showToast(`Modifications enregistrées — notification de changement envoyée (${count} territoire${count>1?"s":""}).`);
+        showToast(`Modifications enregistrées — notification de changement envoyée (${count} territoire${count > 1 ? "s" : ""}).`);
       },
     });
   };
-  bindSupRowInputs(root);
 }
 
 /* ================================================================ *

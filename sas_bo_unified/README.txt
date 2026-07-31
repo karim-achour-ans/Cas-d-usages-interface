@@ -135,9 +135,18 @@ CE QUE FAIT LA MAQUETTE
    - FILTRE PAR SAS (territoire) au-dessus du tableau.
    - Administrateur : tous les territoires ; gestionnaire de compte :
      uniquement son territoire.
-   - Édition en ligne (emails séparés par des virgules) ; bouton « Enregistrer »
-     désactivé sans changement ; modale de confirmation qui indique la
-     NOTIFICATION DE CHANGEMENT envoyée aux référents des territoires modifiés.
+   - ÉDITION EMAIL PAR EMAIL : chaque email est un champ séparé, avec un
+     bouton de SUPPRESSION par email et un bouton « + Ajouter un email » par
+     cellule (un support peut donc porter plusieurs adresses).
+   - Bouton « Enregistrer » désactivé sans changement ; modale de confirmation
+     indiquant la NOTIFICATION DE CHANGEMENT envoyée aux référents des
+     territoires modifiés.
+   - IMPORT / EXPORT JSON (administrateur) :
+       * « Télécharger le JSON » exporte le référentiel complet au format
+         [{reorientation_key, reorientation_name, territories:[{territory,
+         emails:[...]}]}].
+       * « Importer un JSON » (écriture) remplace le référentiel après
+         validation du format et confirmation.
    - Données conformes au format JSON fourni (fichier support.js).
 
 9. OFFRE DE SOINS (page opensearch.html, arrière-guichet Open-Search)

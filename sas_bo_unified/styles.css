@@ -417,7 +417,16 @@ body { margin: 0; background: #fff; color: #1a1a1a; font-size: 14px; line-height
 
 /* ── Gestion Support : tableau matriciel (tous supports) ─── */
 .sup-wrap { overflow-x:auto; border:1px solid #ececec; border-radius:6px; }
-.sup-table--matrix { min-width:720px; }
-.sup-table--matrix th, .sup-table--matrix td { vertical-align:middle; }
-.sup-table--matrix td .sup-emails-input { min-width:180px; }
-.sup-table--matrix .terr { white-space:nowrap; font-weight:600; position:sticky; left:0; background:#fff; z-index:1; }
+.sup-table--matrix { min-width:820px; }
+.sup-table--matrix th, .sup-table--matrix td { vertical-align:top; }
+.sup-table--matrix .terr { white-space:nowrap; font-weight:600; position:sticky; left:0; background:#fff; z-index:1; vertical-align:middle; }
+.sup-td { min-width:230px; }
+.sup-td.changed { background:#fff7f2; }
+.sup-email-row { display:flex; align-items:center; gap:.3rem; margin-bottom:.3rem; }
+.sup-email-input { flex:1 1 auto; min-width:140px; padding:.3rem .45rem; font-size:.82rem; background:#f2f2f7; border:1px solid transparent; border-bottom:2px solid #cfcfda; border-radius:4px 4px 0 0; }
+.sup-email-input:focus { outline:2px solid #000091; outline-offset:1px; }
+.sup-email-del { flex:0 0 auto; width:1.4rem; height:1.4rem; line-height:1; border:none; background:#f4e3e0; color:#ce0500; border-radius:4px; cursor:pointer; font-size:1rem; }
+.sup-email-del:hover { background:#f9c9c2; }
+.sup-email-add { border:none; background:none; color:#000091; font-family:inherit; font-size:.78rem; cursor:pointer; padding:.1rem 0; }
+.sup-email-add:hover { text-decoration:underline; }
+.sup-email-ro { font-size:.82rem; padding:.1rem 0; color:#3a3a3a; }
