@@ -118,6 +118,11 @@
     <!-- ===== BARRE DE FILTRES COMPACTE ===== -->
     <section id="filters-section" class="fr-py-2w" aria-labelledby="filters-heading">
       <div class="fr-container">
+
+        <h2 class="sas-zone-title" id="filters-heading">
+          Résultat pour la zone <span id="zone-label">Paris</span>
+        </h2>
+
         <div class="fr-grid-row fr-grid-row--gutters fr-grid-row--middle">
 
           <!-- ================= FILTERS ================= -->
@@ -277,6 +282,25 @@
         <div id="active-filters" class="fr-mt-1w" hidden>
           <div class="fr-tags-group"></div>
         </div>
+
+        <!-- ================= LÉGENDE CRÉNEAUX ================= -->
+        <ul class="sas-legend-row" aria-label="Légende des créneaux">
+          <li class="sas-legend-pill sas-legend-pill--today">Aujourd'hui</li>
+          <li class="sas-legend-pill sas-legend-pill--upcoming">Prochains jours</li>
+          <li class="sas-legend-pill sas-legend-pill--unavailable">Indisponible</li>
+          <li class="sas-legend-pill sas-legend-pill--mode">
+            <span class="sas-legend-icon" aria-hidden="true">T</span>Téléconsultation
+          </li>
+          <li class="sas-legend-pill sas-legend-pill--mode">
+            <span class="sas-legend-icon" aria-hidden="true">V</span>Visite à domicile
+          </li>
+          <li class="sas-legend-pill sas-legend-pill--mode">
+            <span class="sas-legend-icon" aria-hidden="true">C</span>Consultation en cabinet
+          </li>
+          <li class="sas-legend-sep" aria-hidden="true"></li>
+          <li class="sas-legend-pill sas-legend-pill--mode">Créneaux CPTS</li>
+        </ul>
+
       </div>
     </section>
 
@@ -580,6 +604,13 @@
     }
   }
 
+  function syncZoneLabel() {
+    const locInput  = document.getElementById('search-location');
+    const zoneLabel = document.getElementById('zone-label');
+    const val = locInput?.value.trim();
+    if (zoneLabel && val) zoneLabel.textContent = val;
+  }
+
   /* Sync à l'ouverture de chaque card (délégation déjà en place dans panel.js) */
   document.addEventListener('click', function (e) {
     if (e.target.closest('.js-open-panel')) {
@@ -595,8 +626,13 @@
 
   /* Sync en temps réel quand l'utilisateur change la localisation */
   document.addEventListener('DOMContentLoaded', function () {
+    syncZoneLabel();
     document.getElementById('search-location')
       ?.addEventListener('input', syncLocationToPanel);
+    document.getElementById('search-location')
+      ?.addEventListener('input', syncZoneLabel);
+    document.getElementById('search-submit')
+      ?.addEventListener('click', syncZoneLabel);
   });
 })();
 </script>
