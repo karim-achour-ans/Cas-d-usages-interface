@@ -1000,3 +1000,183 @@
   letter-spacing: 0.04em;
   font-weight: 600;
 }
+/* ═══════════════════════════════════════════════════════════════════════════
+   REDESIGN V2 — Alignement sur la maquette graphique (zone + légende + cards)
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ── Titre de zone ── */
+.sas-zone-title {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--text-title-grey, #161616);
+  margin: 0 0 0.85rem 0;
+}
+
+/* ── Légende créneaux ── */
+.sas-legend-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  list-style: none;
+  margin: 0.75rem 0 0;
+  padding: 0;
+}
+
+.sas-legend-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  padding: 0.28rem 0.7rem;
+  border-radius: 1rem;
+  border: 1px solid var(--border-default-grey, #ddd);
+  background: #fff;
+  color: var(--text-mention-grey, #666);
+  white-space: nowrap;
+}
+
+.sas-legend-pill--today {
+  background: var(--background-action-low-green-emeraude, #e3fdea);
+  border-color: transparent;
+  color: #18753c;
+}
+
+.sas-legend-pill--unavailable {
+  background: #fdeee0;
+  border-color: transparent;
+  color: #b34000;
+}
+
+.sas-legend-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1rem;
+  height: 1rem;
+  border-radius: 50%;
+  background: var(--background-action-low-blue-france, #e8edff);
+  color: var(--text-action-high-blue-france, #0063cb);
+  font-size: 0.6rem;
+  font-weight: 700;
+}
+
+.sas-legend-sep {
+  width: 1px;
+  height: 1rem;
+  background: var(--border-default-grey, #ddd);
+  margin: 0 0.25rem;
+}
+
+/* ── Carte : badge coin + en-tête ── */
+article.js-practitioner-card > .fr-card {
+  position: relative;
+}
+
+.sas-card-corner-badge {
+  position: absolute;
+  top: 0.85rem;
+  right: 0.85rem;
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  padding: 0.25rem 0.65rem;
+  border-radius: 1rem;
+  background: var(--background-contrast-grey, #eee);
+  color: var(--text-mention-grey, #666);
+  white-space: nowrap;
+  z-index: 2;
+}
+
+.sas-card-corner-badge--error {
+  background: #ce0500;
+  color: #fff;
+}
+
+.sas-card-corner-badge--success {
+  background: var(--background-action-low-green-emeraude, #e3fdea);
+  color: #18753c;
+}
+
+.fr-card__title.js-open-panel {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  max-width: calc(100% - 6.5rem);
+}
+
+/* ── Lignes info avec icône (adresse / téléphone) ── */
+.sas-info-line {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.45rem;
+  margin-bottom: 0.55rem !important;
+}
+
+.sas-info-icon {
+  flex-shrink: 0;
+  margin-top: 0.05rem;
+  font-size: 0.85rem;
+  line-height: 1;
+}
+
+.sas-info-line strong {
+  display: block;
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--text-mention-grey, #666);
+  margin-bottom: 0.1rem;
+}
+
+/* ── En-tête de la colonne "Information complémentaires" ── */
+.sas-comment-heading {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--text-action-high-blue-france, #0063cb);
+  margin: 0 0 0.4rem 0;
+}
+
+/* ── Lien "voir plus de créneaux" ── */
+.sas-more-slots-link {
+  display: inline-block;
+  appearance: none;
+  border: none;
+  background: none;
+  padding: 0;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-decoration: underline;
+  color: var(--text-action-high-blue-france, #0063cb);
+  margin: 0.3rem 0 0.6rem;
+  text-align: left;
+}
+
+/* ── Placeholder "Indisponible" dans une colonne de créneaux ── */
+.sas-slot-unavailable {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 2.4rem;
+  border-radius: 0.375rem;
+  background: #fdeee0;
+  color: #b34000;
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  text-align: center;
+  padding: 0.3rem 0.2rem;
+}
