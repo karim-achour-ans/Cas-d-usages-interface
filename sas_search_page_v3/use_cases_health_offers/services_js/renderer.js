@@ -29,7 +29,8 @@ function toDateKey(date) {
   return date.toISOString().slice(0, 10);
 }
 
-function formatDayLabel(date) {
+function formatDayLabel(date, offset) {
+  if (offset === 0) return "Aujourd'hui";
   return date.toLocaleDateString('fr-FR', { weekday: 'short', day: '2-digit', month: '2-digit' });
 }
 
@@ -59,7 +60,7 @@ export function renderSlotButton(slot) {
             aria-label="Créneau ${timeRange}">
       <span class="sas-slot-time">${timeRange}</span>
       <div class="sas-slot-footer">
-        <span class="sas-slot-counter" aria-label="0 réservation sur 1">0/1</span>
+        <span class="sas-slot-counter" aria-label="0 réservation sur 3">0/3</span>
         <span class="sas-slot-icon" aria-label="Téléconsultation">T</span>
         <span class="sas-slot-icon" aria-label="Consultation">C</span>
         <span class="sas-slot-icon" aria-label="Visite">V</span>
@@ -84,7 +85,7 @@ function buildSlotColumns(slots) {
     return [0, 1, 2].map(offset => {
       const d = new Date(today);
       d.setDate(d.getDate() + offset);
-      return { label: formatDayLabel(d), key: toDateKey(d), slots: [] };
+      return { label: formatDayLabel(d, offset), key: toDateKey(d), slots: [] };
     });
   }
 
@@ -92,7 +93,7 @@ function buildSlotColumns(slots) {
   const columns  = [0, 1, 2].map(offset => {
     const d = new Date(earliest);
     d.setDate(d.getDate() + offset);
-    return { label: formatDayLabel(d), key: toDateKey(d), slots: [] };
+    return { label: formatDayLabel(d, offset), key: toDateKey(d), slots: [] };
   });
 
   for (const slot of slotArray) {
@@ -120,13 +121,13 @@ export function renderSlotColumns(slots) {
 
   const columns = buildSlotColumns(normalised);
 
-  return columns.map(col => `
-    <div class="sas-slot-day">
+  return columns.map((col, i) => `
+    <div class="sas-slot-day${i === 0 ? ' sas-slot-day--today' : ''}">
       <p class="sas-slot-day-label">${col.label}</p>
       <div class="sas-slot-day-list">
         ${col.slots.length
           ? col.slots.map(renderSlotButton).join('')
-          : `<p class="fr-text--xs fr-text--mention-grey fr-mb-0">—</p>`
+          : `<span class="sas-slot-unavailable">Indisponible</span>`
         }
       </div>
     </div>`).join('');
@@ -158,8 +159,8 @@ function normalizeProfession(profession) {
 // ─── Conventionnement badge ────────────────────────────────────────────────
 
 const CONVENTIONNEMENT_MAP = {
-  '1': { label: 'Secteur 1',        modifier: 'fr-badge--info',  title: 'Conventionné secteur 1 — tarifs Sécurité Sociale' },
-  '2': { label: 'Secteur 2',        modifier: 'fr-badge--info',  title: "Conventionné secteur 2 — dépassements d'honoraires autorisés" },
+  '1': { label: 'Secteur 1',        modifier: '',             title: 'Conventionné secteur 1 — tarifs Sécurité Sociale' },
+  '2': { label: 'Secteur 2',        modifier: '',             title: "Conventionné secteur 2 — dépassements d'honoraires autorisés" },
   '3': { label: 'Non conventionné', modifier: 'fr-badge--error', title: 'Non conventionné par la CNAM' },
 };
 
@@ -171,6 +172,13 @@ function renderConventionnementBadge(code, display) {
   }
   const fallback = display ?? `Conventionnement ${code}`;
   return `<span class="fr-badge fr-badge--sm" title="Conventionnement CNAM">${fallback}</span>`;
+}
+
+// ─── Badge spécialité / profession (pastille neutre sous le titre) ────────
+function renderSpecialtyBadge(offer) {
+  const label = offer.specialty || (offer.profession && offer.profession !== 'Médecin' ? offer.profession : null);
+  if (!label) return '';
+  return `<span class="fr-badge fr-badge--sm" style="text-transform:uppercase;">${label}</span>`;
 }
 
 // ─── SAS badge ─────────────────────────────────────────────────────────────
@@ -282,12 +290,16 @@ function renderCard(offer) {
     orgId:                   offer.orgId    ?? null,
   };
 
-  const sasBadge              = renderSasBadge(offer.sasOk, offer.sasTypes);
+  const specialtyBadge        = renderSpecialtyBadge(offer);
   const conventionnementBadge = renderConventionnementBadge(
     offer.conventionnementCode,
     offer.conventionnementDisplay,
   );
   const orgLink               = renderOrgLink(offer);
+
+  const hasComment = Boolean(offer.operationalActivity || offer.comment);
+  const cornerLabel = offer.sasOk === true ? 'Participe au SAS' : 'Non inscrit au SAS';
+  const cornerClass = offer.sasOk === true ? 'sas-card-corner-badge--success' : 'sas-card-corner-badge--error';
 
   return `
     <article class="fr-col-12 js-practitioner-card"
@@ -300,6 +312,7 @@ function renderCard(offer) {
              data-mode="${computeMode(offer)}"
              data-panel='${JSON.stringify(panelData).replace(/'/g, "&apos;")}'>
       <div class="fr-card">
+        <span class="sas-card-corner-badge ${cornerClass}">${cornerLabel}</span>
         <div class="fr-card__body">
           <div class="fr-card__content sas-card-layout">
 
@@ -313,33 +326,31 @@ function renderCard(offer) {
               </h3>
 
               <div class="fr-badges-group fr-mt-1w">
-                ${sasBadge}
+                ${specialtyBadge}
                 ${conventionnementBadge}
               </div>
 
-              ${offer.phone ? `
-              <p class="fr-text--sm fr-text--default-grey fr-mb-0 fr-mt-1w">
-                <a href="tel:${offer.phone}">${offer.phone}</a>
+              ${addressLine ? `
+              <p class="sas-info-line fr-text--sm fr-text--default-grey fr-mb-0 fr-mt-1w">
+                <span class="sas-info-icon" aria-hidden="true">📍</span>
+                <span><strong>Adresse</strong>${addressLine}</span>
               </p>` : ''}
 
-              ${addressLine ? `
-              <p class="fr-text--sm fr-text--default-grey fr-mb-0">
-                ${addressLine}
+              ${offer.phone ? `
+              <p class="sas-info-line fr-text--sm fr-text--default-grey fr-mb-0">
+                <span class="sas-info-icon" aria-hidden="true">📞</span>
+                <span><strong>Téléphone</strong><a href="tel:${offer.phone}">${offer.phone}</a></span>
               </p>` : ''}
 
               ${orgLink}
             </div>
 
-            <!-- ── Col 2 : commentaire + activité ────────────────────── -->
+            <!-- ── Col 2 : information complémentaire (masquée si vide) ── -->
+            ${hasComment ? `
             <div class="sas-card-comment">
-              ${(offer.profession !== "Médecin" || offer.specialty) ? `
-                <p class="fr-text--sm fr-text--default-grey fr-mb-0">
-                  <strong>${[
-                    offer.profession !== "Médecin" ? offer.profession : null,
-                    offer.specialty
-                  ].filter(Boolean).join(' — ')}</strong>
-                </p>` : ''}
-
+              <p class="sas-comment-heading">
+                <span aria-hidden="true">ℹ️</span> Information complémentaire
+              </p>
               ${offer.operationalActivity ? `
               <p class="fr-text--sm fr-text--default-grey fr-mb-0 sas-comment">
                 ${offer.operationalActivity}
@@ -349,13 +360,16 @@ function renderCard(offer) {
                 <figure class="fr-callout fr-p-2w fr-mt-1w">
                   <p class="fr-text--md">${offer.comment}</p>
                 </figure>` : ''}
-            </div>
+            </div>` : ''}
 
             <!-- ── Col 3 : créneaux + actions ────────────────────────── -->
             <div class="sas-card-slots">
               <div class="sas-slots-grid">
                 ${renderSlotColumns(offer.slots ?? offer.slotStarts)}
               </div>
+              <button type="button" class="sas-more-slots-link js-open-panel">
+                Voir plus de créneaux
+              </button>
               ${offer.sasOk === true ? `
               <button class="fr-btn fr-btn--sm fr-mt-1w sas-btn-full">
                 Orientation hors disponibilité

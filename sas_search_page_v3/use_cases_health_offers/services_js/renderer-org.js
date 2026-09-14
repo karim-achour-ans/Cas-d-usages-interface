@@ -81,6 +81,14 @@ function renderOrgTypeBadge(orgType, sosSubtype) {
   return `<span class="fr-badge fr-badge--sm ${cls}">${label}</span>`;
 }
 
+function renderOrgCornerBadge(orgType, sosSubtype) {
+  if (!orgType) return '';
+  const label = orgType === 'SOS Médecins' && sosSubtype
+    ? `SOS Médecins — ${SOS_SUBTYPE_LABEL[sosSubtype] ?? sosSubtype}`
+    : orgType;
+  return `<span class="sas-card-corner-badge">${label}</span>`;
+}
+
 function renderSasBadge(sasOk) {
   return sasOk === true
     ? `<span class="fr-badge fr-badge--success fr-badge--sm">Participe au SAS</span>`
@@ -126,6 +134,10 @@ function renderOrgCard(offer) {
 
   const isPdsa = orgTypeCode === 'PFG' || orgTypeCode === 'MMG';
 
+  const hasComment = Boolean(
+    (offer.orgName && offer.orgName !== offer.locationName) || hoursLabel || offer.description
+  );
+
   return `
     <article class="fr-col-12 js-practitioner-card"
              data-sas="${offer.sasOk ? 'true' : 'false'}"
@@ -137,6 +149,7 @@ function renderOrgCard(offer) {
              data-mode="${computeOrgMode(offer.serviceTypes)}"
              data-panel='${JSON.stringify(panelData).replace(/'/g, "&apos;")}'>
       <div class="fr-card">
+        ${renderOrgCornerBadge(offer.orgType, offer.sosSubtype)}
         <div class="fr-card__body">
           <div class="fr-card__content sas-card-layout">
 
@@ -149,23 +162,29 @@ function renderOrgCard(offer) {
               </h3>
 
               <div class="fr-badges-group fr-mt-1w">
-                ${renderOrgTypeBadge(offer.orgType, offer.sosSubtype)}
                 ${renderSasBadge(offer.sasOk)}
               </div>
 
-              ${offer.phone ? `
-              <p class="fr-text--sm fr-text--default-grey fr-mb-0 fr-mt-1w">
-                <a href="tel:${offer.phone}">${offer.phone}</a>
+              ${addressLine ? `
+              <p class="sas-info-line fr-text--sm fr-text--default-grey fr-mb-0 fr-mt-1w">
+                <span class="sas-info-icon" aria-hidden="true">📍</span>
+                <span><strong>Adresse</strong>${addressLine}</span>
               </p>` : ''}
 
-              ${addressLine ? `
-              <p class="fr-text--sm fr-text--default-grey fr-mb-0">
-                ${addressLine}
+              ${offer.phone ? `
+              <p class="sas-info-line fr-text--sm fr-text--default-grey fr-mb-0">
+                <span class="sas-info-icon" aria-hidden="true">📞</span>
+                <span><strong>Téléphone</strong><a href="tel:${offer.phone}">${offer.phone}</a></span>
               </p>` : ''}
             </div>
 
-            <!-- ── Col 2 : description + horaires ─────────────────────── -->
+            <!-- ── Col 2 : description + horaires (masquée si vide) ──── -->
+            ${hasComment ? `
             <div class="sas-card-comment">
+              <p class="sas-comment-heading">
+                <span aria-hidden="true">ℹ️</span> Information complémentaire
+              </p>
+
               ${offer.orgName && offer.orgName !== offer.locationName ? `
               <p class="fr-text--sm fr-text--default-grey fr-mb-0">
                 <strong>${offer.orgName}</strong>
@@ -180,13 +199,16 @@ function renderOrgCard(offer) {
               <figure class="fr-callout fr-p-2w fr-mt-1w">
                 <p class="fr-text--md">${offer.description}</p>
               </figure>` : ''}
-            </div>
+            </div>` : ''}
 
             <!-- ── Col 3 : créneaux + actions ─────────────────────────── -->
             <div class="sas-card-slots">
               <div class="sas-slots-grid">
                 ${renderSlotColumns(slots)}
               </div>
+              <button type="button" class="sas-more-slots-link js-open-panel">
+                Voir plus de créneaux
+              </button>
               <button class="fr-btn fr-btn--sm fr-mt-1w sas-btn-full">
                 Orientation hors disponibilité
               </button>
