@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cas d'usages — Plateforme numérique du SAS</title>
+<style>
+  :root {
+    --bleu-marianne: #000091;
+    --bleu-marianne-hover: #1212ff;
+    --bleu-fonce: #21213f;
+    --fond-page: #ffffff;
+    --fond-alt: #f5f5fe;
+    --bordure: #e5e5e5;
+    --texte: #1e1e1e;
+    --texte-mute: #666666;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background-color: var(--fond-page);
+    color: var(--texte);
+    font-family: Marianne, Arial, "Segoe UI", sans-serif;
+    font-size: 16px;
+    line-height: 1.5;
+  }
+
+  a { color: inherit; }
+
+  /* ── En-tête (repris du composant existant sas_page_components/header.html) ── */
+  #div_header {
+    background-color: #f8f8f8;
+    border-bottom: 1px solid var(--bordure);
+    display: flex;
+    align-items: center;
+  }
+
+  .state_logo {
+    width: 15%;
+    height: 100px;
+    display: flex;
+    align-items: center;
+    margin-top: 0;
+    margin-left: 2%;
+  }
+
+  .state_logo img { max-height: 64px; }
+
+  #header_title { padding: 12px 0; }
+
+  #header_title h1 {
+    font-size: 18px;
+    font-weight: 700;
+    margin: 0 0 4px;
+  }
+
+  #header_title h2 {
+    font-size: 14px;
+    font-weight: 400;
+    margin: 0;
+    color: var(--texte-mute);
+  }
+
+  /* ── Bandeau d'intro ── */
+  .intro {
+    max-width: 720px;
+    margin: 40px auto 8px;
+    padding: 0 24px;
+  }
+
+  .intro .eyebrow {
+    color: var(--bleu-marianne);
+    font-weight: 700;
+    font-size: 14px;
+    margin: 0 0 8px;
+  }
+
+  .intro h2 {
+    font-size: 28px;
+    line-height: 1.25;
+    margin: 0 0 12px;
+  }
+
+  .intro p {
+    color: var(--texte-mute);
+    font-size: 16px;
+    margin: 0;
+  }
+
+  /* ── Sections thématiques ── */
+  main {
+    max-width: 1080px;
+    margin: 0 auto;
+    padding: 32px 24px 80px;
+  }
+
+  section.groupe { margin-bottom: 48px; }
+
+  .groupe-entete {
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+    border-bottom: 2px solid var(--bleu-marianne);
+    padding-bottom: 8px;
+    margin-bottom: 20px;
+  }
+
+  .groupe-entete h3 {
+    font-size: 20px;
+    margin: 0;
+  }
+
+  .groupe-entete span {
+    font-size: 14px;
+    color: var(--texte-mute);
+  }
+
+  .grille-cas {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 16px;
+  }
+
+  .carte {
+    display: flex;
+    flex-direction: column;
+    border: 1px solid var(--bordure);
+    background-color: var(--fond-page);
+    padding: 20px;
+    text-decoration: none;
+    color: var(--texte);
+    transition: border-color 0.15s ease, background-color 0.15s ease;
+  }
+
+  .carte:hover,
+  .carte:focus-visible {
+    border-color: var(--bleu-marianne);
+    background-color: var(--fond-alt);
+    outline: none;
+  }
+
+  .carte:focus-visible {
+    box-shadow: 0 0 0 2px var(--bleu-marianne);
+  }
+
+  .carte .statut {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--bleu-marianne);
+    margin-bottom: 8px;
+  }
+
+  .carte h4 {
+    font-size: 16px;
+    margin: 0 0 8px;
+  }
+
+  .carte p {
+    font-size: 14px;
+    color: var(--texte-mute);
+    margin: 0 0 16px;
+    flex-grow: 1;
+  }
+
+  .carte .lien {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--bleu-marianne);
+  }
+
+  .carte.donnees .statut { color: #666666; }
+  .carte.donnees .lien { color: #666666; }
+
+  /* ── Sous-liens (variantes / pages secondaires) ── */
+  .sous-liens {
+    margin-top: -4px;
+    padding-top: 8px;
+    border-top: 1px dashed var(--bordure);
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  .sous-liens a {
+    font-size: 13px;
+    color: var(--bleu-marianne);
+    text-decoration: underline;
+  }
+
+  footer {
+    max-width: 1080px;
+    margin: 0 auto;
+    padding: 0 24px 40px;
+    font-size: 13px;
+    color: var(--texte-mute);
+  }
+
+  @media (max-width: 600px) {
+    #div_header { flex-wrap: wrap; }
+    .state_logo { width: 30%; margin-top: 12px; }
+    .intro h2 { font-size: 22px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div id="div_header">
+    <div class="state_logo">
+      <img src="images/logo-ANS.svg" alt="Agence du Numérique en Santé">
+    </div>
+    <div class="state_logo">
+      <img src="images/logo-min_sante_acces_soins.svg" alt="Service d'Accès aux Soins">
+    </div>
+    <div id="header_title">
+      <h1>Mock d'interface Plateforme numérique du SAS</h1>
+      <h2>Présentation des cas d'usages</h2>
+    </div>
+  </div>
+</header>
+
+<div class="intro">
+  <p class="eyebrow">Sommaire des mocks</p>
+  <h2>Tous les cas d'usage, au même endroit</h2>
+  <p>Chaque carte ouvre le mock HTML correspondant à un cas d'usage de la plateforme SAS. Les cas sont regroupés par grand parcours pour faciliter la présentation en comité.</p>
+</div>
+
+<main>
+
+  <section class="groupe">
+    <div class="groupe-entete">
+      <h3>Recherche &amp; parcours patient</h3>
+      <span>Offre de soins, filtres, itinéraire</span>
+    </div>
+    <div class="grille-cas">
+
+      <a class="carte" href="sas_search_page_v3/index.html">
+        <span class="statut">Cas d'usage</span>
+        <h4>Recherche d'offre de soins</h4>
+        <p>Page de recherche v3 : résultats de créneaux et d'offres de soins, avec ses cas d'usage détaillés associés.</p>
+        <span class="lien">Ouvrir le mock →</span>
+      </a>
+
+      <a class="carte" href="mock_filtre%20sante/mock_sante.html">
+        <span class="statut">Cas d'usage</span>
+        <h4>Filtre actes spécifiques</h4>
+        <p>Mock du filtrage des résultats de recherche par actes spécifiques (ex. téléconsultation, motif de soin).</p>
+        <span class="lien">Ouvrir le mock →</span>
+      </a>
+
+      <a class="carte" href="sas_card_ps_ror/sas_card_ps.html">
+        <span class="statut">Cas d'usage</span>
+        <h4>Fiche professionnel de santé (ROR)</h4>
+        <p>Carte de présentation d'un professionnel de santé enrichie par les données du Répertoire Opérationnel des Ressources.</p>
+        <span class="lien">Ouvrir le mock →</span>
+      </a>
+
+      <a class="carte" href="sas_itineraire/index.html">
+        <span class="statut">Cas d'usage</span>
+        <h4>Itinéraire vers le point de soin</h4>
+        <p>Calcul et affichage d'un itinéraire jusqu'au professionnel de santé, sur fond de carte IGN via Leaflet.</p>
+        <span class="lien">Ouvrir le mock →</span>
+      </a>
+
+    </div>
+  </section>
+
+  <section class="groupe">
+    <div class="groupe-entete">
+      <h3>Rendez-vous &amp; agenda</h3>
+      <span>Suivi, disponibilités, réservation</span>
+    </div>
+    <div class="grille-cas">
+
+      <a class="carte" href="sas_appointment_evolution/sas_appointment_interface.html">
+        <span class="statut">Cas d'usage</span>
+        <h4>Suivi des rendez-vous</h4>
+        <p>Évolution du suivi des rendez-vous pris sur la plateforme : liste, filtres et statuts de rendez-vous.</p>
+        <span class="lien">Ouvrir le mock →</span>
+      </a>
+
+      <a class="carte" href="sas_indispo/tb_indispo.html">
+        <span class="statut">Cas d'usage</span>
+        <h4>Indisponibilités de l'agenda</h4>
+        <p>Évolution de la gestion des indisponibilités de l'agenda de la plateforme numérique du SAS.</p>
+        <span class="lien">Ouvrir le mock →</span>
+      </a>
+
+      <a class="carte donnees" href="sas_appointment_lrm/appointment_lrm.json">
+        <span class="statut">Jeu de données</span>
+        <h4>Rendez-vous — modèle LRM</h4>
+        <p>Structure JSON de référence pour les rendez-vous au format LRM, utilisée comme base des autres mocks.</p>
+        <span class="lien">Voir les données →</span>
+      </a>
+
+    </div>
+  </section>
+
+  <section class="groupe">
+    <div class="groupe-entete">
+      <h3>Formulaires &amp; démarches</h3>
+      <span>Paramètres, participation, API démarches</span>
+    </div>
+    <div class="grille-cas">
+
+      <a class="carte" href="sas_forms_evolution/index.html">
+        <span class="statut">Cas d'usage</span>
+        <h4>Formulaire de participation au SAS</h4>
+        <p>Formulaire de participation construit avec les composants DSFR.</p>
+        <span class="lien">Ouvrir le mock →</span>
+        <div class="sous-liens">
+          <a href="sas_forms_evolution/sas_forms_V1/index.html">Variante V1 — Mes paramètres</a>
+          <a href="sas_forms_evolution/sas_forms_V2/index.html">Variante V2 — Mes paramètres</a>
+        </div>
+      </a>
+
+      <a class="carte" href="sas_rdv_demarche_simpl/index.html">
+        <span class="statut">Cas d'usage</span>
+        <h4>RDV Solidarités — explorateur API</h4>
+        <p>Tableau de bord d'exploration de l'API RDV Solidarités pour la prise de rendez-vous via démarches simplifiées.</p>
+        <span class="lien">Ouvrir le mock →</span>
+      </a>
+
+    </div>
+  </section>
+
+  <section class="groupe">
+    <div class="groupe-entete">
+      <h3>Arrière-guichet &amp; administration</h3>
+      <span>Back-office, accès, interopérabilité</span>
+    </div>
+    <div class="grille-cas">
+
+      <a class="carte" href="sas_bo_unified/index.html">
+        <span class="statut">Cas d'usage</span>
+        <h4>Portail arrière-guichet unifié</h4>
+        <p>Portail back-office regroupant la gestion des accès et utilisateurs, l'interopérabilité et l'Open-Search.</p>
+        <span class="lien">Ouvrir le mock →</span>
+      </a>
+
+      <a class="carte" href="sas_back_office/hub-backoffice_3.html">
+        <span class="statut">Cas d'usage</span>
+        <h4>Hub Messages — Back Office</h4>
+        <p>Interface de suivi et de traitement des messages reçus côté arrière-guichet.</p>
+        <span class="lien">Ouvrir le mock →</span>
+      </a>
+
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  Agence du Numérique en Santé — Mocks internes de la plateforme numérique du Service d'Accès aux Soins (SAS). Ces pages sont des maquettes de présentation et ne reflètent pas nécessairement le comportement final du produit.
+</footer>
+
+</body>
+</html>
