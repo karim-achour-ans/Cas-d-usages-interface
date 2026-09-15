@@ -1331,3 +1331,22 @@
   border-color: var(--text-action-high-blue-france) !important;
 }
 .sas-slot-day:not(.sas-slot-day--today) .sas-slot-icon    { color: var(--text-action-high-blue-france) !important; }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   CORRECTIF ORDRE FLEX — le DSFR impose `.fr-card__content { order: 1; }`.
+   Nos divs custom (sas-card-head / sas-card-footer) n'ayant pas de classe
+   fr-card__*, ils restent à order:0 par défaut et remontent AVANT le contenu
+   (ordre 0 groupé avant ordre 1, peu importe leur position dans le DOM).
+   On verrouille explicitement la séquence : tête → contenu → pied.
+   ═══════════════════════════════════════════════════════════════════════════ */
+.sas-card-head {
+  order: -2 !important;
+}
+
+.fr-card__content.sas-card-layout {
+  order: -1 !important;
+}
+
+.sas-card-footer {
+  order: 0 !important;
+}
