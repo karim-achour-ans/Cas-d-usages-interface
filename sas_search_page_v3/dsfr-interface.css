@@ -1241,3 +1241,93 @@
   text-align: center;
   padding: 0.3rem 0.2rem;
 }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   CORRECTIONS FIDÈLES À LA MAQUETTE — bloc contact bleu, encart "aujourd'hui",
+   couleurs créneaux (aujourd'hui = vert, autres jours = bleu)
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ── Bloc contact (adresse / téléphone / offres de soins / info compl.) :
+   fond bleu clair, texte bleu foncé. La boîte de valeur reste blanche. ── */
+.sas-card-info {
+  background: var(--background-alt-blue-france, #f5f5fe);
+  border-radius: 0.5rem;
+  padding: 0.85rem 1rem;
+}
+
+.sas-card-info .sas-info-line,
+.sas-card-info .sas-info-line strong,
+.sas-card-info .sas-comment-heading {
+  color: var(--text-title-blue-france, #000091) !important;
+}
+
+.sas-card-info .sas-info-line a {
+  color: var(--text-title-blue-france, #000091) !important;
+}
+
+.sas-comment-box {
+  background: #fff !important;
+}
+
+/* ── Encart "aujourd'hui" sur le calendrier : cadre bleu distinct ── */
+.sas-slot-day--today {
+  border: 1px solid var(--border-action-high-blue-france, #000091);
+  border-radius: 0.5rem;
+  padding-bottom: 0.35rem;
+  overflow: hidden;
+}
+
+.sas-slot-day--today .sas-slot-day-label {
+  background: var(--background-action-high-blue-france, #000091);
+  color: #fff;
+  text-transform: none;
+  margin: 0 0 0.35rem 0;
+  padding: 0.3rem 0.4rem;
+  border-radius: 0.4rem 0.4rem 0 0;
+}
+
+.sas-slot-day--today .sas-slot-day-list {
+  padding: 0 0.35rem;
+}
+
+/* ── Couleurs créneaux : aujourd'hui = vert, autres jours disponibles = bleu
+   (remplace les anciennes règles basées sur nth-child, qui étaient inversées) ── */
+.sas-slot-day--today .sas-slot-btn,
+.sas-slot-day--today .sas-slot-btn.fr-btn--secondary {
+  background-color: var(--background-action-low-green-emeraude) !important;
+}
+.sas-slot-day--today .sas-slot-btn:hover,
+.sas-slot-day--today .sas-slot-btn.fr-btn--secondary:hover {
+  background-color: var(--background-action-high-green-emeraude) !important;
+  color: var(--text-white) !important;
+}
+.sas-slot-day--today .sas-slot-btn:active,
+.sas-slot-day--today .sas-slot-btn.fr-btn--secondary:active {
+  background-color: var(--background-action-high-green-emeraude) !important;
+}
+.sas-slot-day--today .sas-slot-time    { color: var(--text-action-high-green-emeraude) !important; }
+.sas-slot-day--today .sas-slot-counter {
+  color: var(--text-action-high-green-emeraude) !important;
+  border-color: var(--text-action-high-green-emeraude) !important;
+}
+.sas-slot-day--today .sas-slot-icon    { color: var(--text-action-high-green-emeraude) !important; }
+
+.sas-slot-day:not(.sas-slot-day--today) .sas-slot-btn,
+.sas-slot-day:not(.sas-slot-day--today) .sas-slot-btn.fr-btn--secondary {
+  background-color: var(--background-action-low-blue-france) !important;
+}
+.sas-slot-day:not(.sas-slot-day--today) .sas-slot-btn:hover,
+.sas-slot-day:not(.sas-slot-day--today) .sas-slot-btn.fr-btn--secondary:hover {
+  background-color: #0855a0 !important;
+  color: #fff !important;
+}
+.sas-slot-day:not(.sas-slot-day--today) .sas-slot-btn:active,
+.sas-slot-day:not(.sas-slot-day--today) .sas-slot-btn.fr-btn--secondary:active {
+  background-color: #063f7a !important;
+}
+.sas-slot-day:not(.sas-slot-day--today) .sas-slot-time    { color: var(--text-action-high-blue-france) !important; }
+.sas-slot-day:not(.sas-slot-day--today) .sas-slot-counter {
+  color: var(--text-action-high-blue-france) !important;
+  border-color: var(--text-action-high-blue-france) !important;
+}
+.sas-slot-day:not(.sas-slot-day--today) .sas-slot-icon    { color: var(--text-action-high-blue-france) !important; }
