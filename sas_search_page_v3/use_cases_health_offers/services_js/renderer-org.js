@@ -134,9 +134,12 @@ function renderOrgCard(offer) {
 
   const isPdsa = orgTypeCode === 'PFG' || orgTypeCode === 'MMG';
 
-  const hasComment = Boolean(
-    (offer.orgName && offer.orgName !== offer.locationName) || hoursLabel || offer.description
-  );
+  const commentParts = [
+    offer.orgName && offer.orgName !== offer.locationName ? `<strong>${offer.orgName}</strong>` : null,
+    hoursLabel || null,
+    offer.description || null,
+  ].filter(Boolean);
+  const commentValue = commentParts.length ? commentParts.join('<br>') : '-';
 
   return `
     <article class="fr-col-12 js-practitioner-card"
@@ -149,59 +152,49 @@ function renderOrgCard(offer) {
              data-mode="${computeOrgMode(offer.serviceTypes)}"
              data-panel='${JSON.stringify(panelData).replace(/'/g, "&apos;")}'>
       <div class="fr-card">
-        ${renderOrgCornerBadge(offer.orgType, offer.sosSubtype)}
         <div class="fr-card__body">
-          <div class="fr-card__content sas-card-layout ${hasComment ? 'sas-card-layout--3col' : 'sas-card-layout--2col'}">
+
+          <!-- ── En-tête : titre + badges empilés en haut à droite ──────── -->
+          <div class="sas-card-head">
+            <h3 class="fr-card__title fr-mb-0 js-open-panel"
+                tabindex="0" role="button"
+                aria-label="Ouvrir les détails de ${displayName}">
+              ${displayName}
+            </h3>
+            <div class="sas-card-corner-badges">
+              ${renderSasBadge(offer.sasOk)}
+              ${renderOrgCornerBadge(offer.orgType, offer.sosSubtype)}
+            </div>
+          </div>
+
+          <div class="fr-card__content sas-card-layout">
 
             <!-- ── Col 1 : identité de la structure ───────────────────── -->
             <div class="sas-card-info">
-              <h3 class="fr-card__title fr-mb-0 js-open-panel"
-                  tabindex="0" role="button"
-                  aria-label="Ouvrir les détails de ${displayName}">
-                ${displayName}
-              </h3>
 
-              <div class="fr-badges-group fr-mt-1w">
-                ${renderSasBadge(offer.sasOk)}
+              <div class="sas-card-subgrid">
+                ${addressLine ? `
+                <div class="sas-info-line">
+                  <span class="sas-info-icon" aria-hidden="true">📍</span>
+                  <span><strong>Adresse 1</strong>${addressLine}</span>
+                </div>` : ''}
               </div>
 
-              ${addressLine ? `
-              <p class="sas-info-line fr-text--sm fr-text--default-grey fr-mb-0 fr-mt-1w">
-                <span class="sas-info-icon" aria-hidden="true">📍</span>
-                <span><strong>Adresse</strong>${addressLine}</span>
-              </p>` : ''}
-
               ${offer.phone ? `
-              <p class="sas-info-line fr-text--sm fr-text--default-grey fr-mb-0">
+              <p class="sas-info-line fr-mb-0">
                 <span class="sas-info-icon" aria-hidden="true">📞</span>
                 <span><strong>Téléphone</strong><a href="tel:${offer.phone}">${offer.phone}</a></span>
               </p>` : ''}
+
+              <div class="sas-comment-block">
+                <p class="sas-comment-heading">
+                  <span aria-hidden="true">ℹ️</span> Information complémentaire
+                </p>
+                <div class="sas-comment-box">${commentValue}</div>
+              </div>
             </div>
 
-            <!-- ── Col 2 : description + horaires (masquée si vide) ──── -->
-            ${hasComment ? `
-            <div class="sas-card-comment">
-              <p class="sas-comment-heading">
-                <span aria-hidden="true">ℹ️</span> Information complémentaire
-              </p>
-
-              ${offer.orgName && offer.orgName !== offer.locationName ? `
-              <p class="fr-text--sm fr-text--default-grey fr-mb-0">
-                <strong>${offer.orgName}</strong>
-              </p>` : ''}
-
-              ${hoursLabel ? `
-              <p class="fr-text--sm fr-text--default-grey fr-mb-0 sas-comment">
-                ${hoursLabel}
-              </p>` : ''}
-
-              ${offer.description ? `
-              <p class="fr-text--sm fr-text--default-grey fr-mt-1w fr-mb-0">
-                ${offer.description}
-              </p>` : ''}
-            </div>` : ''}
-
-            <!-- ── Col 3 : créneaux + actions ─────────────────────────── -->
+            <!-- ── Col 2 : créneaux + actions ─────────────────────────── -->
             <div class="sas-card-slots">
               <div class="sas-slots-grid">
                 ${renderSlotColumns(slots)}

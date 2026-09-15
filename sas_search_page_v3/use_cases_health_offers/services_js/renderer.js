@@ -297,9 +297,8 @@ function renderCard(offer) {
   );
   const orgLink               = renderOrgLink(offer);
 
-  const hasComment = Boolean(offer.operationalActivity || offer.comment);
-  const cornerLabel = offer.sasOk === true ? 'Participe au SAS' : 'Non inscrit au SAS';
-  const cornerClass = offer.sasOk === true ? 'sas-card-corner-badge--success' : 'sas-card-corner-badge--error';
+  const sasCornerLabel = offer.sasOk === true ? 'Participe au SAS' : 'Non inscrit au SAS';
+  const sasCornerClass = offer.sasOk === true ? 'sas-card-corner-badge--success' : 'sas-card-corner-badge--error';
 
   return `
     <article class="fr-col-12 js-practitioner-card"
@@ -312,57 +311,57 @@ function renderCard(offer) {
              data-mode="${computeMode(offer)}"
              data-panel='${JSON.stringify(panelData).replace(/'/g, "&apos;")}'>
       <div class="fr-card">
-        <span class="sas-card-corner-badge ${cornerClass}">${cornerLabel}</span>
         <div class="fr-card__body">
-          <div class="fr-card__content sas-card-layout ${hasComment ? 'sas-card-layout--3col' : 'sas-card-layout--2col'}">
 
-            <!-- ── Col 1 : identité du PS ─────────────────────────────── -->
+          <!-- ── En-tête : titre + badges empilés en haut à droite ──────── -->
+          <div class="sas-card-head">
+            <h3 class="fr-card__title fr-mb-0 js-open-panel"
+                tabindex="0" role="button"
+                title="Voir les détails de ${displayName || 'ce professionnel'}"
+                aria-label="Ouvrir les détails de ${displayName || 'ce professionnel'}">
+              ${displayName || '—'}
+            </h3>
+            <div class="sas-card-corner-badges">
+              <span class="sas-card-corner-badge ${sasCornerClass}">${sasCornerLabel}</span>
+              ${specialtyBadge}
+              ${conventionnementBadge}
+            </div>
+          </div>
+
+          <div class="fr-card__content sas-card-layout">
+
+            <!-- ── Col 1 : identité + infos ───────────────────────────── -->
             <div class="sas-card-info">
-              <h3 class="fr-card__title fr-mb-0 js-open-panel"
-                  tabindex="0" role="button"
-                  title="Voir les détails de ${displayName || 'ce professionnel'}"
-                  aria-label="Ouvrir les détails de ${displayName || 'ce professionnel'}">
-                ${displayName || '—'}
-              </h3>
 
-              <div class="fr-badges-group fr-mt-1w">
-                ${specialtyBadge}
-                ${conventionnementBadge}
+              <div class="sas-card-subgrid">
+                ${addressLine ? `
+                <div class="sas-info-line">
+                  <span class="sas-info-icon" aria-hidden="true">📍</span>
+                  <span><strong>Adresse 1</strong>${addressLine}</span>
+                </div>` : ''}
+
+                ${offer.operationalActivity ? `
+                <div class="sas-info-line">
+                  <span class="sas-info-icon" aria-hidden="true">🩺</span>
+                  <span><strong>Offres de soins</strong>${offer.operationalActivity}</span>
+                </div>` : ''}
               </div>
 
-              ${addressLine ? `
-              <p class="sas-info-line fr-text--sm fr-text--default-grey fr-mb-0 fr-mt-1w">
-                <span class="sas-info-icon" aria-hidden="true">📍</span>
-                <span><strong>Adresse</strong>${addressLine}</span>
-              </p>` : ''}
-
               ${offer.phone ? `
-              <p class="sas-info-line fr-text--sm fr-text--default-grey fr-mb-0">
+              <p class="sas-info-line fr-mb-0">
                 <span class="sas-info-icon" aria-hidden="true">📞</span>
                 <span><strong>Téléphone</strong><a href="tel:${offer.phone}">${offer.phone}</a></span>
               </p>` : ''}
 
-              ${orgLink}
+              <div class="sas-comment-block">
+                <p class="sas-comment-heading">
+                  <span aria-hidden="true">ℹ️</span> Information complémentaire
+                </p>
+                <div class="sas-comment-box">${offer.comment || '-'}</div>
+              </div>
             </div>
 
-            <!-- ── Col 2 : information complémentaire (masquée si vide) ── -->
-            ${hasComment ? `
-            <div class="sas-card-comment">
-              <p class="sas-comment-heading">
-                <span aria-hidden="true">ℹ️</span> Information complémentaire
-              </p>
-              ${offer.operationalActivity ? `
-              <p class="fr-text--sm fr-text--default-grey fr-mb-0 sas-comment">
-                ${offer.operationalActivity}
-              </p>` : ''}
-
-              ${offer.comment ? `
-                <p class="fr-text--sm fr-text--default-grey fr-mt-1w fr-mb-0">
-                  ${offer.comment}
-                </p>` : ''}
-            </div>` : ''}
-
-            <!-- ── Col 3 : créneaux + actions ────────────────────────── -->
+            <!-- ── Col 2 : créneaux + actions ────────────────────────── -->
             <div class="sas-card-slots">
               <div class="sas-slots-grid">
                 ${renderSlotColumns(offer.slots ?? offer.slotStarts)}
@@ -381,6 +380,9 @@ function renderCard(offer) {
             </div>
 
           </div>
+
+          ${orgLink ? `<div class="sas-card-footer">${orgLink}</div>` : ''}
+
         </div>
       </div>
     </article>`;
