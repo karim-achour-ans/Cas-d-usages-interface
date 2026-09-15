@@ -62,29 +62,33 @@ function extractAddress(location) {
 
 /**
  * Extract ISO start strings sorted chronologically.
+ * Only "free" (bookable) slots — excludes explicit "busy-unavailable"
+ * declarations, which must not count as availability for filters/dispo.
  * Kept for backward compat (panel, dispo filter).
  */
 function extractSlotStarts(slots) {
   if (!Array.isArray(slots) || slots.length === 0) return [];
   return slots
+    .filter(s => s.start && s.status !== 'busy-unavailable')
     .map(s => s.start)
-    .filter(Boolean)
     .sort((a, b) => new Date(a) - new Date(b));
 }
 
 /**
- * Extract slot objects { start, end } sorted chronologically.
- * Used by the renderer for the time-range button display.
+ * Extract slot objects { start, end, status } sorted chronologically.
+ * Used by the renderer for the time-range button display and to
+ * distinguish explicit unavailability ("busy-unavailable") from the
+ * simple absence of slot data.
  *
  * @param {Object[]} slots - FHIR Slot resources
- * @returns {{ start: string, end: string|null }[]}
+ * @returns {{ start: string, end: string|null, status: string|null }[]}
  */
 function extractSlots(slots) {
   if (!Array.isArray(slots) || slots.length === 0) return [];
   return slots
     .filter(s => s.start)
     .sort((a, b) => new Date(a.start) - new Date(b.start))
-    .map(s => ({ start: s.start, end: s.end ?? null }));
+    .map(s => ({ start: s.start, end: s.end ?? null, status: s.status ?? null }));
 }
 
 function extractSasParticipation(practitionerRole) {

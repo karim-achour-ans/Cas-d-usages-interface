@@ -85,7 +85,10 @@ function buildSlotColumns(slots) {
     return [0, 1, 2].map(offset => {
       const d = new Date(today);
       d.setDate(d.getDate() + offset);
-      return { label: formatDayLabel(d, offset), key: toDateKey(d), slots: [] };
+      return {
+        label: formatDayLabel(d, offset), key: toDateKey(d),
+        slots: [], bookable: [], declaredUnavailable: false,
+      };
     });
   }
 
@@ -102,6 +105,16 @@ function buildSlotColumns(slots) {
     if (col) col.slots.push(slot);
   }
 
+  // Sépare, pour chaque jour, les créneaux réservables (statut "free" ou
+  // sans statut connu) des créneaux explicitement déclarés indisponibles
+  // par le PS (statut FHIR "busy-unavailable"). Un jour sans aucune donnée
+  // de créneau n'est PAS "indisponible" — le PS ne s'est simplement pas
+  // prononcé — d'où la distinction bookable / declaredUnavailable ci-dessous.
+  for (const col of columns) {
+    col.bookable            = col.slots.filter(s => s.status !== 'busy-unavailable');
+    col.declaredUnavailable = col.slots.some(s => s.status === 'busy-unavailable');
+  }
+
   return columns;
 }
 
@@ -110,7 +123,12 @@ function buildSlotColumns(slots) {
  * Accepts { start, end }[] from offer.slots (preferred)
  * or falls back to string[] from offer.slotStarts.
  *
- * @param {{ start: string, end: string|null }[] | string[]} slots
+ * Un PS n'est "Indisponible" (encart orange) que s'il a explicitement
+ * déclaré l'être (créneau de statut "busy-unavailable") ce jour-là.
+ * S'il n'y a simplement aucun créneau (pas de donnée), on affiche un
+ * simple trait neutre "–", qui ne présume pas de son indisponibilité.
+ *
+ * @param {{ start: string, end: string|null, status?: string }[] | string[]} slots
  * @returns {string} HTML
  */
 export function renderSlotColumns(slots) {
@@ -121,16 +139,24 @@ export function renderSlotColumns(slots) {
 
   const columns = buildSlotColumns(normalised);
 
-  return columns.map((col, i) => `
+  return columns.map((col, i) => {
+    let body;
+    if (col.bookable.length) {
+      body = col.bookable.map(renderSlotButton).join('');
+    } else if (col.declaredUnavailable) {
+      body = `<span class="sas-slot-unavailable">Indisponible</span>`;
+    } else {
+      body = `<span class="sas-slot-empty" aria-label="Aucun créneau renseigné">–</span>`;
+    }
+
+    return `
     <div class="sas-slot-day${i === 0 ? ' sas-slot-day--today' : ''}">
       <p class="sas-slot-day-label">${col.label}</p>
       <div class="sas-slot-day-list">
-        ${col.slots.length
-          ? col.slots.map(renderSlotButton).join('')
-          : `<span class="sas-slot-unavailable">Indisponible</span>`
-        }
+        ${body}
       </div>
-    </div>`).join('');
+    </div>`;
+  }).join('');
 }
 
 // ─── Availability / mode helpers ───────────────────────────────────────────

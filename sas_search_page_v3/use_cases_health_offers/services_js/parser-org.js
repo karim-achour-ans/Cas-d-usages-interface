@@ -99,6 +99,8 @@ function extractAddress(location) {
 
 /**
  * Extract and sort slot start times (ISO strings).
+ * Only "free" (bookable) slots — excludes explicit "busy-unavailable"
+ * declarations, which must not count as availability for filters/dispo.
  *
  * @param {object[]} slots
  * @returns {string[]}
@@ -106,9 +108,26 @@ function extractAddress(location) {
 function extractSlotStarts(slots) {
   if (!Array.isArray(slots) || slots.length === 0) return [];
   return slots
+    .filter(s => s.start && s.status !== 'busy-unavailable')
     .map(s => s.start)
-    .filter(Boolean)
     .sort((a, b) => new Date(a) - new Date(b));
+}
+
+/**
+ * Extract slot objects { start, end, status } sorted chronologically.
+ * Used by the renderer for the time-range button display and to
+ * distinguish explicit unavailability ("busy-unavailable") from the
+ * simple absence of slot data.
+ *
+ * @param {object[]} slots - FHIR Slot resources
+ * @returns {{ start: string, end: string|null, status: string|null }[]}
+ */
+function extractSlots(slots) {
+  if (!Array.isArray(slots) || slots.length === 0) return [];
+  return slots
+    .filter(s => s.start)
+    .sort((a, b) => new Date(a.start) - new Date(b.start))
+    .map(s => ({ start: s.start, end: s.end ?? null, status: s.status ?? null }));
 }
 
 /**
@@ -170,6 +189,7 @@ export function parseOrgOffer({ location, organization, slots = [] }) {
 
     // Availability
     slotStarts:      extractSlotStarts(slots),
+    slots:           extractSlots(slots),
     serviceTypes:    extractServiceTypes(slots),   // ['AMB'] | ['VR'] | ['AMB','VR']
     hoursOfOperation: extractHoursOfOperation(location),
 
