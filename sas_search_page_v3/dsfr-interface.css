@@ -1222,7 +1222,8 @@
   text-align: left;
 }
 
-/* ── Placeholder "Indisponible" dans une colonne de créneaux ── */
+/* ── Placeholder "Indisponible" dans une colonne de créneaux
+   (uniquement si le PS l'a explicitement déclaré — statut busy-unavailable) ── */
 .sas-slot-unavailable {
   display: flex;
   align-items: center;
@@ -1238,6 +1239,20 @@
   letter-spacing: 0.02em;
   text-align: center;
   padding: 0.3rem 0.2rem;
+}
+
+/* ── Placeholder neutre : aucune donnée de créneau ce jour-là
+   (le PS ne s'est pas prononcé — on ne présume pas de son indisponibilité) ── */
+.sas-slot-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 2.4rem;
+  color: var(--text-mention-grey, #929292);
+  font-size: 1.1rem;
+  font-weight: 600;
+  line-height: 1;
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
