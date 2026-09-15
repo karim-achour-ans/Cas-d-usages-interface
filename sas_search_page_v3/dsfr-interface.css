@@ -601,13 +601,17 @@
         flex: 0 0 calc(40% - 1rem);
         max-width: calc(40% - 1rem);
         position: sticky;
-        top: 0;
-        height: 100vh;
+        top: 1rem;
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+        max-height: calc(100vh - 2rem);
       }
- 
-      /* Override DSFR fr-card — position:relative nécessaire pour les enfants absolus */
+
+      /* Carte OSM : hauteur fixe, ne prend plus toute la colonne */
       .sas-results-map .fr-card {
-        height: 100% !important;
+        flex: 0 0 auto;
+        height: 420px !important;
         min-height: unset !important;
         padding: 0 !important;
         margin: 0 !important;
@@ -637,48 +641,32 @@
         z-index: 5;
       }
  
-      /* ── Widget slider sur carte ── */
-      .map-slider-widget {
-        position: absolute;
-        bottom: 16px;
-        left: 50%;
-        transform: translateX(-50%);
-        width: calc(100% - 32px);
-        max-width: 320px;
-        background: #fff;
-        border-radius: 4px;
-        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.22);
-        padding: 10px 14px 12px;
-        z-index: 10;
+      /* ── Panneau "Rayon de recherche" : sous la carte, plus en overlay ── */
+      .map-radius-panel {
+        flex: 0 0 auto;
       }
- 
-      .map-slider-top {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        margin-bottom: 8px;
-      }
- 
-      .map-slider-label {
-        font-size: 11px;
+
+      .map-radius-title {
+        font-size: 0.95rem;
         font-weight: 700;
-        color: #3a3a3a;
-        text-transform: uppercase;
-        letter-spacing: .04em;
+        color: var(--text-title-grey, #1e1e1e);
+        margin: 0 0 1.1rem 0;
       }
- 
-      .map-slider-val {
-        font-size: 16px;
+
+      .map-slider-track-wrap {
+        position: relative;
+        padding-top: 1.5rem;
+      }
+
+      .map-slider-tooltip {
+        position: absolute;
+        top: 0;
+        transform: translateX(-50%);
+        font-size: 0.85rem;
         font-weight: 700;
         color: #000091;
-        line-height: 1;
-      }
- 
-      .map-slider-val span {
-        font-size: 11px;
-        font-weight: 400;
-        color: #666;
-        margin-left: 2px;
+        white-space: nowrap;
+        pointer-events: none;
       }
  
       /* Range slider — track fill progressif via CSS custom property */
@@ -693,8 +681,8 @@
         background: linear-gradient(
           to right,
           #000091 0%,
-          #000091 var(--pct, 13%),
-          #ccc    var(--pct, 13%),
+          #000091 var(--pct, 50%),
+          #ccc    var(--pct, 50%),
           #ccc    100%
         );
         margin: 0;
@@ -728,25 +716,28 @@
       .map-slider-bounds {
         display: flex;
         justify-content: space-between;
-        font-size: 10px;
-        color: #999;
-        margin-top: 4px;
+        font-size: 0.72rem;
+        color: #929292;
+        margin-top: 0.4rem;
       }
  
       /* Preset chips */
       .map-rayon-presets {
         display: flex;
-        gap: 5px;
-        margin-top: 10px;
+        gap: 0.5rem;
+        margin-top: 0.9rem;
         flex-wrap: wrap;
       }
  
       .map-rayon-pt {
-        padding: 3px 10px;
+        flex: 1 1 0;
+        text-align: center;
+        padding: 0.4rem 0.5rem;
         border: 1px solid #ccc;
         border-radius: 2px;
-        font-size: 11px;
-        color: #3a3a3a;
+        font-size: 0.78rem;
+        font-weight: 600;
+        color: #000091;
         background: #fff;
         cursor: pointer;
         font-family: Marianne, arial, sans-serif;
@@ -755,7 +746,6 @@
  
       .map-rayon-pt:hover {
         border-color: #000091;
-        color: #000091;
       }
  
       .map-rayon-pt.on {
@@ -769,8 +759,7 @@
         .sas-results-layout { flex-direction: column; }
         .sas-results-list,
         .sas-results-map    { flex: none; max-width: 100%; width: 100%; }
-        .sas-results-map    { position: static; height: 300px; }
-        .map-slider-widget  { max-width: 100%; }
+        .sas-results-map    { position: static; max-height: none; }
       }
 /* ═══════════════════════════════════════════════════════════════════════════
    RAFFINEMENTS VISUELS — Surcharge légère post-DSFR
@@ -1044,22 +1033,10 @@
 }
 
 /* ── Widget carte / slider ───────────────────────────────────────────────── */
-.map-slider-widget {
-  border-radius: 2px !important;
-  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.14) !important;
-  padding: 8px 12px 10px !important;
-}
-
-.map-slider-label {
-  font-size: 10px !important;
-  letter-spacing: 0.06em !important;
-  font-weight: 600 !important;
-}
-
 .map-rayon-pt {
   border-radius: 2px !important;
-  font-size: 10px !important;
-  padding: 2px 8px !important;
+  font-size: 0.72rem !important;
+  padding: 0.35rem 0.4rem !important;
 }
 
 /* ── Badges DSFR plus légers ─────────────────────────────────────────────── */

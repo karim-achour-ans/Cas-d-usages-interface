@@ -34,25 +34,13 @@
         min-width: 0;
       }
 
-      /* Colonne carte : 40%, sticky, pleine hauteur viewport */
+      /* Colonne carte : 40%, sticky ; hauteur = carte + panneau rayon
+         (règles détaillées dans dsfr-interface.css) */
       .sas-results-map {
         flex: 0 0 calc(40% - 1rem);
         max-width: calc(40% - 1rem);
         position: sticky;
-        top: 0;
-        height: 100vh;
-      }
-
-      /* Override DSFR fr-card pour pleine hauteur */
-      .sas-results-map .fr-card {
-        height: 100% !important;
-        min-height: unset !important;
-        padding: 0 !important;
-        margin: 0 !important;
-        border-radius: 0.5rem;
-        overflow: hidden;
-        border: none !important;
-        display: block !important;
+        top: 1rem;
       }
 
       .sas-map-iframe {
@@ -67,7 +55,7 @@
         .sas-results-layout  { flex-direction: column; }
         .sas-results-list,
         .sas-results-map     { flex: none; max-width: 100%; width: 100%; }
-        .sas-results-map     { position: static; height: 300px; }
+        .sas-results-map     { position: static; }
       }
     </style>
 </head>
@@ -316,7 +304,7 @@
           </div>
         </div>
 
-        <!-- ── Colonne carte (≈ 28%) sticky pleine hauteur ── -->
+        <!-- ── Colonne carte (≈ 28%) sticky : carte + panneau rayon ── -->
 <div class="sas-results-map">
           <div class="fr-card">
     
@@ -338,38 +326,38 @@
               title="Carte OpenStreetMap"
               aria-label="Carte interactive des professionnels de santé">
             </iframe>
- 
-            <!-- Widget slider ancré en bas de la carte -->
-            <div class="map-slider-widget" role="group" aria-label="Rayon de recherche">
- 
-              <div class="map-slider-top">
-                <span class="map-slider-label">Rayon de recherche</span>
-                <span class="map-slider-val" id="map-rayon-val">14<span>km</span></span>
-              </div>
- 
+          </div>
+
+          <!-- Panneau "Rayon de recherche" : sous la carte -->
+          <div class="map-radius-panel" role="group" aria-label="Rayon de recherche">
+
+            <p class="map-radius-title">Rayon de recherche</p>
+
+            <div class="map-slider-track-wrap">
+              <span class="map-slider-tooltip" id="map-rayon-val">50</span>
               <input
                 type="range"
                 class="map-rayon-range"
                 id="map-rayon-slider"
-                min="1" max="100" value="14" step="1"
+                min="1" max="100" value="50" step="1"
                 aria-label="Rayon en kilomètres"
                 oninput="updateRayon(parseInt(this.value))"
               />
- 
-              <div class="map-slider-bounds">
-                <span>1 km</span>
-                <span>100 km</span>
-              </div>
- 
-              <div class="map-rayon-presets">
-                <button class="map-rayon-pt"    id="mpt-5"   onclick="setRayon(5)">5 km</button>
-                <button class="map-rayon-pt on" id="mpt-14"  onclick="setRayon(14)">14 km</button>
-                <button class="map-rayon-pt"    id="mpt-25"  onclick="setRayon(25)">25 km</button>
-                <button class="map-rayon-pt"    id="mpt-50"  onclick="setRayon(50)">50 km</button>
-                <button class="map-rayon-pt"    id="mpt-100" onclick="setRayon(100)">100 km</button>
-              </div>
- 
             </div>
+
+            <div class="map-slider-bounds">
+              <span>1 km</span>
+              <span>100 km</span>
+            </div>
+
+            <div class="map-rayon-presets">
+              <button class="map-rayon-pt"    id="mpt-5"   onclick="setRayon(5)">5 km</button>
+              <button class="map-rayon-pt"    id="mpt-10"  onclick="setRayon(10)">10 km</button>
+              <button class="map-rayon-pt"    id="mpt-25"  onclick="setRayon(25)">25 km</button>
+              <button class="map-rayon-pt on" id="mpt-50"  onclick="setRayon(50)">50 km</button>
+              <button class="map-rayon-pt"    id="mpt-100" onclick="setRayon(100)">100 km</button>
+            </div>
+
           </div>
         </div>
       </div>
@@ -541,7 +529,7 @@
 <!-- Rayon slider -->
 <script>
 (function () {
-  var PRESETS = [5, 14, 25, 50, 100];
+  var PRESETS = [5, 10, 25, 50, 100];
   var MIN_PX = 40;
   var MAX_PX = 340;
 
@@ -552,10 +540,13 @@
   function updateRayon(v) {
     v = parseInt(v, 10);
 
-    document.getElementById('map-rayon-val').innerHTML =
-      v + '<span>km</span>';
-
     var pct = Math.round((v - 1) / 99 * 100);
+
+    var tooltip = document.getElementById('map-rayon-val');
+    if (tooltip) {
+      tooltip.textContent = v;
+      tooltip.style.left = pct + '%';
+    }
 
     document.getElementById('map-rayon-slider')
       .style.setProperty('--pct', pct + '%');
@@ -588,7 +579,7 @@
   window.updateRayon = updateRayon;
   window.setRayon = setRayon;
 
-  updateRayon(14);
+  updateRayon(50);
 })();
 </script>
 
