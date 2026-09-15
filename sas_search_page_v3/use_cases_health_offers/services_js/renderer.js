@@ -314,7 +314,7 @@ function renderCard(offer) {
       <div class="fr-card">
         <span class="sas-card-corner-badge ${cornerClass}">${cornerLabel}</span>
         <div class="fr-card__body">
-          <div class="fr-card__content sas-card-layout">
+          <div class="fr-card__content sas-card-layout ${hasComment ? 'sas-card-layout--3col' : 'sas-card-layout--2col'}">
 
             <!-- ── Col 1 : identité du PS ─────────────────────────────── -->
             <div class="sas-card-info">
@@ -357,9 +357,9 @@ function renderCard(offer) {
               </p>` : ''}
 
               ${offer.comment ? `
-                <figure class="fr-callout fr-p-2w fr-mt-1w">
-                  <p class="fr-text--md">${offer.comment}</p>
-                </figure>` : ''}
+                <p class="fr-text--sm fr-text--default-grey fr-mt-1w fr-mb-0">
+                  ${offer.comment}
+                </p>` : ''}
             </div>` : ''}
 
             <!-- ── Col 3 : créneaux + actions ────────────────────────── -->

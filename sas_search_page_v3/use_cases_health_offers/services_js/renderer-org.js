@@ -151,7 +151,7 @@ function renderOrgCard(offer) {
       <div class="fr-card">
         ${renderOrgCornerBadge(offer.orgType, offer.sosSubtype)}
         <div class="fr-card__body">
-          <div class="fr-card__content sas-card-layout">
+          <div class="fr-card__content sas-card-layout ${hasComment ? 'sas-card-layout--3col' : 'sas-card-layout--2col'}">
 
             <!-- ── Col 1 : identité de la structure ───────────────────── -->
             <div class="sas-card-info">
@@ -196,9 +196,9 @@ function renderOrgCard(offer) {
               </p>` : ''}
 
               ${offer.description ? `
-              <figure class="fr-callout fr-p-2w fr-mt-1w">
-                <p class="fr-text--md">${offer.description}</p>
-              </figure>` : ''}
+              <p class="fr-text--sm fr-text--default-grey fr-mt-1w fr-mb-0">
+                ${offer.description}
+              </p>` : ''}
             </div>` : ''}
 
             <!-- ── Col 3 : créneaux + actions ─────────────────────────── -->
