@@ -231,6 +231,52 @@
   font-size: clamp(0.75rem, 0.9vw, 0.85rem);
 }
 
+/* ── Verrouillage des largeurs de colonnes ──────────────────────────────
+   template_integration.css impose un ancien layout à 2 colonnes
+   (.sas-card-info { flex: 1 }, .sas-card-slots { width: 180px }).
+   On neutralise ces règles avec !important + variantes 2col/3col
+   pour garantir un rendu fidèle à la maquette dans tous les cas. ── */
+.sas-card-layout.sas-card-layout--3col,
+.sas-card-layout.sas-card-layout--2col {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: flex-start !important;
+  gap: 1rem !important;
+  flex-wrap: nowrap !important;
+}
+
+/* Variante 3 colonnes : identité / information complémentaire / créneaux */
+.sas-card-layout--3col > .sas-card-info {
+  flex: 0 1 26% !important;
+  max-width: 26% !important;
+  width: 26% !important;
+}
+
+.sas-card-layout--3col > .sas-card-comment {
+  flex: 1 1 0% !important;
+  max-width: 34% !important;
+  width: auto !important;
+}
+
+.sas-card-layout--3col > .sas-card-slots {
+  flex: 0 0 38% !important;
+  max-width: 38% !important;
+  width: 38% !important;
+}
+
+/* Variante 2 colonnes : pas d'information complémentaire → identité + créneaux */
+.sas-card-layout--2col > .sas-card-info {
+  flex: 0 1 34% !important;
+  max-width: 34% !important;
+  width: 34% !important;
+}
+
+.sas-card-layout--2col > .sas-card-slots {
+  flex: 1 1 0% !important;
+  max-width: 62% !important;
+  width: auto !important;
+}
+
 /* ── Quote ── */
 .fr-quote {
   display: flex;
@@ -264,6 +310,21 @@
 
   .sas-card-layout {
     flex-direction: column;
+  }
+
+  .sas-card-layout.sas-card-layout--3col,
+  .sas-card-layout.sas-card-layout--2col {
+    flex-direction: column !important;
+  }
+
+  .sas-card-layout--3col > .sas-card-info,
+  .sas-card-layout--3col > .sas-card-comment,
+  .sas-card-layout--3col > .sas-card-slots,
+  .sas-card-layout--2col > .sas-card-info,
+  .sas-card-layout--2col > .sas-card-slots {
+    width: 100% !important;
+    max-width: 100% !important;
+    flex: 1 1 auto !important;
   }
 
   .sas-card-comment,
