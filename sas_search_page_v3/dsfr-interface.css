@@ -205,14 +205,53 @@
   justify-content: center !important;
 }
 
-/* ── Card layout columns ── */
-.sas-card-info {
-  max-width: 25%;
+/* ── En-tête de card : titre + badges empilés en haut à droite ── */
+.sas-card-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.6rem;
 }
 
-.sas-card-slots {
-  flex-shrink: 0;
-  width: 40%;
+.sas-card-head .fr-card__title {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.sas-card-corner-badges {
+  flex: 0 0 auto;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.3rem;
+  max-width: 60%;
+}
+
+/* ── Card layout : 2 colonnes fixes (identité+infos / créneaux) ──────────
+   template_integration.css impose un ancien layout (.sas-card-info{flex:1},
+   .sas-card-slots{width:180px}) : on verrouille ici avec !important. ── */
+.sas-card-layout {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: flex-start !important;
+  gap: 1.25rem !important;
+  flex-wrap: nowrap !important;
+}
+
+.sas-card-layout > .sas-card-info {
+  flex: 1 1 55% !important;
+  max-width: 58% !important;
+  width: auto !important;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.sas-card-layout > .sas-card-slots {
+  flex: 0 0 40% !important;
+  max-width: 42% !important;
+  width: 40% !important;
   display: flex;
   flex-direction: column;
   gap: 0.4rem;
@@ -220,61 +259,34 @@
   padding-left: clamp(0.5rem, 1vw, 1rem);
 }
 
-.sas-card-comment {
-  flex-shrink: 0;
-  max-width: 30% !important;
-  display: flex;
-  flex-direction: column;
-  gap: 0.35rem;
-  border-left: 1px solid var(--border-default-grey);
-  padding-left: 0.75rem;
+/* ── Sous-grille Adresse / Offres de soins (1 ou 2 blocs selon contenu) ── */
+.sas-card-subgrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 0.5rem 1.25rem;
+}
+
+/* ── Bloc "Information complémentaire" : encadré toujours visible ── */
+.sas-comment-block {
+  margin-top: 0.25rem;
+}
+
+.sas-comment-box {
+  border: 1px solid var(--border-default-grey, #ddd);
+  border-radius: 0.25rem;
+  background: var(--background-alt-blue-france, #f5f5fe);
+  padding: 0.5rem 0.75rem;
   font-size: clamp(0.75rem, 0.9vw, 0.85rem);
+  color: var(--text-default-grey, #3a3a3a);
+  min-height: 1.6rem;
 }
 
-/* ── Verrouillage des largeurs de colonnes ──────────────────────────────
-   template_integration.css impose un ancien layout à 2 colonnes
-   (.sas-card-info { flex: 1 }, .sas-card-slots { width: 180px }).
-   On neutralise ces règles avec !important + variantes 2col/3col
-   pour garantir un rendu fidèle à la maquette dans tous les cas. ── */
-.sas-card-layout.sas-card-layout--3col,
-.sas-card-layout.sas-card-layout--2col {
-  display: flex !important;
-  flex-direction: row !important;
-  align-items: flex-start !important;
-  gap: 1rem !important;
-  flex-wrap: nowrap !important;
-}
-
-/* Variante 3 colonnes : identité / information complémentaire / créneaux */
-.sas-card-layout--3col > .sas-card-info {
-  flex: 0 1 26% !important;
-  max-width: 26% !important;
-  width: 26% !important;
-}
-
-.sas-card-layout--3col > .sas-card-comment {
-  flex: 1 1 0% !important;
-  max-width: 34% !important;
-  width: auto !important;
-}
-
-.sas-card-layout--3col > .sas-card-slots {
-  flex: 0 0 38% !important;
-  max-width: 38% !important;
-  width: 38% !important;
-}
-
-/* Variante 2 colonnes : pas d'information complémentaire → identité + créneaux */
-.sas-card-layout--2col > .sas-card-info {
-  flex: 0 1 34% !important;
-  max-width: 34% !important;
-  width: 34% !important;
-}
-
-.sas-card-layout--2col > .sas-card-slots {
-  flex: 1 1 0% !important;
-  max-width: 62% !important;
-  width: auto !important;
+/* ── Lien organisation (CPTS/MSP) : pied de card, centré, pleine largeur ── */
+.sas-card-footer {
+  margin-top: 0.75rem;
+  padding-top: 0.6rem;
+  border-top: 1px solid var(--border-default-grey);
+  text-align: center;
 }
 
 /* ── Quote ── */
@@ -309,27 +321,17 @@
   }
 
   .sas-card-layout {
-    flex-direction: column;
-  }
-
-  .sas-card-layout.sas-card-layout--3col,
-  .sas-card-layout.sas-card-layout--2col {
     flex-direction: column !important;
   }
 
-  .sas-card-layout--3col > .sas-card-info,
-  .sas-card-layout--3col > .sas-card-comment,
-  .sas-card-layout--3col > .sas-card-slots,
-  .sas-card-layout--2col > .sas-card-info,
-  .sas-card-layout--2col > .sas-card-slots {
+  .sas-card-layout > .sas-card-info,
+  .sas-card-layout > .sas-card-slots {
     width: 100% !important;
     max-width: 100% !important;
     flex: 1 1 auto !important;
   }
 
-  .sas-card-comment,
-  .sas-card-slots {
-    width: 100%;
+  .sas-card-layout > .sas-card-slots {
     border-left: none;
     border-top: 1px solid var(--border-default-grey);
     padding-left: 0;
@@ -340,8 +342,13 @@
     justify-content: space-between;
   }
 
-  .sas-card-info {
+  .sas-card-head {
+    flex-wrap: wrap;
+  }
+
+  .sas-card-corner-badges {
     max-width: 100%;
+    justify-content: flex-start;
   }
 }
 
@@ -1132,15 +1139,10 @@
   margin: 0 0.25rem;
 }
 
-/* ── Carte : badge coin + en-tête ── */
-article.js-practitioner-card > .fr-card {
-  position: relative;
-}
-
+/* ── Carte : badges en en-tête (voir aussi .sas-card-head plus haut) ── */
 .sas-card-corner-badge {
-  position: absolute;
-  top: 0.85rem;
-  right: 0.85rem;
+  display: inline-flex;
+  align-items: center;
   font-size: 0.62rem;
   font-weight: 700;
   letter-spacing: 0.03em;
@@ -1150,7 +1152,6 @@ article.js-practitioner-card > .fr-card {
   background: var(--background-contrast-grey, #eee);
   color: var(--text-mention-grey, #666);
   white-space: nowrap;
-  z-index: 2;
 }
 
 .sas-card-corner-badge--error {
@@ -1166,7 +1167,6 @@ article.js-practitioner-card > .fr-card {
 .fr-card__title.js-open-panel {
   text-decoration: underline;
   text-underline-offset: 3px;
-  max-width: calc(100% - 6.5rem);
 }
 
 /* ── Lignes info avec icône (adresse / téléphone) ── */
