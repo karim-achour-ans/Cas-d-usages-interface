@@ -807,6 +807,45 @@
   border-radius: 2px;
 }
 
+/* ── En-tête "Résultat pour la zone X" + bouton "Voir tous les filtres" ── */
+.sas-zone-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.85rem;
+}
+
+.sas-zone-title-row .sas-zone-title {
+  margin-bottom: 0;
+}
+
+.sas-all-filters-btn {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  appearance: none;
+  cursor: pointer;
+  background: #fff;
+  border: 1px solid var(--border-action-high-blue-france, #000091);
+  border-radius: 0.25rem;
+  color: var(--text-action-high-blue-france, #000091);
+  font-size: 0.8rem;
+  font-weight: 600;
+  padding: 0.4rem 0.75rem;
+  font-family: inherit;
+}
+
+.sas-all-filters-btn:hover {
+  background: var(--background-alt-blue-france, #f5f5fe);
+}
+
+.sas-all-filters-icon {
+  font-size: 0.7rem;
+  line-height: 1;
+}
+
 /* ── Barre de filtres ────────────────────────────────────────────────────── */
 #filters-section {
   background: #ffffff;
@@ -816,28 +855,37 @@
 }
 
 #filters-section .fr-label {
-  font-size: 0.66rem !important;
-  font-weight: 600 !important;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
-  color: var(--text-mention-grey);
-  margin-bottom: 0.2rem !important;
-  line-height: 1.2 !important;
+  font-size: 0.85rem !important;
+  font-weight: 400 !important;
+  letter-spacing: normal;
+  text-transform: none;
+  color: var(--text-default-grey, #3a3a3a);
+  margin-bottom: 0.35rem !important;
+  line-height: 1.3 !important;
 }
 
+/* Champs de filtre : style "soulignement", identique à la barre de recherche
+   au-dessus, plutôt qu'un encadré plein — conforme à la maquette. */
 #filters-section .fr-select--multiple {
-  font-size: 0.76rem !important;
-  line-height: 1.2 !important;
+  font-size: 0.85rem !important;
+  line-height: 1.3 !important;
   min-height: unset !important;
-  height: 2.1rem !important;
-  padding: 0 2rem 0 0.65rem !important;
-  border-width: 1px !important;
+  height: auto !important;
+  padding: 0 1.75rem 0.35rem 0 !important;
+  border-width: 0 0 1px 0 !important;
+  border-style: solid !important;
   border-color: var(--border-default-grey) !important;
-  border-radius: 2px !important;
+  border-radius: 0 !important;
+  background-color: transparent !important;
   background-size: 0.85rem 0.85rem !important;
-  background-position: calc(100% - 0.65rem) 50% !important;
-  background: #fff;
+  background-position: calc(100% - 0.1rem) 50% !important;
   color: var(--text-label-grey);
+  text-align: left;
+}
+
+#filters-section .fr-select--multiple:hover,
+#filters-section .fr-select--multiple[aria-expanded="true"] {
+  border-bottom-color: var(--border-action-high-blue-france, #000091) !important;
 }
 
 #filters-section #reset-filters {
@@ -1351,11 +1399,12 @@
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
-   HARMONISATION ÉCRAN 15" — largeur de conteneur, densité de la barre
-   recherche/filtres. template_integration.css impose max-width:95% (partagé
-   avec d'autres mocks du repo, non modifié ici) : on la plafonne pour cette
-   page uniquement afin d'éviter un étirement excessif sur un 15" (~1440-1536px).
+   LARGEUR DE CONTENEUR — priorité à l'espace disponible pour la carte.
+   template_integration.css impose déjà max-width:95% (partagé avec d'autres
+   mocks du repo, non modifié ici) ; on l'aligne explicitement ici à 95 %
+   pour cette page, sans plafond en pixels, afin de maximiser la largeur de
+   la colonne carte sur les grands écrans.
    ═══════════════════════════════════════════════════════════════════════════ */
 .fr-container, .fr-container-lg, .fr-container-md, .fr-container-sm {
-  max-width: min(95%, 1440px) !important;
+  max-width: 95% !important;
 }
