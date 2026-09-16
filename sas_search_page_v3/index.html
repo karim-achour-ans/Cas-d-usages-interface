@@ -167,6 +167,10 @@
                     <label class="fr-label" for="filter-mg">Médecine générale</label>
                   </div>
                   <div class="fr-checkbox-group">
+                    <input type="checkbox" id="filter-medecin-traitant" value="medecin-traitant">
+                    <label class="fr-label" for="filter-medecin-traitant">Médecin traitant</label>
+                  </div>
+                  <div class="fr-checkbox-group">
                     <input type="checkbox" id="filter-infirmier" value="infirmier">
                     <label class="fr-label" for="filter-infirmier">Infirmier</label>
                   </div>
@@ -350,14 +354,6 @@
               <span>100 km</span>
             </div>
 
-            <div class="map-rayon-presets">
-              <button class="map-rayon-pt"    id="mpt-5"   onclick="setRayon(5)">5 km</button>
-              <button class="map-rayon-pt"    id="mpt-10"  onclick="setRayon(10)">10 km</button>
-              <button class="map-rayon-pt"    id="mpt-25"  onclick="setRayon(25)">25 km</button>
-              <button class="map-rayon-pt on" id="mpt-50"  onclick="setRayon(50)">50 km</button>
-              <button class="map-rayon-pt"    id="mpt-100" onclick="setRayon(100)">100 km</button>
-            </div>
-
           </div>
         </div>
       </div>
@@ -529,7 +525,6 @@
 <!-- Rayon slider -->
 <script>
 (function () {
-  var PRESETS = [5, 10, 25, 50, 100];
   var MIN_PX = 40;
   var MAX_PX = 340;
 
@@ -558,11 +553,6 @@
       circle.style.width = px + 'px';
       circle.style.height = px + 'px';
     }
-
-    PRESETS.forEach(function (p) {
-      var el = document.getElementById('mpt-' + p);
-      if (el) el.classList.toggle('on', p === v);
-    });
 
     document.dispatchEvent(
       new CustomEvent('rayon:change', {
