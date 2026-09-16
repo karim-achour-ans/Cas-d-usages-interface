@@ -19,7 +19,7 @@ function getFilters() {
   return {
     type:      getChecked(['filter-sas', 'filter-pdsa']),
     // Unified filter: profession (PS) + specialty (PS) + org type (structures)
-    category:  getChecked(['filter-medecin', 'filter-mg', 'filter-infirmier', 'filter-kine',
+    category:  getChecked(['filter-medecin', 'filter-mg', 'filter-medecin-traitant', 'filter-infirmier', 'filter-kine',
                            'filter-sos', 'filter-mmg', 'filter-cds']),
     dispo:     getChecked(['filter-4h', 'filter-8h', 'filter-12h']),
     mode:      getChecked(['filter-cabinet', 'filter-domicile', 'filter-visio']),
@@ -156,6 +156,7 @@ function renderTags(filters) {
     // Category (profession / specialty / org type)
     medecin:  'Médecin',
     mg:       'Médecine générale',
+    'medecin-traitant': 'Médecin traitant',
     infirmier:'Infirmier',
     kine:     'Kiné',
     sos:      'SOS Médecins',
@@ -258,7 +259,7 @@ function setupFilters() {
 function updateFilterCounts() {
   const counts = {
     type:     getChecked(['filter-sas', 'filter-pdsa']).length,
-    category: getChecked(['filter-medecin', 'filter-mg', 'filter-infirmier', 'filter-kine',
+    category: getChecked(['filter-medecin', 'filter-mg', 'filter-medecin-traitant', 'filter-infirmier', 'filter-kine',
                           'filter-sos', 'filter-mmg', 'filter-cds']).length,
     dispo:    getChecked(['filter-4h', 'filter-8h', 'filter-12h']).length,
     mode:     getChecked(['filter-cabinet', 'filter-domicile', 'filter-visio']).length,
