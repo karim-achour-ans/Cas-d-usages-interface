@@ -293,14 +293,15 @@ body { margin: 0; background: #fff; color: #1a1a1a; font-size: 14px; line-height
 
 /* ── (reconstruit) Open-Search : adresses d'activité ─────── */
 .os-addrs { display:flex; flex-direction:column; gap:.75rem; }
-.os-addr { display:flex; justify-content:space-between; align-items:flex-start; gap:1rem;
-  border:1px solid #e5e5e5; border-left:3px solid #000091; border-radius:6px; padding:.8rem 1rem; background:#fff; }
-.os-addr__line { font-weight:600; display:flex; align-items:center; gap:.4rem; }
-.os-addr__meta { display:flex; gap:1.2rem; flex-wrap:wrap; font-size:.85rem; color:#444; margin-top:.35rem; align-items:center; }
-.os-addr .act-edit { background:none; border:none; color:#000091; cursor:pointer; font-family:inherit; font-size:.85rem; }
-.os-addr .act-edit:hover { text-decoration:underline; }
-.os-addr--edit { flex-direction:column; align-items:stretch; background:#fafafa; }
-.os-addr--edit .fr-input-group { margin-bottom:.6rem; }
+.os-panel__head { display:flex; justify-content:space-between; align-items:center; gap:1rem; flex-wrap:wrap; margin-bottom:.4rem; }
+.os-panel__head .os-panel__title { margin:0; }
+.os-panel--overridden { border-left:3px solid #976a00; }
+.os-panel .act-edit { background:none; border:none; color:#000091; cursor:pointer; font-family:inherit; font-size:.85rem; white-space:nowrap; }
+.os-panel .act-edit:hover { text-decoration:underline; }
+.os-index-ref { font-size:.74rem; color:#888; margin:.2rem 0 0; }
+.os-geo-warn { background:#ffe9e6; color:#ce0500; font-size:.82rem; padding:.5rem .7rem; border-radius:4px; margin:0 0 .7rem; }
+.os-badge-source-index { background:#f0f0f0; color:#555; text-transform:none; }
+.os-badge-source-override { background:#fff2df; color:#976a00; text-transform:none; }
 
 /* ── Gestion des accès (Admin BO) ────────────────────────── */
 .ga-wrap { overflow-x:auto; }
@@ -375,11 +376,6 @@ body { margin: 0; background: #fff; color: #1a1a1a; font-size: 14px; line-height
 .os-kv:last-of-type { border-bottom:none; }
 .os-kv span { color:#666; }
 
-.os-agenda { width:100%; border-collapse:collapse; font-size:.85rem; }
-.os-agenda th { text-align:left; width:110px; font-weight:600; color:#3a3a3a; padding:.3rem .5rem; border-bottom:1px solid #ececec; }
-.os-agenda td { padding:.3rem .5rem; border-bottom:1px solid #ececec; }
-.os-slot { display:inline-block; background:#e3e3fd; color:#000091; border-radius:4px; padding:.1rem .45rem; font-size:.8rem; margin:.1rem .15rem .1rem 0; }
-
 .geo-score { font-weight:700; }
 .geo--exc  { color:#18753c; }
 .geo--good { color:#0063cb; }
@@ -393,12 +389,9 @@ body { margin: 0; background: #fff; color: #1a1a1a; font-size: 14px; line-height
 .os-hist__who  { color:#0063cb; }
 .os-hist__field { background:#f4f4f8; color:#3a3a3a; text-transform:none; }
 .os-hist__desc { font-size:.83rem; color:#3a3a3a; margin-top:.25rem; }
-/* Badges plats participation / modalité (sans icône) */
+/* Badges plats participation (sans icône) */
 .os-badge-part { background:#b8fec9; color:#18753c; text-transform:none; }
 .os-badge-hors { background:#ececec; color:#666; text-transform:none; }
-.os-badge-mod  { text-transform:none; }
-.os-badge-mod-MSP  { background:#e8edff; color:#0063cb; }
-.os-badge-mod-CPTS { background:#f6e6ff; color:#6e2b8b; }
 
 /* ── Bandeaux d'information (Lot 4) ──────────────────────── */
 .ban-grid { display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-top:.5rem; }
