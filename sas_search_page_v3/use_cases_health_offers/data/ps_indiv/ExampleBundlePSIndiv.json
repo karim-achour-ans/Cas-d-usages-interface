@@ -125,6 +125,10 @@
               "code": "1",
               "display": "Secteur 1"
             }
+          },
+          {
+            "url": "https://annuaire.sante.fr/fhir/StructureDefinition/practitioner-role-medecin-traitant",
+            "valueBoolean": true
           }
         ],
         "practitioner": {
@@ -185,8 +189,8 @@
             "coding": [
               {
                 "system": "https://mos.esante.gouv.fr/NOS/JDV_J17-ActiviteOperationnelle-ROR/FHIR/JDV-J17-ActiviteOperationnelle-ROR",
-                "code": "999",
-                "display": "Médecin traitant"
+                "code": "SM26",
+                "display": "Médecine générale"
               }
             ]
           }
