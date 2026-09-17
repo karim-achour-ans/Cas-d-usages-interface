@@ -1193,6 +1193,11 @@
   color: #18753c;
 }
 
+.sas-card-corner-badge--medecin-traitant {
+  background: #fce4ec;
+  color: #9c2f5c;
+}
+
 .fr-card__title.js-open-panel {
   text-decoration: underline;
   text-underline-offset: 3px;
