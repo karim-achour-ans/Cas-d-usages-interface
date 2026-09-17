@@ -86,6 +86,12 @@ const OS_SPECIALITY_LABEL = {
   "SM42": "Médecine générale",
   "SM53": "Cardiologie",
 };
+/* Modalité d'affichage des créneaux : agenda en ligne (créneaux éditeur, si le PS
+   accepte de les partager) ou agenda de la plateforme SAS (créneaux déclarés) sinon. */
+const OS_AGENDA_MODE_LABEL = {
+  editeur: "Agenda en ligne",
+  sas: "Agenda Plateforme SAS",
+};
 
 /* ------------------------------------------------------------------ *
  *  Modèle « offre de soins » (Lot 3 + révision Lot 4).
@@ -125,7 +131,13 @@ function osIso(y, m, d) { return new Date(y, m, d).toISOString(); }
 /* Attributs SAS communs (statut, date d'inscription, historique) — déterministe */
 function osEnrichOffre(o, i, importAuthor) {
   o.dispo = (i % 4 !== 2);
-  o.sas = { inscription: osIso(2024, (i % 10), 3 + (i % 20)) };
+  o.sas = {
+    inscription: osIso(2024, (i % 10), 3 + (i % 20)),
+    /* Modalité d'affichage des disponibilités : le PS accepte de partager
+       ses créneaux éditeur (agenda en ligne tiers) ou refuse, auquel cas
+       ce sont les créneaux déclarés sur la plateforme SAS qui s'affichent. */
+    agendaMode: (i % 2 === 0) ? "editeur" : "sas",
+  };
   o.history = [
     { at: osIso(2025, 10, 5 + (i % 15)), author: importAuthor, fields: ["Adresse", "Géolocalisation"],
       description: "Création de la fiche dans l'index de l'offre de soins." },

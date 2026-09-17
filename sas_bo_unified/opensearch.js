@@ -22,7 +22,6 @@ const state = {
   editPsa: null,
   search: "",
   fKind: "",    // filtre type d'offre : "" | ps | cds | sos | mmg
-  fDispo: "",    // filtre disponibilité : "" | dispo | indispo
   form: null,
 };
 function identity(){ return IDENTITIES[state.identityIdx]; }
@@ -90,7 +89,6 @@ function filteredOffres(){
   const q = state.search.trim().toLowerCase();
   let list = state.offres.slice();
   if (state.fKind) list = list.filter(o => o.kind === state.fKind);
-  if (state.fDispo) list = list.filter(o => state.fDispo === "dispo" ? o.dispo : !o.dispo);
   if (q) list = list.filter(o => {
     const hay = o.kind === "ps"
       ? `${o.firstname} ${o.lastname} ${professionLabel(o.profession)} ${o.rpps}`
@@ -105,7 +103,7 @@ function offreRow(o){
       <div class="user-row__body">
         <div class="user-row__l1">
           <span class="user-row__name">${esc(offreTitle(o))}</span>
-          ${kindBadge(o)} ${participationBadge(o.participationSAS)} ${dispoBadge(o.dispo)}
+          ${kindBadge(o)} ${participationBadge(o.participationSAS)}
         </div>
         <div class="user-row__l2">${esc(offreSubtitle(o))}</div>
       </div>
@@ -129,14 +127,6 @@ function renderList() {
         <label class="fr-label" for="os-fkind">Type d'offre</label>
         <select class="fr-select" id="os-fkind"><option value="">Toutes</option>${kindOpts}</select>
       </div>
-      <div class="f-field">
-        <label class="fr-label" for="os-fdispo">Disponibilité</label>
-        <select class="fr-select" id="os-fdispo">
-          <option value="">Toutes</option>
-          <option value="dispo"   ${state.fDispo==="dispo"?"selected":""}>Disponible</option>
-          <option value="indispo" ${state.fDispo==="indispo"?"selected":""}>Indisponible</option>
-        </select>
-      </div>
     </div>
     <p class="result-count">${list.length} offre${list.length>1?"s":""} de soins</p>
     <div class="user-list" id="os-list">${list.map(offreRow).join("") || `<p class="mock-note" style="padding:1rem 0;">Aucun résultat.</p>`}</div>`;
@@ -149,7 +139,6 @@ function renderList() {
   };
   el("os-q").oninput = (e) => { state.search = e.target.value; refresh(); };
   el("os-fkind").onchange = (e) => { state.fKind = e.target.value; refresh(); };
-  el("os-fdispo").onchange = (e) => { state.fDispo = e.target.value; refresh(); };
   bindOffreRows();
 }
 function bindOffreRows(){
@@ -202,6 +191,7 @@ function renderDetail() {
       <section class="os-panel">
         <h2 class="os-panel__title">Inscription &amp; participation SAS</h2>
         <div class="os-kv"><span>Date d'inscription</span><strong>${esc(fmtD(inscription))}</strong></div>
+        <div class="os-kv"><span>Affichage des créneaux</span><strong>${esc(OS_AGENDA_MODE_LABEL[o.sas && o.sas.agendaMode] || "—")}</strong></div>
         <div class="os-kv"><span>Dernière mise à jour</span><strong>${esc(fmtD(latestUpdate(o)))}</strong></div>
       </section>
     </div>
