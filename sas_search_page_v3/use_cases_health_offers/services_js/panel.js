@@ -59,6 +59,30 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // ── Note / PS ──────────────────────────────────────────────────────────
     // (section supprimée — infos pratiques retirées de l'interface)
+
+    // ── Information complémentaire ──────────────────────────────────────────
+    const commentEl = $('panel-comment');
+    if (commentEl) {
+      commentEl.textContent = data.comment || 'Aucune information complémentaire renseignée.';
+    }
+
+    // ── Offre de soins : activité opérationnelle ────────────────────────────
+    const activityEl = $('panel-operational-activity');
+    if (activityEl) {
+      activityEl.textContent = data.operationalActivity || 'Non renseignée.';
+    }
+
+    // ── Offre de soins : actes et équipements spécifiques ───────────────────
+    const actsEl = $('panel-specific-acts');
+    if (actsEl) {
+      if (Array.isArray(data.specificActs) && data.specificActs.length) {
+        actsEl.innerHTML = data.specificActs
+          .map(act => `<span class="fr-badge fr-badge--sm fr-mr-1w fr-mb-1w">${act}</span>`)
+          .join('');
+      } else {
+        actsEl.innerHTML = `<p class="fr-text--sm fr-text--default-grey fr-mb-0">Aucun acte spécifique renseigné.</p>`;
+      }
+    }
   }
 
   // 🚪 2. Ouvrir le panneau
