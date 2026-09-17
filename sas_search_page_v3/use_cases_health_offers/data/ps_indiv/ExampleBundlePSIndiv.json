@@ -7,43 +7,250 @@
     ]
   },
   "type": "searchset",
-  "total": 9,
+  "total": 10,
   "entry": [
+    {
+      "resource": {
+        "resourceType": "Slot",
+        "id": "ExampleSlotMedecinTraitant1",
+        "schedule": {
+          "reference": "Schedule/ExampleScheduleMedecinTraitant"
+        },
+        "status": "free",
+        "start": "2026-09-17T09:00:00.000+00:00",
+        "end": "2026-09-17T09:30:00.000+00:00"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Slot",
+        "id": "ExampleSlotMedecinTraitant2",
+        "schedule": {
+          "reference": "Schedule/ExampleScheduleMedecinTraitant"
+        },
+        "status": "free",
+        "start": "2026-09-19T09:00:00.000+00:00",
+        "end": "2026-09-19T09:30:00.000+00:00"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Schedule",
+        "id": "ExampleScheduleMedecinTraitant",
+        "actor": [
+          {
+            "reference": "Practitioner/ExamplePractitionerMedecinTraitant"
+          },
+          {
+            "reference": "PractitionerRole/ExamplePractitionerRoleMedecinTraitant"
+          }
+        ]
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Practitioner",
+        "id": "ExamplePractitionerMedecinTraitant",
+        "identifier": [
+          {
+            "type": {
+              "coding": [
+                {
+                  "system": "http://interopsante.org/fhir/CodeSystem/fr-v2-0203",
+                  "code": "IDNPS"
+                }
+              ]
+            },
+            "system": "urn:oid:1.2.250.1.71.4.2.1",
+            "value": "810100050099"
+          }
+        ],
+        "name": [
+          {
+            "use": "official",
+            "family": "UNG",
+            "given": [
+              "Cécile"
+            ],
+            "prefix": [
+              "Dr."
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "PractitionerRole",
+        "id": "ExamplePractitionerRoleMedecinTraitant",
+        "contained": [
+          {
+            "resourceType": "Location",
+            "id": "ExampleLocationMedecinTraitant",
+            "address": {
+              "line": [
+                "12 rue de la Santé"
+              ],
+              "city": "PARIS",
+              "postalCode": "75013"
+            }
+          }
+        ],
+        "extension": [
+          {
+            "url": "https://annuaire.sante.fr/fhir/StructureDefinition/practitioner-sas-participation",
+            "extension": [
+              {
+                "url": "sasParticipation",
+                "valueBoolean": true
+              },
+              {
+                "url": "sasParticipationType",
+                "valueCodeableConcept": {
+                  "coding": [
+                    {
+                      "system": "https://annuaire.sante.fr/fhir/CodeSystem/sas-participation-type",
+                      "code": "cabinet",
+                      "display": "Cabinet"
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "url": "https://annuaire.sante.fr/fhir/StructureDefinition/practitioner-role-conventionnement",
+            "valueCoding": {
+              "system": "https://mos.esante.gouv.fr/NOS/TRE_R75-TypeDeConventionnement/FHIR/TRE-R75-TypeDeConventionnement",
+              "code": "1",
+              "display": "Secteur 1"
+            }
+          }
+        ],
+        "practitioner": {
+          "reference": "Practitioner/ExamplePractitionerMedecinTraitant"
+        },
+        "healthcareService": [
+          {
+            "reference": "HealthcareService/ExampleHSMedecinTraitant"
+          }
+        ],
+        "code": [
+          {
+            "coding": [
+              {
+                "system": "https://mos.esante.gouv.fr/NOS/TRE_G15-ProfessionSante/FHIR/TRE-G15-ProfessionSante",
+                "code": "10",
+                "display": "Médecin"
+              }
+            ]
+          }
+        ],
+        "specialty": [
+          {
+            "coding": [
+              {
+                "system": "https://mos.esante.gouv.fr/NOS/TRE_R38-SpecialiteOrdinale/FHIR/TRE-R38-SpecialiteOrdinale",
+                "code": "SM26",
+                "display": "Médecine générale"
+              }
+            ]
+          }
+        ],
+        "location": [
+          {
+            "reference": "#ExampleLocationMedecinTraitant"
+          }
+        ],
+        "telecom": [
+          {
+            "system": "phone",
+            "value": "+33 1 45 67 89 10",
+            "use": "work",
+            "rank": 1
+          }
+        ]
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "HealthcareService",
+        "id": "ExampleHSMedecinTraitant",
+        "meta": {
+          "lastUpdated": "2021-11-01T00:00:00Z"
+        },
+        "comment": "Accepte les nouveaux patients en tant que médecin traitant. Consultations sur rendez-vous.",
+        "specialty": [
+          {
+            "coding": [
+              {
+                "system": "https://mos.esante.gouv.fr/NOS/JDV_J17-ActiviteOperationnelle-ROR/FHIR/JDV-J17-ActiviteOperationnelle-ROR",
+                "code": "999",
+                "display": "Médecin traitant"
+              }
+            ]
+          }
+        ],
+        "characteristic": [
+          {
+            "coding": [
+              {
+                "system": "https://mos.esante.gouv.fr/NOS/JDV_J16-ActeSpecifique-ROR/FHIR/JDV-J16-ActeSpecifique-ROR",
+                "code": "0009",
+                "display": "Téléconsultation"
+              }
+            ]
+          }
+        ]
+      }
+    },
     {
       "fullUrl": "https://exemple.com/ans-sas/Slot/ExampleSlotPSIndiv1",
       "resource": {
         "resourceType": "Slot",
         "id": "ExampleSlotPSIndiv1",
-        "schedule": { "reference": "Schedule/ExampleSchedule1" },
+        "schedule": {
+          "reference": "Schedule/ExampleSchedule1"
+        },
         "status": "free",
         "start": "2021-11-05T09:00:00.000+00:00",
-        "end":   "2021-11-05T09:30:00.000+00:00"
+        "end": "2021-11-05T09:30:00.000+00:00"
       },
-      "search": { "mode": "match" }
+      "search": {
+        "mode": "match"
+      }
     },
     {
       "fullUrl": "https://exemple.com/ans-sas/Slot/ExampleSlotPSIndiv11",
       "resource": {
         "resourceType": "Slot",
         "id": "ExampleSlotPSIndiv11",
-        "schedule": { "reference": "Schedule/ExampleSchedule1" },
+        "schedule": {
+          "reference": "Schedule/ExampleSchedule1"
+        },
         "status": "free",
         "start": "2021-11-06T08:15:00.000+00:00",
-        "end":   "2021-11-06T08:30:00.000+00:00"
+        "end": "2021-11-06T08:30:00.000+00:00"
       },
-      "search": { "mode": "match" }
+      "search": {
+        "mode": "match"
+      }
     },
     {
       "fullUrl": "https://exemple.com/ans-sas/Slot/ExampleSlotPSIndiv13",
       "resource": {
         "resourceType": "Slot",
         "id": "ExampleSlotPSIndiv13",
-        "schedule": { "reference": "Schedule/ExampleSchedule1" },
+        "schedule": {
+          "reference": "Schedule/ExampleSchedule1"
+        },
         "status": "free",
         "start": "2021-11-07T10:45:00.000+00:00",
-        "end":   "2021-11-07T10:45:00.000+00:00"
+        "end": "2021-11-07T10:45:00.000+00:00"
       },
-      "search": { "mode": "match" }
+      "search": {
+        "mode": "match"
+      }
     },
     {
       "fullUrl": "https://exemple.com/ans-sas/Schedule/ExampleSchedule1",
@@ -51,11 +258,17 @@
         "resourceType": "Schedule",
         "id": "ExampleSchedule1",
         "actor": [
-          { "reference": "Practitioner/ExamplePractitioner2" },
-          { "reference": "PractitionerRole/ExamplePractitionerRoleAgregateur2" }
+          {
+            "reference": "Practitioner/ExamplePractitioner2"
+          },
+          {
+            "reference": "PractitionerRole/ExamplePractitionerRoleAgregateur2"
+          }
         ]
       },
-      "search": { "mode": "include" }
+      "search": {
+        "mode": "include"
+      }
     },
     {
       "fullUrl": "https://exemple.com/ans-sas/Practitioner/ExamplePractitioner2",
@@ -80,12 +293,18 @@
           {
             "use": "official",
             "family": "THOMAS",
-            "given": [ "Sébastien" ],
-            "prefix": [ "Dr." ]
+            "given": [
+              "Sébastien"
+            ],
+            "prefix": [
+              "Dr."
+            ]
           }
         ]
       },
-      "search": { "mode": "include" }
+      "search": {
+        "mode": "include"
+      }
     },
     {
       "fullUrl": "https://exemple.com/ans-sas/PractitionerRole/ExamplePractitionerRoleAgregateur2",
@@ -97,7 +316,9 @@
             "resourceType": "Location",
             "id": "ExampleLocation3",
             "address": {
-              "line": [ "1 rue Mme DELMAS" ],
+              "line": [
+                "1 rue Mme DELMAS"
+              ],
               "city": "AGEN",
               "postalCode": "47000"
             }
@@ -134,8 +355,14 @@
             }
           }
         ],
-        "practitioner": { "reference": "Practitioner/ExamplePractitioner2" },
-        "healthcareService": [ { "reference": "HealthcareService/ExampleHS1" } ],
+        "practitioner": {
+          "reference": "Practitioner/ExamplePractitioner2"
+        },
+        "healthcareService": [
+          {
+            "reference": "HealthcareService/ExampleHS1"
+          }
+        ],
         "code": [
           {
             "coding": [
@@ -158,7 +385,11 @@
             ]
           }
         ],
-        "location": [ { "reference": "#ExampleLocation3" } ],
+        "location": [
+          {
+            "reference": "#ExampleLocation3"
+          }
+        ],
         "telecom": [
           {
             "system": "phone",
@@ -168,14 +399,18 @@
           }
         ]
       },
-      "search": { "mode": "include" }
+      "search": {
+        "mode": "include"
+      }
     },
     {
       "fullUrl": "https://exemple.com/ans-sas/HealthcareService/ExampleHS1",
       "resource": {
         "resourceType": "HealthcareService",
         "id": "ExampleHS1",
-        "meta": { "lastUpdated": "2021-11-01T00:00:00Z" },
+        "meta": {
+          "lastUpdated": "2021-11-01T00:00:00Z"
+        },
         "comment": "Cabinet accessible PMR. Consultations le matin uniquement.",
         "specialty": [
           {
@@ -209,19 +444,25 @@
           }
         ]
       },
-      "search": { "mode": "include" }
+      "search": {
+        "mode": "include"
+      }
     },
     {
       "fullUrl": "https://exemple.com/ans-sas/Slot/ExampleSlotPSIndiv2",
       "resource": {
         "resourceType": "Slot",
         "id": "ExampleSlotPSIndiv2",
-        "schedule": { "reference": "Schedule/ExampleSchedule2" },
+        "schedule": {
+          "reference": "Schedule/ExampleSchedule2"
+        },
         "status": "free",
         "start": "2021-11-05T11:00:00.000+00:00",
-        "end":   "2021-11-05T11:30:00.000+00:00"
+        "end": "2021-11-05T11:30:00.000+00:00"
       },
-      "search": { "mode": "match" }
+      "search": {
+        "mode": "match"
+      }
     },
     {
       "fullUrl": "https://exemple.com/ans-sas/Schedule/ExampleSchedule2",
@@ -229,11 +470,17 @@
         "resourceType": "Schedule",
         "id": "ExampleSchedule2",
         "actor": [
-          { "reference": "Practitioner/ExamplePractitioner2" },
-          { "reference": "PractitionerRole/ExamplePractitionerRoleAgregateur3" }
+          {
+            "reference": "Practitioner/ExamplePractitioner2"
+          },
+          {
+            "reference": "PractitionerRole/ExamplePractitionerRoleAgregateur3"
+          }
         ]
       },
-      "search": { "mode": "include" }
+      "search": {
+        "mode": "include"
+      }
     },
     {
       "fullUrl": "https://exemple.com/ans-sas/PractitionerRole/ExamplePractitionerRoleAgregateur3",
@@ -245,7 +492,9 @@
             "resourceType": "Location",
             "id": "ExampleLocation2",
             "address": {
-              "line": [ "30 rue Mme DELMAS" ],
+              "line": [
+                "30 rue Mme DELMAS"
+              ],
               "city": "AGEN",
               "postalCode": "47000"
             }
@@ -270,8 +519,14 @@
             }
           }
         ],
-        "practitioner": { "reference": "Practitioner/ExamplePractitioner2" },
-        "healthcareService": [ { "reference": "HealthcareService/ExampleHS2" } ],
+        "practitioner": {
+          "reference": "Practitioner/ExamplePractitioner2"
+        },
+        "healthcareService": [
+          {
+            "reference": "HealthcareService/ExampleHS2"
+          }
+        ],
         "code": [
           {
             "coding": [
@@ -294,16 +549,24 @@
             ]
           }
         ],
-        "location": [ { "reference": "#ExampleLocation2" } ]
+        "location": [
+          {
+            "reference": "#ExampleLocation2"
+          }
+        ]
       },
-      "search": { "mode": "include" }
+      "search": {
+        "mode": "include"
+      }
     },
     {
       "fullUrl": "https://exemple.com/ans-sas/HealthcareService/ExampleHS2",
       "resource": {
         "resourceType": "HealthcareService",
         "id": "ExampleHS2",
-        "meta": { "lastUpdated": "2021-11-01T00:00:00Z" },
+        "meta": {
+          "lastUpdated": "2021-11-01T00:00:00Z"
+        },
         "comment": "",
         "specialty": [
           {
@@ -328,19 +591,25 @@
           }
         ]
       },
-      "search": { "mode": "include" }
+      "search": {
+        "mode": "include"
+      }
     },
     {
       "fullUrl": "https://exemple.com/ans-sas/Slot/ExampleSlotPSIndiv3",
       "resource": {
         "resourceType": "Slot",
         "id": "ExampleSlotPSIndiv3",
-        "schedule": { "reference": "Schedule/ExampleSchedule3" },
+        "schedule": {
+          "reference": "Schedule/ExampleSchedule3"
+        },
         "status": "free",
         "start": "2021-11-04T14:20:00.000+00:00",
-        "end":   "2021-11-04T14:40:00.000+00:00"
+        "end": "2021-11-04T14:40:00.000+00:00"
       },
-      "search": { "mode": "match" }
+      "search": {
+        "mode": "match"
+      }
     },
     {
       "fullUrl": "https://exemple.com/ans-sas/Schedule/ExampleSchedule3",
@@ -348,11 +617,17 @@
         "resourceType": "Schedule",
         "id": "ExampleSchedule3",
         "actor": [
-          { "reference": "Practitioner/ExamplePractitioner3" },
-          { "reference": "PractitionerRole/ExamplePractitionerRoleAgregateur4" }
+          {
+            "reference": "Practitioner/ExamplePractitioner3"
+          },
+          {
+            "reference": "PractitionerRole/ExamplePractitionerRoleAgregateur4"
+          }
         ]
       },
-      "search": { "mode": "include" }
+      "search": {
+        "mode": "include"
+      }
     },
     {
       "fullUrl": "https://exemple.com/ans-sas/Practitioner/ExamplePractitioner3",
@@ -377,12 +652,18 @@
           {
             "use": "official",
             "family": "MARCEL",
-            "given": [ "Guillaume" ],
-            "prefix": [ "Dr." ]
+            "given": [
+              "Guillaume"
+            ],
+            "prefix": [
+              "Dr."
+            ]
           }
         ]
       },
-      "search": { "mode": "include" }
+      "search": {
+        "mode": "include"
+      }
     },
     {
       "fullUrl": "https://exemple.com/ans-sas/PractitionerRole/ExamplePractitionerRoleAgregateur4",
@@ -394,7 +675,9 @@
             "resourceType": "Location",
             "id": "ExampleLocation4",
             "address": {
-              "line": [ "1 rue Mme DELMAS" ],
+              "line": [
+                "1 rue Mme DELMAS"
+              ],
               "city": "AGEN",
               "postalCode": "47000"
             }
@@ -443,8 +726,14 @@
             }
           }
         ],
-        "practitioner": { "reference": "Practitioner/ExamplePractitioner3" },
-        "healthcareService": [ { "reference": "HealthcareService/ExampleHS3" } ],
+        "practitioner": {
+          "reference": "Practitioner/ExamplePractitioner3"
+        },
+        "healthcareService": [
+          {
+            "reference": "HealthcareService/ExampleHS3"
+          }
+        ],
         "code": [
           {
             "coding": [
@@ -467,7 +756,11 @@
             ]
           }
         ],
-        "location": [ { "reference": "#ExampleLocation4" } ],
+        "location": [
+          {
+            "reference": "#ExampleLocation4"
+          }
+        ],
         "telecom": [
           {
             "system": "phone",
@@ -477,14 +770,18 @@
           }
         ]
       },
-      "search": { "mode": "include" }
+      "search": {
+        "mode": "include"
+      }
     },
     {
       "fullUrl": "https://exemple.com/ans-sas/HealthcareService/ExampleHS3",
       "resource": {
         "resourceType": "HealthcareService",
         "id": "ExampleHS3",
-        "meta": { "lastUpdated": "2021-11-01T00:00:00Z" },
+        "meta": {
+          "lastUpdated": "2021-11-01T00:00:00Z"
+        },
         "comment": "secrétariat 0146051532 pour annulation de rendez-vous pas de vaccin pour les moins de 15 ans pas de sutures au cabinet",
         "specialty": [
           {
@@ -518,91 +815,121 @@
           }
         ]
       },
-      "search": { "mode": "include" }
+      "search": {
+        "mode": "include"
+      }
     },
     {
       "fullUrl": "https://exemple.com/ans-sas/Slot/ExampleSlotPSIndiv4",
       "resource": {
         "resourceType": "Slot",
         "id": "ExampleSlotPSIndiv4",
-        "schedule": { "reference": "Schedule/ExampleSchedule4" },
+        "schedule": {
+          "reference": "Schedule/ExampleSchedule4"
+        },
         "status": "free",
         "start": "2021-11-05T08:00:00.000+00:00",
-        "end":   "2021-11-05T08:30:00.000+00:00"
+        "end": "2021-11-05T08:30:00.000+00:00"
       },
-      "search": { "mode": "match" }
+      "search": {
+        "mode": "match"
+      }
     },
     {
       "fullUrl": "https://exemple.com/ans-sas/Slot/ExampleSlotPSIndiv5",
       "resource": {
         "resourceType": "Slot",
         "id": "ExampleSlotPSIndiv5",
-        "schedule": { "reference": "Schedule/ExampleSchedule4" },
+        "schedule": {
+          "reference": "Schedule/ExampleSchedule4"
+        },
         "status": "free",
         "start": "2021-11-05T09:00:00.000+00:00",
-        "end":   "2021-11-05T09:30:00.000+00:00"
+        "end": "2021-11-05T09:30:00.000+00:00"
       },
-      "search": { "mode": "match" }
+      "search": {
+        "mode": "match"
+      }
     },
     {
       "fullUrl": "https://exemple.com/ans-sas/Slot/ExampleSlotPSIndiv6",
       "resource": {
         "resourceType": "Slot",
         "id": "ExampleSlotPSIndiv6",
-        "schedule": { "reference": "Schedule/ExampleSchedule4" },
+        "schedule": {
+          "reference": "Schedule/ExampleSchedule4"
+        },
         "status": "free",
         "start": "2021-11-05T10:30:00.000+00:00",
-        "end":   "2021-11-05T11:00:00.000+00:00"
+        "end": "2021-11-05T11:00:00.000+00:00"
       },
-      "search": { "mode": "match" }
+      "search": {
+        "mode": "match"
+      }
     },
     {
       "fullUrl": "https://exemple.com/ans-sas/Slot/ExampleSlotPSIndiv7",
       "resource": {
         "resourceType": "Slot",
         "id": "ExampleSlotPSIndiv7",
-        "schedule": { "reference": "Schedule/ExampleSchedule4" },
+        "schedule": {
+          "reference": "Schedule/ExampleSchedule4"
+        },
         "status": "free",
         "start": "2021-11-05T14:00:00.000+00:00",
-        "end":   "2021-11-05T14:30:00.000+00:00"
+        "end": "2021-11-05T14:30:00.000+00:00"
       },
-      "search": { "mode": "match" }
+      "search": {
+        "mode": "match"
+      }
     },
     {
       "fullUrl": "https://exemple.com/ans-sas/Slot/ExampleSlotPSIndi8",
       "resource": {
         "resourceType": "Slot",
         "id": "ExampleSlotPSIndi8",
-        "schedule": { "reference": "Schedule/ExampleSchedule4" },
+        "schedule": {
+          "reference": "Schedule/ExampleSchedule4"
+        },
         "status": "free",
         "start": "2021-11-06T15:00:00.000+00:00",
-        "end":   "2021-11-06T15:30:00.000+00:00"
+        "end": "2021-11-06T15:30:00.000+00:00"
       },
-      "search": { "mode": "match" }
+      "search": {
+        "mode": "match"
+      }
     },
     {
       "fullUrl": "https://exemple.com/ans-sas/Slot/ExampleSlotPSIndi9",
       "resource": {
         "resourceType": "Slot",
         "id": "ExampleSlotPSIndi9",
-        "schedule": { "reference": "Schedule/ExampleSchedule4" },
+        "schedule": {
+          "reference": "Schedule/ExampleSchedule4"
+        },
         "status": "free",
         "start": "2021-11-06T16:00:00.000+00:00",
-        "end":   "2021-11-06T16:30:00.000+00:00"
+        "end": "2021-11-06T16:30:00.000+00:00"
       },
-      "search": { "mode": "match" }
+      "search": {
+        "mode": "match"
+      }
     },
     {
       "fullUrl": "https://exemple.com/ans-sas/Slot/ExampleSlotPSIndi10",
       "resource": {
         "resourceType": "Slot",
         "id": "ExampleSlotPSIndi10",
-        "schedule": { "reference": "Schedule/ExampleSchedule4" },
+        "schedule": {
+          "reference": "Schedule/ExampleSchedule4"
+        },
         "status": "free",
         "start": "2021-11-07T16:00:00.000+00:00",
-        "end":   "2021-11-07T16:30:00.000+00:00"
+        "end": "2021-11-07T16:30:00.000+00:00"
       },
-      "search": { "mode": "match" }
+      "search": {
+        "mode": "match"
+      }
     },
     {
       "fullUrl": "https://exemple.com/ans-sas/Schedule/ExampleSchedule4",
@@ -610,11 +937,17 @@
         "resourceType": "Schedule",
         "id": "ExampleSchedule4",
         "actor": [
-          { "reference": "Practitioner/ExamplePractitioner4" },
-          { "reference": "PractitionerRole/ExamplePractitionerRoleAgregateur5" }
+          {
+            "reference": "Practitioner/ExamplePractitioner4"
+          },
+          {
+            "reference": "PractitionerRole/ExamplePractitionerRoleAgregateur5"
+          }
         ]
       },
-      "search": { "mode": "include" }
+      "search": {
+        "mode": "include"
+      }
     },
     {
       "fullUrl": "https://exemple.com/ans-sas/Practitioner/ExamplePractitioner4",
@@ -639,12 +972,18 @@
           {
             "use": "official",
             "family": "DUPUIS",
-            "given": [ "Marie" ],
-            "prefix": [ "Mme" ]
+            "given": [
+              "Marie"
+            ],
+            "prefix": [
+              "Mme"
+            ]
           }
         ]
       },
-      "search": { "mode": "include" }
+      "search": {
+        "mode": "include"
+      }
     },
     {
       "fullUrl": "https://exemple.com/ans-sas/PractitionerRole/ExamplePractitionerRoleAgregateur5",
@@ -656,7 +995,9 @@
             "resourceType": "Location",
             "id": "ExampleLocation5",
             "address": {
-              "line": [ "12 Avenue de la République" ],
+              "line": [
+                "12 Avenue de la République"
+              ],
               "city": "TOULOUSE",
               "postalCode": "31000"
             }
@@ -693,9 +1034,17 @@
             }
           }
         ],
-        "practitioner": { "reference": "Practitioner/ExamplePractitioner4" },
-        "organization": { "reference": "Organization/ExampleOrganizationMSP1" },
-        "healthcareService": [ { "reference": "HealthcareService/ExampleHS4" } ],
+        "practitioner": {
+          "reference": "Practitioner/ExamplePractitioner4"
+        },
+        "organization": {
+          "reference": "Organization/ExampleOrganizationMSP1"
+        },
+        "healthcareService": [
+          {
+            "reference": "HealthcareService/ExampleHS4"
+          }
+        ],
         "code": [
           {
             "coding": [
@@ -718,7 +1067,11 @@
             ]
           }
         ],
-        "location": [ { "reference": "#ExampleLocation5" } ],
+        "location": [
+          {
+            "reference": "#ExampleLocation5"
+          }
+        ],
         "telecom": [
           {
             "system": "phone",
@@ -728,14 +1081,18 @@
           }
         ]
       },
-      "search": { "mode": "include" }
+      "search": {
+        "mode": "include"
+      }
     },
     {
       "fullUrl": "https://exemple.com/ans-sas/HealthcareService/ExampleHS4",
       "resource": {
         "resourceType": "HealthcareService",
         "id": "ExampleHS4",
-        "meta": { "lastUpdated": "2021-11-01T00:00:00Z" },
+        "meta": {
+          "lastUpdated": "2021-11-01T00:00:00Z"
+        },
         "comment": "Soins infirmiers au cabinet de 17h30 à 18h sauf dimanches et jours fériés",
         "specialty": [
           {
@@ -774,7 +1131,9 @@
           }
         ]
       },
-      "search": { "mode": "include" }
+      "search": {
+        "mode": "include"
+      }
     },
     {
       "fullUrl": "https://exemple.com/ans-sas/Practitioner/ExamplePractitioner5",
@@ -799,12 +1158,18 @@
           {
             "use": "official",
             "family": "BERNARD",
-            "given": [ "Claire" ],
-            "prefix": [ "Dr." ]
+            "given": [
+              "Claire"
+            ],
+            "prefix": [
+              "Dr."
+            ]
           }
         ]
       },
-      "search": { "mode": "include" }
+      "search": {
+        "mode": "include"
+      }
     },
     {
       "fullUrl": "https://exemple.com/ans-sas/PractitionerRole/ExamplePractitionerRoleAgregateur6",
@@ -816,7 +1181,9 @@
             "resourceType": "Location",
             "id": "ExampleLocation6",
             "address": {
-              "line": [ "5 Rue du Faubourg Saint-Antoine" ],
+              "line": [
+                "5 Rue du Faubourg Saint-Antoine"
+              ],
               "city": "PARIS",
               "postalCode": "75011"
             }
@@ -841,8 +1208,14 @@
             }
           }
         ],
-        "practitioner": { "reference": "Practitioner/ExamplePractitioner5" },
-        "healthcareService": [ { "reference": "HealthcareService/ExampleHS5" } ],
+        "practitioner": {
+          "reference": "Practitioner/ExamplePractitioner5"
+        },
+        "healthcareService": [
+          {
+            "reference": "HealthcareService/ExampleHS5"
+          }
+        ],
         "code": [
           {
             "coding": [
@@ -865,7 +1238,11 @@
             ]
           }
         ],
-        "location": [ { "reference": "#ExampleLocation6" } ],
+        "location": [
+          {
+            "reference": "#ExampleLocation6"
+          }
+        ],
         "telecom": [
           {
             "system": "phone",
@@ -875,14 +1252,18 @@
           }
         ]
       },
-      "search": { "mode": "include" }
+      "search": {
+        "mode": "include"
+      }
     },
     {
       "fullUrl": "https://exemple.com/ans-sas/HealthcareService/ExampleHS5",
       "resource": {
         "resourceType": "HealthcareService",
         "id": "ExampleHS5",
-        "meta": { "lastUpdated": "2021-11-01T00:00:00Z" },
+        "meta": {
+          "lastUpdated": "2021-11-01T00:00:00Z"
+        },
         "comment": "Cabinet non accessible PMR. Consultations uniquement sur référence d'un médecin traitant.",
         "specialty": [
           {
@@ -916,7 +1297,9 @@
           }
         ]
       },
-      "search": { "mode": "include" }
+      "search": {
+        "mode": "include"
+      }
     },
     {
       "fullUrl": "https://exemple.com/ans-sas/Practitioner/ExamplePractitioner6",
@@ -941,12 +1324,18 @@
           {
             "use": "official",
             "family": "LEROY",
-            "given": [ "Pierre" ],
-            "prefix": [ "Dr." ]
+            "given": [
+              "Pierre"
+            ],
+            "prefix": [
+              "Dr."
+            ]
           }
         ]
       },
-      "search": { "mode": "include" }
+      "search": {
+        "mode": "include"
+      }
     },
     {
       "fullUrl": "https://exemple.com/ans-sas/PractitionerRole/ExamplePractitionerRoleAgregateur7",
@@ -958,7 +1347,9 @@
             "resourceType": "Location",
             "id": "ExampleLocation7",
             "address": {
-              "line": [ "18 Place Bellecour" ],
+              "line": [
+                "18 Place Bellecour"
+              ],
               "city": "LYON",
               "postalCode": "69002"
             }
@@ -995,9 +1386,17 @@
             }
           }
         ],
-        "practitioner": { "reference": "Practitioner/ExamplePractitioner6" },
-        "organization": { "reference": "Organization/ExampleOrganizationCPTS1" },
-        "healthcareService": [ { "reference": "HealthcareService/ExampleHS6" } ],
+        "practitioner": {
+          "reference": "Practitioner/ExamplePractitioner6"
+        },
+        "organization": {
+          "reference": "Organization/ExampleOrganizationCPTS1"
+        },
+        "healthcareService": [
+          {
+            "reference": "HealthcareService/ExampleHS6"
+          }
+        ],
         "code": [
           {
             "coding": [
@@ -1020,16 +1419,24 @@
             ]
           }
         ],
-        "location": [ { "reference": "#ExampleLocation7" } ]
+        "location": [
+          {
+            "reference": "#ExampleLocation7"
+          }
+        ]
       },
-      "search": { "mode": "include" }
+      "search": {
+        "mode": "include"
+      }
     },
     {
       "fullUrl": "https://exemple.com/ans-sas/HealthcareService/ExampleHS6",
       "resource": {
         "resourceType": "HealthcareService",
         "id": "ExampleHS6",
-        "meta": { "lastUpdated": "2021-11-01T00:00:00Z" },
+        "meta": {
+          "lastUpdated": "2021-11-01T00:00:00Z"
+        },
         "comment": "Psychiatre libéral. Suivi thérapeutique adultes. Pas de prise en charge urgence psychiatrique.",
         "specialty": [
           {
@@ -1054,7 +1461,9 @@
           }
         ]
       },
-      "search": { "mode": "include" }
+      "search": {
+        "mode": "include"
+      }
     },
     {
       "fullUrl": "https://exemple.com/ans-sas/Practitioner/ExamplePractitioner7",
@@ -1079,12 +1488,18 @@
           {
             "use": "official",
             "family": "[Nom]",
-            "given": [ "[Prénom]" ],
-            "prefix": [ "[Titre du PS]" ]
+            "given": [
+              "[Prénom]"
+            ],
+            "prefix": [
+              "[Titre du PS]"
+            ]
           }
         ]
       },
-      "search": { "mode": "include" }
+      "search": {
+        "mode": "include"
+      }
     },
     {
       "fullUrl": "https://exemple.com/ans-sas/PractitionerRole/ExamplePractitionerRoleAgregateur_",
@@ -1096,7 +1511,9 @@
             "resourceType": "Location",
             "id": "ExampleLocation8",
             "address": {
-              "line": [ "[Adresse du lieu d'exercice]" ],
+              "line": [
+                "[Adresse du lieu d'exercice]"
+              ],
               "city": "[Ville]",
               "postalCode": "[Code postal]"
             }
@@ -1133,9 +1550,17 @@
             }
           }
         ],
-        "practitioner": { "reference": "Practitioner/ExamplePractitioner7" },
-        "organization": { "reference": "Organization/ExampleOrganizationCPTS2" },
-        "healthcareService": [ { "reference": "HealthcareService/ExampleHS7" } ],
+        "practitioner": {
+          "reference": "Practitioner/ExamplePractitioner7"
+        },
+        "organization": {
+          "reference": "Organization/ExampleOrganizationCPTS2"
+        },
+        "healthcareService": [
+          {
+            "reference": "HealthcareService/ExampleHS7"
+          }
+        ],
         "code": [
           {
             "coding": [
@@ -1158,16 +1583,24 @@
             ]
           }
         ],
-        "location": [ { "reference": "#ExampleLocation8" } ]
+        "location": [
+          {
+            "reference": "#ExampleLocation8"
+          }
+        ]
       },
-      "search": { "mode": "include" }
+      "search": {
+        "mode": "include"
+      }
     },
     {
       "fullUrl": "https://exemple.com/ans-sas/HealthcareService/ExampleHS7",
       "resource": {
         "resourceType": "HealthcareService",
         "id": "ExampleHS7",
-        "meta": { "lastUpdated": "2021-11-01T00:00:00Z" },
+        "meta": {
+          "lastUpdated": "2021-11-01T00:00:00Z"
+        },
         "comment": "[Informations complémentaires]",
         "specialty": [
           {
@@ -1192,9 +1625,10 @@
           }
         ]
       },
-      "search": { "mode": "include" }
+      "search": {
+        "mode": "include"
+      }
     },
-
     {
       "fullUrl": "https://exemple.com/ans-sas/Organization/ExampleOrganizationMSP1",
       "resource": {
@@ -1227,15 +1661,18 @@
         ],
         "address": [
           {
-            "line": [ "12 Avenue de la République" ],
+            "line": [
+              "12 Avenue de la République"
+            ],
             "city": "TOULOUSE",
             "postalCode": "31000"
           }
         ]
       },
-      "search": { "mode": "include" }
+      "search": {
+        "mode": "include"
+      }
     },
-
     {
       "fullUrl": "https://exemple.com/ans-sas/Organization/ExampleOrganizationCPTS1",
       "resource": {
@@ -1268,15 +1705,18 @@
         ],
         "address": [
           {
-            "line": [ "18 Place Bellecour" ],
+            "line": [
+              "18 Place Bellecour"
+            ],
             "city": "LYON",
             "postalCode": "69002"
           }
         ]
       },
-      "search": { "mode": "include" }
+      "search": {
+        "mode": "include"
+      }
     },
-
     {
       "fullUrl": "https://exemple.com/ans-sas/Organization/ExampleOrganizationCPTS2",
       "resource": {
@@ -1309,14 +1749,17 @@
         ],
         "address": [
           {
-            "line": [ "[Adresse de la CPTS]" ],
+            "line": [
+              "[Adresse de la CPTS]"
+            ],
             "city": "[Ville]",
             "postalCode": "[Code postal]"
           }
         ]
       },
-      "search": { "mode": "include" }
+      "search": {
+        "mode": "include"
+      }
     }
-
   ]
 }
