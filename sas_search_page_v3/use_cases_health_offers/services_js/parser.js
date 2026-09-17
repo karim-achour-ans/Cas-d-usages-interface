@@ -131,6 +131,16 @@ function extractConventionnement(practitionerRole) {
   };
 }
 
+/**
+ * Extract the "médecin traitant" flag from PractitionerRole (badge rose sur la card).
+ * Extension custom, simple booléen — pas de ValueSet ANS dédié à ce jour.
+ */
+function extractMedecinTraitant(practitionerRole) {
+  return practitionerRole?.extension?.find(
+    e => e.url === "https://annuaire.sante.fr/fhir/StructureDefinition/practitioner-role-medecin-traitant"
+  )?.valueBoolean ?? false;
+}
+
 function extractOperationalActivity(healthcareService) {
   return (
     healthcareService?.specialty
@@ -188,6 +198,7 @@ export function parseOffer({
   const containedLocation                                 = resolveContainedLocation(practitionerRole);
   const { sasOk, sasTypes }                               = extractSasParticipation(practitionerRole);
   const { conventionnementCode, conventionnementDisplay } = extractConventionnement(practitionerRole);
+  const isMedecinTraitant                                 = extractMedecinTraitant(practitionerRole);
 
   return {
     id:                      practitionerRole?.id ?? null,
@@ -205,6 +216,7 @@ export function parseOffer({
     slots:                   extractSlots(slots),
     sasOk,
     sasTypes,
+    isMedecinTraitant,
     conventionnementCode,
     conventionnementDisplay,
     comment:                 healthcareService?.comment ?? null,

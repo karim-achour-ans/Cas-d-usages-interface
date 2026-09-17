@@ -348,6 +348,7 @@ function renderCard(offer) {
               ${displayName || '—'}
             </h3>
             <div class="sas-card-corner-badges">
+              ${offer.isMedecinTraitant ? '<span class="sas-card-corner-badge sas-card-corner-badge--medecin-traitant">Médecin traitant</span>' : ''}
               <span class="sas-card-corner-badge ${sasCornerClass}">${sasCornerLabel}</span>
               ${specialtyBadge}
               ${conventionnementBadge}
