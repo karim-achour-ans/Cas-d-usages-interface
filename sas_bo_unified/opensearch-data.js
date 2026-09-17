@@ -136,6 +136,9 @@ function osEnrichOffre(o, i, importAuthor) {
   });
   o.places.forEach((p, k) => {
     if (p.geoScore == null) p.geoScore = OS_GEO_SCORES[(i + k) % OS_GEO_SCORES.length];
+    /* La disponibilité est une information d'adresse (une même offre peut être
+       disponible sur une adresse et indisponible sur une autre), pas de l'offre. */
+    p.dispo = ((i + k) % 4 !== 2);
     /* Chaque adresse conserve un instantané de sa valeur d'index d'origine,
        et sa source (index / remplacée en base) — utilisés par la fiche
        détail et par le formulaire de remplacement. */

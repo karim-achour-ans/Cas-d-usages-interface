@@ -194,14 +194,13 @@ function renderDetail() {
         <h1 class="fr-h4" style="margin:0;">${esc(offreTitle(o))}</h1>
         <p class="page-sub">${o.kind === "ps" ? esc(professionLabel(o.profession)) + " · RPPS " + esc(o.rpps) : esc(OS_KIND_LABEL[o.kind])}</p>
       </div>
-      <div style="display:flex;gap:.4rem;flex-wrap:wrap;">${kindBadge(o)} ${participationBadge(o.participationSAS)} ${dispoBadge(o.dispo)}</div>
+      <div style="display:flex;gap:.4rem;flex-wrap:wrap;">${kindBadge(o)} ${participationBadge(o.participationSAS)}</div>
     </div>
 
     <div class="os-panels">
       ${infoPanel}
       <section class="os-panel">
         <h2 class="os-panel__title">Inscription &amp; participation SAS</h2>
-        <div class="os-kv"><span>Statut</span>${dispoBadge(o.dispo)}</div>
         <div class="os-kv"><span>Date d'inscription</span><strong>${esc(fmtD(inscription))}</strong></div>
         <div class="os-kv"><span>Dernière mise à jour</span><strong>${esc(fmtD(latestUpdate(o)))}</strong></div>
       </section>
@@ -236,12 +235,13 @@ function addrPanel(o, p, idx, total){
   return `
     <section class="os-panel ${overridden ? "os-panel--overridden" : ""}">
       <div class="os-panel__head">
-        <h2 class="os-panel__title">${o.kind === "ps" ? "Adresse" : "Adresse"}${total>1 ? " "+(idx+1) : ""} ${pointBadge(p)}</h2>
+        <h2 class="os-panel__title">Adresse d'effection de soins${total>1 ? " "+(idx+1) : ""} ${pointBadge(p)}</h2>
         ${osWrite() ? `<button class="act-edit" data-addr-edit="${esc(p.psa)}">Remplacer les informations de cette adresse</button>` : ""}
       </div>
       ${lowGeo ? `<p class="os-geo-warn">Cette adresse n'est pas affichée dans les résultats de recherche du SAS (score de géolocalisation inférieur à ${OS_GEO_MIN_VISIBLE}/100).</p>` : ""}
-      <div class="os-kv"><span>Adresse</span><strong>${esc(p.address.full)}</strong></div>
+      <div class="os-kv"><span>Adresse d'effection de soins</span><strong>${esc(p.address.full)}</strong></div>
       ${p.modalite ? `<div class="os-kv"><span>Modalité de participation</span><strong>via ${esc(p.modalite)}${p.structureName ? " (" + esc(p.structureName) + ")" : ""}</strong></div>` : ""}
+      <div class="os-kv"><span>Disponibilité</span>${dispoBadge(p.dispo)}</div>
       <div class="os-kv"><span>Téléphone</span><strong>${tel ? esc(tel) : '<span class="mock-note">non renseigné</span>'}</strong></div>
       <div class="os-kv"><span>Coordonnées</span><strong>${esc(p.coordinates.lat)}, ${esc(p.coordinates.lon)}</strong></div>
       <div class="os-kv"><span>Score géolocalisation</span><strong class="geo-score ${geoScoreClass(p.geoScore)}">${esc(p.geoScore)}/100 · ${esc(osGeoScoreLabel(p.geoScore))}</strong></div>
