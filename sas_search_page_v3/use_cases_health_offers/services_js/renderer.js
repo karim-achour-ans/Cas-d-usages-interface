@@ -292,6 +292,8 @@ function renderCard(offer) {
   const addressLine = formatAddress(offer.address);
 
   const panelData = {
+    id:                      offer.id,
+    identifier:              offer.identifier,
     name:                    displayName,
     specialty:               [offer.profession, offer.specialty].filter(Boolean).join(' — '),
     phone:                   offer.phone,
@@ -328,6 +330,7 @@ function renderCard(offer) {
 
   return `
     <article class="fr-col-12 js-practitioner-card"
+             data-offer-id="${offer.id ?? ''}"
              data-sas="${offer.sasOk === true ? 'true' : 'false'}"
              data-pdsa="false"
              data-orgtype="ps-indiv"
@@ -354,6 +357,12 @@ function renderCard(offer) {
               ${conventionnementBadge}
             </div>
           </div>
+
+          <!-- Déclaration régulateur : masqué par défaut, affiché par panel.js
+               après enregistrement d'une indisponibilité (cf. saveUnavailability) -->
+          <p class="sas-regulation-flag" data-regulation-flag hidden>
+            <span aria-hidden="true">⚠</span> Noté indisponible par la régulation
+          </p>
 
           <div class="fr-card__content sas-card-layout">
 

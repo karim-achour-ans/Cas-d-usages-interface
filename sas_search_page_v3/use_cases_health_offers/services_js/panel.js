@@ -15,11 +15,77 @@ document.addEventListener('DOMContentLoaded', () => {
     return;
   }
 
+  // ── Déclaration d'indisponibilité par le régulateur (feature OSNP) ────────
+  // État en mémoire pour la durée de la session (pas de backend sur ce mock) :
+  // Map<offerId, { cause, start, end }>
+  const regulatorUnavailability = new Map();
+  let currentOfferId = null;
+
+  function refreshCardFlag(offerId) {
+    const card = document.querySelector(`.js-practitioner-card[data-offer-id="${offerId}"]`);
+    const flagEl = card?.querySelector('[data-regulation-flag]');
+    if (flagEl) flagEl.hidden = !regulatorUnavailability.has(offerId);
+  }
+
+  function checkUnavailabilityFormValidity() {
+    const cause   = $ui('panel-unavail-cause').value;
+    const start   = $ui('panel-unavail-start').value;
+    const end     = $ui('panel-unavail-end').value;
+    const confirm = $ui('panel-unavail-confirm').checked;
+    $ui('panel-unavail-save').disabled = !(cause && start && end && confirm);
+  }
+
+  function resetUnavailabilityForm(offerId) {
+    const existing = regulatorUnavailability.get(offerId);
+    $ui('panel-unavail-cause').value    = existing?.cause ?? '';
+    $ui('panel-unavail-start').value    = existing?.start ?? '';
+    $ui('panel-unavail-end').value      = existing?.end   ?? '';
+    $ui('panel-unavail-confirm').checked = false;
+    $ui('panel-unavail-feedback').hidden = !existing;
+    if (existing) {
+      $ui('panel-unavail-feedback').textContent = '✓ Indisponibilité déjà enregistrée pour ce professionnel.';
+    }
+    checkUnavailabilityFormValidity();
+  }
+
+  function saveUnavailability() {
+    if (!currentOfferId) return;
+
+    const start = $ui('panel-unavail-start').value;
+    const end   = $ui('panel-unavail-end').value;
+
+    if (new Date(end) < new Date(start)) {
+      alert("La date de fin doit être postérieure à la date de début.");
+      return;
+    }
+
+    regulatorUnavailability.set(currentOfferId, {
+      cause: $ui('panel-unavail-cause').value,
+      start,
+      end,
+    });
+
+    refreshCardFlag(currentOfferId);
+
+    const feedback = $ui('panel-unavail-feedback');
+    feedback.textContent = '✓ Indisponibilité enregistrée.';
+    feedback.hidden = false;
+  }
+
+  function $ui(id) { return document.getElementById(id); }
+
+  ['panel-unavail-cause', 'panel-unavail-start', 'panel-unavail-end', 'panel-unavail-confirm']
+    .forEach(id => $ui(id)?.addEventListener('change', checkUnavailabilityFormValidity));
+
+  $ui('panel-unavail-save')?.addEventListener('click', saveUnavailability);
+
   // 📝 1. Remplir le panneau avec les données du professionnel
   function populatePanel(data) {
     const $ = (id) => document.getElementById(id);
 
-    $('panel-title').textContent     = data.name     || '—';
+    $('panel-title').textContent = data.identifier
+      ? `${data.name || '—'} - [${data.identifier}]`
+      : (data.name || '—');
     $('panel-specialty').textContent = data.specialty || '';
     $('panel-address').textContent   = data.address   || '';
     $('panel-phone').innerHTML = data.phone
@@ -83,6 +149,9 @@ document.addEventListener('DOMContentLoaded', () => {
         actsEl.innerHTML = `<p class="fr-text--sm fr-text--default-grey fr-mb-0">Aucun acte spécifique renseigné.</p>`;
       }
     }
+    // ── Information spécifique : déclaration d'indisponibilité (régulateur) ──
+    currentOfferId = data.id ?? null;
+    if (currentOfferId) resetUnavailabilityForm(currentOfferId);
   }
 
   // 🚪 2. Ouvrir le panneau
