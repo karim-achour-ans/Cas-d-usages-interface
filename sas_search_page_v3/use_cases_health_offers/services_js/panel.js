@@ -21,10 +21,41 @@ document.addEventListener('DOMContentLoaded', () => {
   const regulatorUnavailability = new Map();
   let currentOfferId = null;
 
+  function $ui(id) { return document.getElementById(id); }
+
+  const CAUSE_LABELS = {
+    absence:        'Absence de ce professionnel de santé',
+    'cabinet-ferme': 'Cabinet fermé',
+    'plus-dispo':    'Plus de disponibilité',
+    autres:          'Autres',
+  };
+
+  function formatDateFr(isoDate) {
+    if (!isoDate) return '';
+    const [y, m, d] = isoDate.split('-');
+    return `${d}/${m}/${y}`;
+  }
+
   function refreshCardFlag(offerId) {
     const card = document.querySelector(`.js-practitioner-card[data-offer-id="${offerId}"]`);
     const flagEl = card?.querySelector('[data-regulation-flag]');
     if (flagEl) flagEl.hidden = !regulatorUnavailability.has(offerId);
+  }
+
+  // Bascule entre les 3 états visuels de la section : 'empty' | 'form' | 'declared'
+  function showUnavailState(state) {
+    $ui('panel-unavail-empty').hidden    = state !== 'empty';
+    $ui('panel-unavail-form').hidden     = state !== 'form';
+    $ui('panel-unavail-declared').hidden = state !== 'declared';
+  }
+
+  function renderDeclaredSummary(offerId) {
+    const rec = regulatorUnavailability.get(offerId);
+    if (!rec) return;
+    const causeLabel = CAUSE_LABELS[rec.cause] ?? rec.cause;
+    $ui('panel-unavail-summary').textContent =
+      `Le professionnel de santé a été déclaré indisponible du ${formatDateFr(rec.start)} `
+      + `au ${formatDateFr(rec.end)} (${causeLabel}).`;
   }
 
   function checkUnavailabilityFormValidity() {
@@ -35,17 +66,41 @@ document.addEventListener('DOMContentLoaded', () => {
     $ui('panel-unavail-save').disabled = !(cause && start && end && confirm);
   }
 
+  // Affiche l'état adapté à l'ouverture du panel : le formulaire vierge
+  // n'est jamais montré directement — seulement 'empty' ou 'declared'.
   function resetUnavailabilityForm(offerId) {
     const existing = regulatorUnavailability.get(offerId);
-    $ui('panel-unavail-cause').value    = existing?.cause ?? '';
-    $ui('panel-unavail-start').value    = existing?.start ?? '';
-    $ui('panel-unavail-end').value      = existing?.end   ?? '';
-    $ui('panel-unavail-confirm').checked = false;
-    $ui('panel-unavail-feedback').hidden = !existing;
     if (existing) {
-      $ui('panel-unavail-feedback').textContent = '✓ Indisponibilité déjà enregistrée pour ce professionnel.';
+      renderDeclaredSummary(offerId);
+      showUnavailState('declared');
+    } else {
+      showUnavailState('empty');
     }
+  }
+
+  // Ouvre le formulaire vierge (nouvelle déclaration)
+  function openCreateForm() {
+    $ui('panel-unavail-cause').value     = '';
+    $ui('panel-unavail-start').value     = '';
+    $ui('panel-unavail-end').value       = '';
+    $ui('panel-unavail-confirm').checked = false;
     checkUnavailabilityFormValidity();
+    showUnavailState('form');
+  }
+
+  // Ouvre le formulaire pré-rempli avec la déclaration existante
+  function openEditForm() {
+    const existing = regulatorUnavailability.get(currentOfferId);
+    $ui('panel-unavail-cause').value     = existing?.cause ?? '';
+    $ui('panel-unavail-start').value     = existing?.start ?? '';
+    $ui('panel-unavail-end').value       = existing?.end   ?? '';
+    $ui('panel-unavail-confirm').checked = false;
+    checkUnavailabilityFormValidity();
+    showUnavailState('form');
+  }
+
+  function cancelForm() {
+    resetUnavailabilityForm(currentOfferId);
   }
 
   function saveUnavailability() {
@@ -66,18 +121,25 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     refreshCardFlag(currentOfferId);
-
-    const feedback = $ui('panel-unavail-feedback');
-    feedback.textContent = '✓ Indisponibilité enregistrée.';
-    feedback.hidden = false;
+    renderDeclaredSummary(currentOfferId);
+    showUnavailState('declared');
   }
 
-  function $ui(id) { return document.getElementById(id); }
+  function deleteUnavailability() {
+    if (!currentOfferId) return;
+    regulatorUnavailability.delete(currentOfferId);
+    refreshCardFlag(currentOfferId);
+    showUnavailState('empty');
+  }
 
   ['panel-unavail-cause', 'panel-unavail-start', 'panel-unavail-end', 'panel-unavail-confirm']
     .forEach(id => $ui(id)?.addEventListener('change', checkUnavailabilityFormValidity));
 
+  $ui('panel-unavail-create-btn')?.addEventListener('click', openCreateForm);
+  $ui('panel-unavail-edit-btn')?.addEventListener('click', openEditForm);
+  $ui('panel-unavail-cancel-btn')?.addEventListener('click', cancelForm);
   $ui('panel-unavail-save')?.addEventListener('click', saveUnavailability);
+  $ui('panel-unavail-delete-btn')?.addEventListener('click', deleteUnavailability);
 
   // 📝 1. Remplir le panneau avec les données du professionnel
   function populatePanel(data) {
