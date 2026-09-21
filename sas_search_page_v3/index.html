@@ -385,36 +385,50 @@
           Fermer
         </button>
         <h2 id="panel-title" class="fr-h4 fr-mt-2w fr-mb-1w"></h2>
-        <p id="panel-specialty" class="fr-text--sm fr-text--default-grey fr-mb-1w"></p>
+
+        <p class="sas-panel-icon-line fr-text--sm fr-text--default-grey fr-mb-1w">
+          <span class="sas-panel-icon" aria-hidden="true">🩺</span>
+          <span id="panel-specialty"></span>
+        </p>
+
+        <p class="sas-panel-icon-line fr-text--sm fr-text--default-grey fr-mb-1w"
+           id="panel-conventionnement-line" hidden>
+          <span class="sas-panel-icon" aria-hidden="true">🛡️</span>
+          <span id="panel-conventionnement"></span>
+        </p>
+
         <div id="panel-sas-badge" hidden></div>
       </div>
 
       <!-- Body scrollable -->
       <div class="side-panel__body">
 
-        <!-- Contact & Adresse -->
+        <!-- Téléphone -->
         <div class="fr-card fr-card--no-border fr-mb-3w">
           <div class="fr-card__body">
-            <h3 class="fr-h5 fr-mb-2w">Coordonnées</h3>
-            <ul class="fr-list fr-list--no-bullet fr-text--sm">
-              <li id="panel-address" class="fr-mb-1w"></li>
-              <li id="panel-phone" class="fr-mb-1w"></li>
-            </ul>
+            <h3 class="fr-h5 fr-mb-2w sas-panel-icon-heading">
+              <span class="sas-panel-icon" aria-hidden="true">📞</span> Téléphone
+            </h3>
+            <p id="panel-phone" class="fr-text--sm fr-mb-0"></p>
           </div>
         </div>
 
         <!-- Information complémentaire -->
         <div class="fr-card fr-card--no-border fr-mb-3w sas-panel-section">
           <div class="fr-card__body">
-            <h3 class="fr-h5 fr-mb-2w">Information complémentaire</h3>
-            <p id="panel-comment" class="fr-text--sm fr-text--default-grey fr-mb-0"></p>
+            <h3 class="fr-h5 fr-mb-2w sas-panel-icon-heading">
+              <span class="sas-panel-icon" aria-hidden="true">ℹ️</span> Informations complémentaires
+            </h3>
+            <p id="panel-comment" class="fr-text--sm fr-text--default-grey fr-mb-0 sas-panel-box"></p>
           </div>
         </div>
 
         <!-- ── Information spécifique : déclaration d'indisponibilité par le régulateur ── -->
         <div class="fr-card fr-mb-3w sas-unavail-card" id="panel-unavail-section">
           <div class="fr-card__body">
-            <h3 class="fr-h5 fr-mb-2w">Information spécifique</h3>
+            <h3 class="fr-h5 fr-mb-2w sas-panel-icon-heading">
+              <span class="sas-panel-icon" aria-hidden="true">⚠️</span> Information spécifique
+            </h3>
 
             <!-- État 1 : rien de déclaré -->
             <div id="panel-unavail-empty">
@@ -486,32 +500,53 @@
           </div>
         </div>
 
+        <!-- Adresse (+ lien structure CPTS/MSP le cas échéant) -->
+        <div class="fr-card fr-card--no-border fr-mb-3w">
+          <div class="fr-card__body">
+            <h3 class="fr-h5 fr-mb-2w sas-panel-icon-heading">
+              <span class="sas-panel-icon" aria-hidden="true">📍</span> Adresse
+            </h3>
+            <p id="panel-org-link" class="fr-text--sm fr-mb-1w" hidden></p>
+            <p id="panel-address" class="fr-text--sm fr-mb-0"></p>
+          </div>
+        </div>
+
 <!-- ── Itinéraire ── -->
 <div class="fr-card fr-card--no-border fr-mb-3w">
   <div class="fr-card__body">
-    <h3 class="fr-h5 fr-mb-2w">Itinéraire</h3>
+    <h3 class="fr-h5 fr-mb-2w sas-panel-icon-heading">
+      <span class="sas-panel-icon" aria-hidden="true">🗺️</span> Itinéraire
+    </h3>
 
     <!-- Adresse patient -->
-    <div class="fr-input-group fr-mb-1w">
+    <div class="fr-input-group fr-mb-2w">
       <label class="fr-label" for="panel-patient-address">
         Adresse de départ
       </label>
-      <input class="fr-input"
+      <input class="fr-input sas-unavail-input"
              type="text"
              id="panel-patient-address"
              placeholder="Ex : 15 rue de Rivoli, 75001 Paris">
     </div>
 
-    <!-- Mode de transport -->
-    <div class="fr-select-group fr-mb-2w">
-      <label class="fr-label" for="panel-transport-mode">
-        Mode de transport
-      </label>
-      <select class="fr-select" id="panel-transport-mode">
-        <option value="car">Voiture</option>
-        <option value="bike">Vélo</option>
-        <option value="foot">À pied</option>
-      </select>
+    <!-- Mode de transport : sélecteur à icônes -->
+    <div class="fr-mb-2w">
+      <p class="fr-label fr-mb-1w">Mode de transport</p>
+      <div class="sas-transport-modes" role="radiogroup" aria-label="Mode de transport">
+        <button type="button" class="sas-transport-mode-btn active"
+                data-mode="car" aria-pressed="true" title="Voiture">
+          <span aria-hidden="true">🚗</span>
+        </button>
+        <button type="button" class="sas-transport-mode-btn"
+                data-mode="bike" aria-pressed="false" title="Vélo">
+          <span aria-hidden="true">🚴</span>
+        </button>
+        <button type="button" class="sas-transport-mode-btn"
+                data-mode="foot" aria-pressed="false" title="À pied">
+          <span aria-hidden="true">🚶</span>
+        </button>
+      </div>
+      <input type="hidden" id="panel-transport-mode" value="car">
     </div>
 
     <!-- Bouton -->
@@ -536,7 +571,9 @@
         <!-- Activité opérationnelle & Actes spécifiques -->
         <div class="fr-card fr-card--no-border fr-mb-3w">
           <div class="fr-card__body">
-            <h3 class="fr-h5 fr-mb-2w">Offre de soins</h3>
+            <h3 class="fr-h5 fr-mb-2w sas-panel-icon-heading">
+              <span class="sas-panel-icon" aria-hidden="true">🩺</span> Offre de soins
+            </h3>
             <p class="fr-text--sm fr-text--bold fr-mb-1w">Activité opérationnelle</p>
             <p id="panel-operational-activity" class="fr-text--sm fr-text--default-grey fr-mb-2w"></p>
             <p class="fr-text--sm fr-text--bold fr-mb-1w">Actes et équipements spécifiques</p>
@@ -557,9 +594,6 @@
           </div>
         </div>
 
-        <button class="fr-btn fr-btn--lg w-100" id="panel-book-btn">
-          Orientation hors disponibilité
-        </button>
       </div>
     </aside>
  
@@ -849,6 +883,21 @@
   document.addEventListener('DOMContentLoaded', function () {
     document.getElementById('panel-itinerary-btn')
             ?.addEventListener('click', onCalculate);
+
+    // Sélecteur de mode de transport à icônes : met à jour le champ caché
+    // #panel-transport-mode (lu par onCalculate ci-dessus) et l'état visuel.
+    document.querySelectorAll('.sas-transport-mode-btn').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        document.querySelectorAll('.sas-transport-mode-btn').forEach(function (b) {
+          b.classList.remove('active');
+          b.setAttribute('aria-pressed', 'false');
+        });
+        btn.classList.add('active');
+        btn.setAttribute('aria-pressed', 'true');
+        var hidden = document.getElementById('panel-transport-mode');
+        if (hidden) hidden.value = btn.dataset.mode;
+      });
+    });
   });
 
   /* ─── 7. Réinitialiser quand le panneau se ferme ─── */

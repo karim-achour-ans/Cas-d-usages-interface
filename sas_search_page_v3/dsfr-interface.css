@@ -1510,3 +1510,75 @@
   font-weight: 600 !important;
   margin-bottom: 0.3rem !important;
 }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   REFONTE LISIBILITÉ DU PANEL — icônes, sections mieux séparées,
+   sélecteur de transport visuel (remplace la maquette de référence)
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ── Icônes de section (en-tête et titres de carte) ── */
+.sas-panel-icon-line {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.sas-panel-icon-heading {
+  display: flex !important;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.sas-panel-icon {
+  font-size: 0.95rem;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+/* ── Boîte grisée pour "Informations complémentaires" (repère visuel net,
+   plutôt qu'un simple paragraphe qui se fond dans le reste) ── */
+.sas-panel-box {
+  background: var(--background-contrast-grey, #f6f6f6);
+  border-radius: 0.375rem;
+  padding: 0.75rem 1rem;
+}
+
+/* ── Espacement général des sections du panel : plus d'air entre chaque
+   bloc pour une lecture plus claire (retour : "panel difficilement lisible") ── */
+.side-panel__body > .fr-card {
+  margin-bottom: 1.5rem !important;
+}
+
+.side-panel__body .fr-h5 {
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--border-default-grey, #e5e5e5);
+}
+
+/* ── Sélecteur de mode de transport : icônes rondes, état actif rempli ── */
+.sas-transport-modes {
+  display: flex;
+  gap: 0.6rem;
+}
+
+.sas-transport-mode-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 50%;
+  border: 1px solid var(--border-default-grey, #929292);
+  background: #fff;
+  font-size: 1.1rem;
+  cursor: pointer;
+  transition: background .12s, border-color .12s;
+}
+
+.sas-transport-mode-btn:hover {
+  border-color: var(--border-action-high-blue-france, #000091);
+}
+
+.sas-transport-mode-btn.active {
+  background: var(--background-action-high-blue-france, #000091);
+  border-color: var(--background-action-high-blue-france, #000091);
+}
