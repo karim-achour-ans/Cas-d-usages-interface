@@ -413,6 +413,16 @@
           </div>
         </div>
 
+        <!-- Activité opérationnelle & Actes spécifiques (pas de titre de section) -->
+        <div class="fr-card fr-card--no-border fr-mb-3w">
+          <div class="fr-card__body">
+            <p class="fr-text--sm fr-text--bold fr-mb-1w">Activité opérationnelle</p>
+            <p id="panel-operational-activity" class="fr-text--sm fr-text--default-grey fr-mb-2w"></p>
+            <p class="fr-text--sm fr-text--bold fr-mb-1w">Actes et équipements spécifiques</p>
+            <div id="panel-specific-acts" class="sas-panel-section"></div>
+          </div>
+        </div>
+
         <!-- Information complémentaire -->
         <div class="fr-card fr-card--no-border fr-mb-3w sas-panel-section">
           <div class="fr-card__body">
@@ -447,8 +457,7 @@
               </p>
 
               <div class="fr-select-group fr-mb-2w">
-                <label class="fr-label" for="panel-unavail-cause">Cause</label>
-                <select class="fr-select sas-unavail-input" id="panel-unavail-cause">
+                <select class="fr-select sas-unavail-input" id="panel-unavail-cause" aria-label="Cause">
                   <option value="" selected>Sélectionner</option>
                   <option value="absence">Absence de ce professionnel de santé</option>
                   <option value="cabinet-ferme">Cabinet fermé</option>
@@ -458,13 +467,11 @@
               </div>
 
               <div class="fr-input-group fr-mb-1w sas-unavail-date-field">
-                <label class="fr-label" for="panel-unavail-start">Début</label>
-                <input class="fr-input sas-unavail-input" type="date" id="panel-unavail-start">
+                <input class="fr-input sas-unavail-input" type="date" id="panel-unavail-start" aria-label="Début">
               </div>
 
               <div class="fr-input-group fr-mb-2w sas-unavail-date-field">
-                <label class="fr-label" for="panel-unavail-end">Fin</label>
-                <input class="fr-input sas-unavail-input" type="date" id="panel-unavail-end">
+                <input class="fr-input sas-unavail-input" type="date" id="panel-unavail-end" aria-label="Fin">
               </div>
 
               <div class="fr-checkbox-group fr-mb-2w">
@@ -511,27 +518,21 @@
           </div>
         </div>
 
-<!-- ── Itinéraire ── -->
+<!-- ── Itinéraire (pas de titre de section) ── -->
 <div class="fr-card fr-card--no-border fr-mb-3w">
   <div class="fr-card__body">
-    <h3 class="fr-h5 fr-mb-2w sas-panel-icon-heading">
-      <span class="sas-panel-icon" aria-hidden="true">🗺️</span> Itinéraire
-    </h3>
 
     <!-- Adresse patient -->
     <div class="fr-input-group fr-mb-2w">
-      <label class="fr-label" for="panel-patient-address">
-        Adresse de départ
-      </label>
       <input class="fr-input sas-unavail-input"
              type="text"
              id="panel-patient-address"
+             aria-label="Adresse de départ"
              placeholder="Ex : 15 rue de Rivoli, 75001 Paris">
     </div>
 
     <!-- Mode de transport : sélecteur à icônes -->
     <div class="fr-mb-2w">
-      <p class="fr-label fr-mb-1w">Mode de transport</p>
       <div class="sas-transport-modes" role="radiogroup" aria-label="Mode de transport">
         <button type="button" class="sas-transport-mode-btn active"
                 data-mode="car" aria-pressed="true" title="Voiture">
@@ -568,19 +569,6 @@
 
   </div>
 </div>
-        <!-- Activité opérationnelle & Actes spécifiques -->
-        <div class="fr-card fr-card--no-border fr-mb-3w">
-          <div class="fr-card__body">
-            <h3 class="fr-h5 fr-mb-2w sas-panel-icon-heading">
-              <span class="sas-panel-icon" aria-hidden="true">🩺</span> Offre de soins
-            </h3>
-            <p class="fr-text--sm fr-text--bold fr-mb-1w">Activité opérationnelle</p>
-            <p id="panel-operational-activity" class="fr-text--sm fr-text--default-grey fr-mb-2w"></p>
-            <p class="fr-text--sm fr-text--bold fr-mb-1w">Actes et équipements spécifiques</p>
-            <div id="panel-specific-acts" class="sas-panel-section"></div>
-          </div>
-        </div>
-
 
         <!-- Lien interface RDV SAS -->
         <div class="fr-card fr-card--no-border fr-mb-3w">

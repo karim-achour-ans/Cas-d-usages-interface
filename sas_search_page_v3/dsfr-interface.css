@@ -975,14 +975,12 @@
   padding: 0 !important; /* Les sections gèrent leur propre espacement */
 }
 
-/* Sections du panneau : diviseurs fins au lieu de cards imbriquées */
+/* Sections du panneau : plus de diviseur — juste de l'espacement (cf. plus bas) */
 .side-panel__body .fr-card.fr-card--no-border {
   border: none !important;
   border-radius: 0 !important;
-  border-bottom: 1px solid var(--border-default-grey) !important;
   box-shadow: none !important;
   background: transparent !important;
-  margin-bottom: 0 !important;
 }
 
 .side-panel__body .fr-card.fr-card--no-border:hover {
@@ -1551,7 +1549,23 @@
 
 .side-panel__body .fr-h5 {
   padding-bottom: 0.5rem;
-  border-bottom: 1px solid var(--border-default-grey, #e5e5e5);
+}
+
+/* ── Suppression du gris au survol des boutons secondaires/tertiaires
+   du panel (style DSFR par défaut : rgba(0,0,0,.05), jugé disgracieux) ── */
+.side-panel__body .fr-btn--secondary:hover,
+.side-panel__body .fr-btn--tertiary:hover {
+  background-color: var(--background-alt-blue-france, #f5f5fe) !important;
+}
+
+.side-panel__body .fr-btn--secondary:active,
+.side-panel__body .fr-btn--tertiary:active {
+  background-color: var(--background-alt-blue-france, #f5f5fe) !important;
+}
+
+/* ── Formulaire de création/édition d'indisponibilité : un peu d'air ── */
+#panel-unavail-form {
+  padding: 0.75rem;
 }
 
 /* ── Sélecteur de mode de transport : icônes rondes, état actif rempli ── */
