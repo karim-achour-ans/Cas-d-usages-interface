@@ -1413,3 +1413,14 @@
 .fr-container, .fr-container-lg, .fr-container-md, .fr-container-sm {
   max-width: 95% !important;
 }
+
+/* ── Déclaration d'indisponibilité par le régulateur (feature OSNP) ── */
+.sas-regulation-flag {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #b34000;
+  margin: -0.35rem 0 0.6rem 0;
+}

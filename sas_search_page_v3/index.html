@@ -410,6 +410,60 @@
             <p id="panel-comment" class="fr-text--sm fr-text--default-grey fr-mb-0"></p>
           </div>
         </div>
+
+        <!-- ── Information spécifique : déclaration d'indisponibilité par le régulateur ── -->
+        <div class="fr-card fr-card--no-border fr-mb-3w">
+          <div class="fr-card__body">
+            <h3 class="fr-h5 fr-mb-2w">Information spécifique</h3>
+            <p class="fr-text--sm fr-mb-2w">
+              Je souhaite déclarer une information d'indisponibilité
+            </p>
+
+            <div class="fr-select-group fr-mb-2w">
+              <label class="fr-label" for="panel-unavail-cause">Cause</label>
+              <select class="fr-select" id="panel-unavail-cause">
+                <option value="" selected>Sélectionner</option>
+                <option value="absence">Absence de ce professionnel de santé</option>
+                <option value="cabinet-ferme">Cabinet fermé</option>
+                <option value="plus-dispo">Plus de disponibilité</option>
+                <option value="autres">Autres</option>
+              </select>
+            </div>
+
+            <div class="fr-grid-row fr-grid-row--gutters fr-mb-2w">
+              <div class="fr-col-6">
+                <div class="fr-input-group fr-mb-0">
+                  <label class="fr-label" for="panel-unavail-start">Début</label>
+                  <input class="fr-input" type="date" id="panel-unavail-start">
+                </div>
+              </div>
+              <div class="fr-col-6">
+                <div class="fr-input-group fr-mb-0">
+                  <label class="fr-label" for="panel-unavail-end">Fin</label>
+                  <input class="fr-input" type="date" id="panel-unavail-end">
+                </div>
+              </div>
+            </div>
+
+            <div class="fr-checkbox-group fr-mb-2w">
+              <input type="checkbox" id="panel-unavail-confirm">
+              <label class="fr-label" for="panel-unavail-confirm">
+                Je confirme cette déclaration
+              </label>
+            </div>
+
+            <button class="fr-btn fr-btn--sm" id="panel-unavail-save" disabled>
+              Enregistrer l'indisponibilité
+            </button>
+
+            <p id="panel-unavail-feedback"
+               class="fr-text--sm fr-text--default-success fr-mt-1w"
+               hidden>
+              ✓ Indisponibilité enregistrée.
+            </p>
+          </div>
+        </div>
+
 <!-- ── Itinéraire ── -->
 <div class="fr-card fr-card--no-border fr-mb-3w">
   <div class="fr-card__body">
