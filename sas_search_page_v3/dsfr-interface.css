@@ -989,7 +989,7 @@
 }
 
 .side-panel__body .fr-card__body {
-  padding: 1rem 1.5rem !important;
+  padding: 0.65rem 1.5rem !important;
 }
 
 /* Titres de section dans le panneau : caption style */
@@ -1541,14 +1541,23 @@
   padding: 0.75rem 1rem;
 }
 
-/* ── Espacement général des sections du panel : plus d'air entre chaque
-   bloc pour une lecture plus claire (retour : "panel difficilement lisible") ── */
+/* ── Espacement général des sections du panel ── */
 .side-panel__body > .fr-card {
-  margin-bottom: 1.5rem !important;
+  margin-bottom: 0.5rem !important;
 }
 
 .side-panel__body .fr-h5 {
   padding-bottom: 0.5rem;
+}
+
+/* Libellé de champ discret (ex. "Téléphone") — un label, pas un titre */
+.sas-panel-field-label {
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-mention-grey);
+  margin: 0;
 }
 
 /* ── Suppression du gris au survol des boutons secondaires/tertiaires
@@ -1561,6 +1570,12 @@
 .side-panel__body .fr-btn--secondary:active,
 .side-panel__body .fr-btn--tertiary:active {
   background-color: var(--background-alt-blue-france, #f5f5fe) !important;
+}
+
+/* Le DSFR grise aussi les champs select/input au survol via sa variable
+   --hover (background-contrast-grey-hover) — on la neutralise ici. */
+.side-panel__body .sas-unavail-input:hover {
+  background-color: #fff !important;
 }
 
 /* ── Formulaire de création/édition d'indisponibilité : un peu d'air ── */
