@@ -151,7 +151,15 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     // ── Information spécifique : déclaration d'indisponibilité (régulateur) ──
     currentOfferId = data.id ?? null;
-    if (currentOfferId) resetUnavailabilityForm(currentOfferId);
+    if (currentOfferId) {
+      // Pré-alimente l'état en mémoire depuis la donnée du bundle (une
+      // indisponibilité déjà déclarée en amont, pas via ce formulaire),
+      // sans écraser une déclaration déjà faite pendant cette session.
+      if (data.regulatorUnavailability && !regulatorUnavailability.has(currentOfferId)) {
+        regulatorUnavailability.set(currentOfferId, data.regulatorUnavailability);
+      }
+      resetUnavailabilityForm(currentOfferId);
+    }
   }
 
   // 🚪 2. Ouvrir le panneau

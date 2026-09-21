@@ -141,6 +141,25 @@ function extractMedecinTraitant(practitionerRole) {
   )?.valueBoolean ?? false;
 }
 
+/**
+ * Extract a régulateur-declared unavailability from PractitionerRole, when
+ * already present in the data (as opposed to one declared live via the
+ * panel form). Distinct from the PS's own "busy-unavailable" slots.
+ */
+function extractRegulatorUnavailability(practitionerRole) {
+  const ext = practitionerRole?.extension?.find(
+    e => e.url === "https://annuaire.sante.fr/fhir/StructureDefinition/practitioner-role-regulator-unavailability"
+  );
+  if (!ext) return null;
+
+  const cause = ext.extension?.find(e => e.url === "cause")?.valueCode ?? null;
+  const start = ext.extension?.find(e => e.url === "start")?.valueDate ?? null;
+  const end   = ext.extension?.find(e => e.url === "end")?.valueDate   ?? null;
+  if (!cause || !start || !end) return null;
+
+  return { cause, start, end };
+}
+
 function extractOperationalActivity(healthcareService) {
   return (
     healthcareService?.specialty
@@ -199,6 +218,7 @@ export function parseOffer({
   const { sasOk, sasTypes }                               = extractSasParticipation(practitionerRole);
   const { conventionnementCode, conventionnementDisplay } = extractConventionnement(practitionerRole);
   const isMedecinTraitant                                 = extractMedecinTraitant(practitionerRole);
+  const regulatorUnavailability                           = extractRegulatorUnavailability(practitionerRole);
 
   return {
     id:                      practitionerRole?.id ?? null,
@@ -217,6 +237,7 @@ export function parseOffer({
     sasOk,
     sasTypes,
     isMedecinTraitant,
+    regulatorUnavailability,
     conventionnementCode,
     conventionnementDisplay,
     comment:                 healthcareService?.comment ?? null,

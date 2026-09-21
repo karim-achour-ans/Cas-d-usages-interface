@@ -294,6 +294,7 @@ function renderCard(offer) {
   const panelData = {
     id:                      offer.id,
     identifier:              offer.identifier,
+    regulatorUnavailability: offer.regulatorUnavailability,
     name:                    displayName,
     specialty:               [offer.profession, offer.specialty].filter(Boolean).join(' — '),
     phone:                   offer.phone,
@@ -358,9 +359,10 @@ function renderCard(offer) {
             </div>
           </div>
 
-          <!-- Déclaration régulateur : masqué par défaut, affiché par panel.js
-               après enregistrement d'une indisponibilité (cf. saveUnavailability) -->
-          <p class="sas-regulation-flag" data-regulation-flag hidden>
+          <!-- Déclaration régulateur : visible par défaut si déjà présente dans
+               la donnée (offer.regulatorUnavailability), sinon masquée jusqu'à
+               ce que panel.js la révèle après un enregistrement via le formulaire -->
+          <p class="sas-regulation-flag" data-regulation-flag ${offer.regulatorUnavailability ? '' : 'hidden'}>
             <span aria-hidden="true">⚠</span> Noté indisponible par la régulation
           </p>
 
