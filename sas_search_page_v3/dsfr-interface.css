@@ -1461,5 +1461,52 @@
 .sas-unavail-actions {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
+  justify-content: center;
+  gap: 1rem;
+  margin-top: 1.25rem;
+}
+
+/* Boutons pilule (arrondi complet), centrés — conforme à la maquette */
+.sas-unavail-actions .fr-btn {
+  border-radius: 999px !important;
+  padding: 0.55rem 1.5rem !important;
+  font-size: 0.85rem !important;
+  font-weight: 600 !important;
+  box-shadow: none !important;
+}
+
+.sas-unavail-actions .fr-btn--secondary {
+  border: 1px solid var(--border-action-high-blue-france, #000091) !important;
+  color: var(--text-action-high-blue-france, #000091) !important;
+  background: #fff !important;
+}
+
+.sas-unavail-actions .fr-btn:not(.fr-btn--secondary):not(.fr-btn--tertiary) {
+  background: var(--background-action-high-blue-france, #000091) !important;
+  color: #fff !important;
+}
+
+.sas-unavail-actions .fr-btn:disabled {
+  opacity: 0.4;
+}
+
+/* Bouton "Créer une information spécifique" (état vide) : même traitement */
+#panel-unavail-create-btn {
+  border-radius: 999px !important;
+  padding: 0.5rem 1.25rem !important;
+  border: 1px solid var(--border-action-high-blue-france, #000091) !important;
+  color: var(--text-action-high-blue-france, #000091) !important;
+  background: #fff !important;
+  box-shadow: none !important;
+}
+
+/* Espacements internes de la section, plus proches de la maquette */
+.sas-unavail-card .fr-card__body {
+  padding: 1.25rem !important;
+}
+
+.sas-unavail-card label.fr-label {
+  font-size: 0.8rem !important;
+  font-weight: 600 !important;
+  margin-bottom: 0.3rem !important;
 }
