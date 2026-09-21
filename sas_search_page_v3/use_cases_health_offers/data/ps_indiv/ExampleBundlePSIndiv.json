@@ -11,6 +11,44 @@
   "entry": [
     {
       "resource": {
+        "resourceType": "Schedule",
+        "id": "ExampleSchedule5",
+        "actor": [
+          {
+            "reference": "Practitioner/ExamplePractitioner5"
+          },
+          {
+            "reference": "PractitionerRole/ExamplePractitionerRoleAgregateur6"
+          }
+        ]
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Slot",
+        "id": "ExampleSlotBernardIndisponible",
+        "schedule": {
+          "reference": "Schedule/ExampleSchedule5"
+        },
+        "status": "busy-unavailable",
+        "start": "2026-09-21T09:00:00.000+00:00",
+        "end": "2026-09-21T17:00:00.000+00:00"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Slot",
+        "id": "ExampleSlotBernardLibre",
+        "schedule": {
+          "reference": "Schedule/ExampleSchedule5"
+        },
+        "status": "free",
+        "start": "2026-09-22T14:00:00.000+00:00",
+        "end": "2026-09-22T14:30:00.000+00:00"
+      }
+    },
+    {
+      "resource": {
         "resourceType": "Slot",
         "id": "ExampleSlotMedecinTraitant1",
         "schedule": {
@@ -728,6 +766,23 @@
               "code": "1",
               "display": "Secteur 1"
             }
+          },
+          {
+            "url": "https://annuaire.sante.fr/fhir/StructureDefinition/practitioner-role-regulator-unavailability",
+            "extension": [
+              {
+                "url": "cause",
+                "valueCode": "absence"
+              },
+              {
+                "url": "start",
+                "valueDate": "2026-09-20"
+              },
+              {
+                "url": "end",
+                "valueDate": "2026-09-25"
+              }
+            ]
           }
         ],
         "practitioner": {
