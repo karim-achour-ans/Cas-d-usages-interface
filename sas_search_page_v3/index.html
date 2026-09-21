@@ -412,55 +412,77 @@
         </div>
 
         <!-- ── Information spécifique : déclaration d'indisponibilité par le régulateur ── -->
-        <div class="fr-card fr-card--no-border fr-mb-3w">
+        <div class="fr-card fr-mb-3w sas-unavail-card" id="panel-unavail-section">
           <div class="fr-card__body">
             <h3 class="fr-h5 fr-mb-2w">Information spécifique</h3>
-            <p class="fr-text--sm fr-mb-2w">
-              Je souhaite déclarer une information d'indisponibilité
-            </p>
 
-            <div class="fr-select-group fr-mb-2w">
-              <label class="fr-label" for="panel-unavail-cause">Cause</label>
-              <select class="fr-select" id="panel-unavail-cause">
-                <option value="" selected>Sélectionner</option>
-                <option value="absence">Absence de ce professionnel de santé</option>
-                <option value="cabinet-ferme">Cabinet fermé</option>
-                <option value="plus-dispo">Plus de disponibilité</option>
-                <option value="autres">Autres</option>
-              </select>
+            <!-- État 1 : rien de déclaré -->
+            <div id="panel-unavail-empty">
+              <p class="fr-text--sm fr-text--default-grey fr-mb-2w">
+                Pas d'information déclarée.
+              </p>
+              <button class="fr-btn fr-btn--secondary fr-btn--sm" id="panel-unavail-create-btn">
+                Créer une information spécifique
+              </button>
             </div>
 
-            <div class="fr-grid-row fr-grid-row--gutters fr-mb-2w">
-              <div class="fr-col-6">
-                <div class="fr-input-group fr-mb-0">
-                  <label class="fr-label" for="panel-unavail-start">Début</label>
-                  <input class="fr-input" type="date" id="panel-unavail-start">
-                </div>
+            <!-- État 2 : formulaire de création / édition -->
+            <div id="panel-unavail-form" hidden>
+              <p class="fr-text--sm fr-mb-2w">
+                Je souhaite déclarer une information d'indisponibilité
+              </p>
+
+              <div class="fr-select-group fr-mb-2w">
+                <label class="fr-label" for="panel-unavail-cause">Cause</label>
+                <select class="fr-select sas-unavail-input" id="panel-unavail-cause">
+                  <option value="" selected>Sélectionner</option>
+                  <option value="absence">Absence de ce professionnel de santé</option>
+                  <option value="cabinet-ferme">Cabinet fermé</option>
+                  <option value="plus-dispo">Plus de disponibilité</option>
+                  <option value="autres">Autres</option>
+                </select>
               </div>
-              <div class="fr-col-6">
-                <div class="fr-input-group fr-mb-0">
-                  <label class="fr-label" for="panel-unavail-end">Fin</label>
-                  <input class="fr-input" type="date" id="panel-unavail-end">
-                </div>
+
+              <div class="fr-input-group fr-mb-1w sas-unavail-date-field">
+                <label class="fr-label" for="panel-unavail-start">Début</label>
+                <input class="fr-input sas-unavail-input" type="date" id="panel-unavail-start">
+              </div>
+
+              <div class="fr-input-group fr-mb-2w sas-unavail-date-field">
+                <label class="fr-label" for="panel-unavail-end">Fin</label>
+                <input class="fr-input sas-unavail-input" type="date" id="panel-unavail-end">
+              </div>
+
+              <div class="fr-checkbox-group fr-mb-2w">
+                <input type="checkbox" id="panel-unavail-confirm">
+                <label class="fr-label" for="panel-unavail-confirm">
+                  Je confirme cette déclaration
+                </label>
+              </div>
+
+              <div class="sas-unavail-actions">
+                <button class="fr-btn fr-btn--secondary fr-btn--sm" id="panel-unavail-cancel-btn">
+                  Annuler
+                </button>
+                <button class="fr-btn fr-btn--sm" id="panel-unavail-save" disabled>
+                  Enregistrer
+                </button>
               </div>
             </div>
 
-            <div class="fr-checkbox-group fr-mb-2w">
-              <input type="checkbox" id="panel-unavail-confirm">
-              <label class="fr-label" for="panel-unavail-confirm">
-                Je confirme cette déclaration
-              </label>
+            <!-- État 3 : indisponibilité déclarée (vue résumé) -->
+            <div id="panel-unavail-declared" hidden>
+              <p class="fr-text--sm fr-mb-2w" id="panel-unavail-summary"></p>
+              <div class="sas-unavail-actions">
+                <button class="fr-btn fr-btn--secondary fr-btn--sm" id="panel-unavail-edit-btn">
+                  Modifier
+                </button>
+                <button class="fr-btn fr-btn--tertiary fr-btn--sm" id="panel-unavail-delete-btn">
+                  Supprimer
+                </button>
+              </div>
             </div>
 
-            <button class="fr-btn fr-btn--sm" id="panel-unavail-save" disabled>
-              Enregistrer l'indisponibilité
-            </button>
-
-            <p id="panel-unavail-feedback"
-               class="fr-text--sm fr-text--default-success fr-mt-1w"
-               hidden>
-              ✓ Indisponibilité enregistrée.
-            </p>
           </div>
         </div>
 
