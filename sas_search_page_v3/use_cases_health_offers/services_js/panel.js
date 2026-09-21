@@ -146,7 +146,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const $ = (id) => document.getElementById(id);
 
     $('panel-title').textContent = data.identifier
-      ? `${data.name || '—'} - [${data.identifier}]`
+      ? `${data.name || '—'} - ${data.identifier}`
       : (data.name || '—');
     $('panel-specialty').textContent = data.specialty || '';
     $('panel-address').textContent   = data.address   || '';
@@ -154,20 +154,20 @@ document.addEventListener('DOMContentLoaded', () => {
       ? `<a href="tel:${data.phone}">${data.phone}</a>`
       : 'Non communiqué';
 
-    // ── Lien vers les professionnels de la CPTS / MSP ─────────────────────
-    // L'élément #panel-org-link est créé dynamiquement s'il n'existe pas encore
-    // (évite de modifier index.html). Il est inséré après #panel-phone dans la
-    // même <ul> de coordonnées.
-    const phoneEl = $('panel-phone');
-    let orgLinkEl = $('panel-org-link');
-
-    if (!orgLinkEl && phoneEl?.parentNode) {
-      orgLinkEl    = document.createElement('li');
-      orgLinkEl.id = 'panel-org-link';
-      orgLinkEl.className = 'fr-mb-0 fr-mt-1w';
-      phoneEl.parentNode.appendChild(orgLinkEl);
+    // ── Conventionnement (secteur 1 / 2 / non conventionné) ────────────────
+    const conventionnementLine = $('panel-conventionnement-line');
+    if (conventionnementLine) {
+      if (data.conventionnementDisplay || data.conventionnementCode) {
+        $('panel-conventionnement').textContent =
+          data.conventionnementDisplay || `Conventionnement ${data.conventionnementCode}`;
+        conventionnementLine.hidden = false;
+      } else {
+        conventionnementLine.hidden = true;
+      }
     }
 
+    // ── Lien vers les professionnels de la CPTS / MSP ─────────────────────
+    const orgLinkEl = $('panel-org-link');
     if (orgLinkEl) {
       if (data.orgType && data.orgName) {
         const prefix = data.orgType === 'cpts' ? 'de la CPTS' : 'du MSP';
