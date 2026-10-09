@@ -8,16 +8,30 @@
 /* ---------------------------------------------------------------- *
  *  RÉFÉRENTIELS
  * ---------------------------------------------------------------- */
-/* Rôles gérés. Le rôle « Administrateur » a été retiré : l'administrateur du BO
-   a par défaut l'accès national (voir habilitations, identities.js). */
+/* Rôles gérés — spécification cible « Création et gestion des comptes utilisateurs SAS ».
+   - Deux rôles créateurs : SAS Administrateur (national) et Gestionnaire de comptes (territorial).
+   - Le rôle `sas_administrateur` historique est supprimé ; l'ex-administrateur national
+     devient « SAS Administrateur ».
+   - Le rôle Effecteur est supprimé : la qualité d'effecteur est déduite du RPPS (Annuaire Santé).
+   territoire : "aucun" (pas de territoire) · "un" (exactement un) · "plusieurs" (au moins un). */
 const ROLES = [
-  { value: "gestionnaire_compte",   label: "Gestionnaire de Compte",   desc: "Gère les utilisateurs rattachés à son territoire SAS." },
-  { value: "gestionnaire_structure",label: "Gestionnaire de Structure",desc: "Gère une ou plusieurs structures d'effection (SOS, CDS, CPTS/MSP)." },
-  { value: "regulateur_osnp",       label: "Régulateur OSNP",          desc: "Régulation des soins non programmés (OSNP)." },
-  { value: "regulateur_su",         label: "Régulateur SU",            desc: "Régulation SU — droits identiques au Régulateur OSNP." },
-  { value: "effecteur",             label: "Effecteur",                desc: "Professionnel de santé effecteur, identifié par son n° RPPS." },
+  { value: "sas_administrateur",     label: "SAS Administrateur",                              territoire: "aucun",     desc: "Portée nationale : crée et gère tous les comptes." },
+  { value: "gestionnaire_compte",    label: "Gestionnaire de comptes – Référent territorial",  territoire: "plusieurs", desc: "Crée et gère les comptes de ses territoires." },
+  { value: "gestionnaire_structure", label: "Gestionnaire de structure",                       territoire: "plusieurs", desc: "Rattaché à au moins une structure (SOS Médecins, CPTS, CDS)." },
+  { value: "regulateur_osnp",        label: "Régulateur OSNP",                                 territoire: "un",        desc: "Régulation des soins non programmés — un seul territoire." },
+  { value: "regulateur_ioa",         label: "Régulateur IOA / Agent d'accueil",                territoire: "un",        desc: "Infirmier d'orientation et d'accueil — un seul territoire." },
+  { value: "testinterop",            label: "TestInterop",                                     territoire: "aucun",     desc: "Compte de test d'interopérabilité, visible des seuls SAS Administrateurs." },
 ];
+const ROLE_BY_VALUE = Object.fromEntries(ROLES.map(r => [r.value, r]));
 const ROLE_LABEL = Object.fromEntries(ROLES.map(r => [r.value, r.label]));
+/* Libellé d'affichage : un Régulateur OSNP dont le RPPS est celui d'un effecteur
+   est listé comme « Régulateur Médecin » (RG-EFF-04 / RG-LIST-03). */
+ROLE_LABEL.regulateur_medecin = "Régulateur Médecin";
+const REGULATEUR_ROLES = ["regulateur_osnp", "regulateur_ioa"];      // non cumulables entre eux (RG-REG-03)
+/* Rôles qu'un Gestionnaire de comptes ne peut pas attribuer (RG-ACC-06) */
+const ROLES_RESERVES_ADMIN = ["sas_administrateur", "testinterop"];
+/* Comptes visibles des seuls SAS Administrateurs (RG-TI-01) */
+const ROLES_VISIBLES_ADMIN = ["sas_administrateur", "testinterop"];
 
 /* Environnements (rattachement d'un compte, fixé par l'administrateur du BO) */
 const ENVIRONNEMENTS = ["Production", "PréProduction", "Intégration", "Formation"];
@@ -32,17 +46,9 @@ function territoireRegion(code) {
   const d = (typeof DEPARTEMENTS !== "undefined" ? DEPARTEMENTS : []).find(x => (x.territory||[]).some(t => t.name === code));
   return d ? d.region : "";
 }
-const MODE_CONNEXION = { PSC: "France Connect / PSC", MdP: "Login / mot de passe" };
-
-// Rôles/tags réservés : assignables uniquement par un administrateur,
-// et les utilisateurs qui les portent ne sont visibles/filtrables que par les admins.
-const ADMIN_TAGS = [
-  { value: "referent_territoriale", label: "Referent Territoriale" },
-  { value: "ambassadeur",           label: "Ambassadeur" },
-  { value: "testlrm",               label: "TestLRM" },
-];
-const ADMIN_TAG_KEYS = ADMIN_TAGS.map(t => t.value);
-ADMIN_TAGS.forEach(t => { ROLE_LABEL[t.value] = t.label; });
+/* Mode de connexion : choisi par l'utilisateur lors de l'activation (mail à deux options,
+   RG-POST-02) — inconnu tant que le compte n'a jamais été utilisé. */
+const MODE_CONNEXION = { PSC: "Pro Santé Connect", MdP: "Mot de passe" };
 
 const STRUCTURE_TYPES = [
   { value: "sos_medecins", label: "SOS Médecins" },
@@ -126,52 +132,92 @@ const COMMUNES = [
   "59000 Lille","44100 Nantes","67100 Strasbourg","34000 Montpellier",
 ];
 
-/* Les identités sont définies dans identities.js (compte unique multi-périmètres).
-   Le BO Accès n'utilise que l'habilitation « acces » de l'identité. */
+/* Annuaire Santé : la qualité d'effecteur est DÉDUITE du RPPS (le rôle Effecteur n'existe plus). */
+const RPPS_BY_ID = Object.fromEntries(RPPS_DIRECTORY.map(x => [x.rpps, x]));
+/* Identifiant national d'un professionnel de santé = « 8 » + RPPS (un compte = un identifiant national). */
+function idNationalFromRpps(rpps) { return "8" + rpps; }
 
-/* Utilisateurs de démonstration (roles = tableau, structures = tableau) */
+/* Les identités (profils « Connecté en tant que ») sont définies dans identities.js. */
+
+/* Utilisateurs de démonstration.
+   - roles : tableau (cumul autorisé, sauf Régulateur OSNP + Régulateur IOA) ;
+   - territoires : tableau (aucun pour SAS Administrateur / TestInterop, un seul pour un régulateur) ;
+   - createdBy / updatedBy : auteur ({ userId } pour un compte de la plateforme — s'il est supprimé,
+     on affiche son rôle et son territoire — ou { label } pour un profil du mock). */
 const SEED_USERS = [
-  { id:"u-001", idNational:"SASN-100001", email:"admin.national@sas.gouv.fr", nom:"Lefevre", prenom:"Isabelle", roles:["administrateur"],        ville:"75007 Paris",     territoire:"SAS-75", actif:true },
-  { id:"u-002", idNational:"SASN-100002", email:"g.compte.paris@sas.gouv.fr", nom:"Garnier", prenom:"Paul",     roles:["gestionnaire_compte","referent_territoriale"], ville:"75012 Paris", territoire:"SAS-75", actif:true },
-  { id:"u-003", idNational:"SASN-100003", email:"g.compte.lyon@sas.gouv.fr",  nom:"Faure",   prenom:"Camille",  roles:["gestionnaire_compte"],   ville:"69002 Lyon",      territoire:"SAS-69", actif:true },
-  { id:"u-004", idNational:"SASN-100004", email:"regul.osnp.paris@sas.gouv.fr", nom:"Roux",  prenom:"David",    roles:["regulateur_osnp","gestionnaire_compte"], ville:"75015 Paris", territoire:"SAS-75", actif:true },
-  { id:"u-005", idNational:"SASN-100005", email:"claire.durand@effecteur.fr", nom:"Durand",  prenom:"Claire",   roles:["effecteur","ambassadeur"], ville:"75014 Paris",     territoire:"SAS-75", actif:true,  rpps:"10001234567", profession:"Médecin", specialite:"Médecine générale" },
-  { id:"u-006", idNational:"SASN-100006", email:"sos.paris@structure.fr",     nom:"Leroy",   prenom:"Nathalie", roles:["gestionnaire_structure"],ville:"75014 Paris",     territoire:"SAS-75", actif:true,
-    structures:[ {type:"sos_medecins",finess:"750000015",nom:"SOS Médecins Paris"}, {type:"sos_medecins",finess:"750000023",nom:"SOS Médecins Paris Est"}, {type:"cds",finess:"750100056",nom:"Centre de Santé Marcadet"}, {type:"cpts_msp",finess:"750200091",nom:"CPTS Paris 13"}, {type:"cpts_msp",finess:"750200108",nom:"MSP Paris 18"} ] },
-  { id:"u-007", idNational:"SASN-100007", email:"cpts.rennes@structure.fr",   nom:"Girard",  prenom:"Hugo",     roles:["gestionnaire_structure","effecteur"], ville:"35000 Rennes", territoire:"SAS-35", actif:true,
-    rpps:"10004567890", profession:"Médecin", specialite:"Médecine générale",
+  { id:"u-001", email:"admin.national@sas.gouv.fr", nom:"Lefevre", prenom:"Isabelle", roles:["sas_administrateur"], ville:"75007 Paris", territoires:[], actif:true,
+    createdBy:{ label:"Reprise de l'existant" } },
+  { id:"u-002", email:"g.compte.paris@sas.gouv.fr", nom:"Garnier", prenom:"Paul", roles:["gestionnaire_compte"], ville:"75012 Paris", territoires:["SAS-75","SAS-92"], actif:true,
+    createdBy:{ userId:"u-001" } },
+  { id:"u-003", email:"g.compte.lyon@sas.gouv.fr", nom:"Faure", prenom:"Camille", roles:["gestionnaire_compte"], ville:"69002 Lyon", territoires:["SAS-69"], actif:true,
+    createdBy:{ userId:"u-001" } },
+  { id:"u-004", email:"regul.osnp.paris@sas.gouv.fr", nom:"Roux", prenom:"David", roles:["regulateur_osnp","gestionnaire_compte"], ville:"75015 Paris", territoires:["SAS-75"], actif:true,
+    createdBy:{ userId:"u-002" }, updatedBy:{ userId:"u-001" } },
+  { id:"u-005", email:"claire.durand@sas.gouv.fr", nom:"Durand", prenom:"Claire", roles:["regulateur_osnp"], ville:"75014 Paris", territoires:["SAS-75"], actif:true,
+    rpps:"10001234567", createdBy:{ userId:"u-002" } },
+  { id:"u-006", email:"sos.paris@structure.fr", nom:"Leroy", prenom:"Nathalie", roles:["gestionnaire_structure"], ville:"75014 Paris", territoires:["SAS-75"], actif:true,
+    createdBy:{ userId:"u-002" },
+    structures:[ {type:"sos_medecins",finess:"750000015",nom:"SOS Médecins Paris"}, {type:"sos_medecins",finess:"750000023",nom:"SOS Médecins Paris Est"}, {type:"cds",finess:"750100056",nom:"Centre de Santé Marcadet"}, {type:"cpts_msp",finess:"750200091",nom:"CPTS Paris 13"} ] },
+  { id:"u-007", email:"cpts.rennes@structure.fr", nom:"Girard", prenom:"Hugo", roles:["gestionnaire_structure"], ville:"35000 Rennes", territoires:["SAS-35"], actif:true,
+    rpps:"10004567890", createdBy:{ userId:"u-001" },
     structures:[ {type:"cpts_msp",finess:"350200117",nom:"CPTS Rennes Métropole"} ] },
-  { id:"u-008", idNational:"SASN-100008", email:"julien.martin@effecteur.fr", nom:"Martin",  prenom:"Julien",   roles:["effecteur","testlrm"],   ville:"69003 Lyon",      territoire:"SAS-69", actif:false, rpps:"10002345678", profession:"Médecin", specialite:"Médecine d'urgence" },
-  { id:"u-009", idNational:"SASN-100009", email:"cds.montreuil@structure.fr", nom:"Fontaine",prenom:"Sarah",    roles:["gestionnaire_structure"],ville:"93100 Montreuil", territoire:"SAS-93", actif:true,
+  { id:"u-008", email:"julien.martin@sas.gouv.fr", nom:"Martin", prenom:"Julien", roles:["regulateur_osnp"], ville:"69003 Lyon", territoires:["SAS-69"], actif:false,
+    rpps:"10002345678", createdBy:{ userId:"u-003" }, updatedBy:{ userId:"u-003" } },
+  { id:"u-009", email:"cds.montreuil@structure.fr", nom:"Fontaine", prenom:"Sarah", roles:["gestionnaire_structure"], ville:"93100 Montreuil", territoires:["SAS-93"], actif:true,
+    createdBy:{ userId:"u-023" },
     structures:[ {type:"cds",finess:"930100063",nom:"Centre Municipal de Santé de Montreuil"} ] },
-  { id:"u-010", idNational:"SASN-100010", email:"g.compte.lille@sas.gouv.fr", nom:"Chevalier",prenom:"Marion",  roles:["gestionnaire_compte"],   ville:"59000 Lille",     territoire:"SAS-59", actif:true },
-  { id:"u-011", idNational:"SASN-100011", email:"lea.roussel@effecteur.fr",   nom:"Roussel", prenom:"Léa",      roles:["effecteur"],             ville:"31400 Toulouse",  territoire:"SAS-31", actif:true,  rpps:"10009012345", profession:"Chirurgien-dentiste", specialite:"Chirurgie orale" },
-  { id:"u-012", idNational:"SASN-100012", email:"manuel.lopez@effecteur.fr",  nom:"Lopez",   prenom:"Manuel",   roles:["effecteur"],             ville:"33000 Bordeaux",  territoire:"SAS-33", actif:true,  rpps:"10010123456", profession:"Infirmier", specialite:"Soins généraux" },
-  { id:"u-013", idNational:"SASN-100013", email:"chloe.meyer@effecteur.fr",   nom:"Meyer",   prenom:"Chloé",    roles:["effecteur"],             ville:"67100 Strasbourg",territoire:"SAS-67", actif:true,  rpps:"10011234567", profession:"Médecin", specialite:"Dermatologie" },
-  { id:"u-014", idNational:"SASN-100014", email:"lucas.blanc@effecteur.fr",   nom:"Blanc",   prenom:"Lucas",    roles:["effecteur"],             ville:"13008 Marseille", territoire:"SAS-13", actif:true,  rpps:"10012345678", profession:"Médecin", specialite:"Ophtalmologie" },
-  { id:"u-015", idNational:"SASN-100015", email:"manon.perrin@effecteur.fr",  nom:"Perrin",  prenom:"Manon",    roles:["effecteur"],             ville:"44100 Nantes",    territoire:"SAS-44", actif:true,  rpps:"10016789012", profession:"Sage-femme", specialite:"Maïeutique" },
-  // Régulateurs OSNP
-  { id:"u-016", idNational:"SASN-100016", email:"regul.osnp.lyon@sas.gouv.fr",   nom:"Nguyen",   prenom:"Linh",     roles:["regulateur_osnp"], ville:"69003 Lyon",      territoire:"SAS-69", actif:true },
-  { id:"u-017", idNational:"SASN-100017", email:"regul.osnp.lille@sas.gouv.fr",  nom:"Dubois",   prenom:"Antoine",  roles:["regulateur_osnp"], ville:"59000 Lille",     territoire:"SAS-59", actif:true },
-  { id:"u-018", idNational:"SASN-100018", email:"regul.osnp.marseille@sas.gouv.fr", nom:"Barbier", prenom:"Léa",   roles:["regulateur_osnp"], ville:"13008 Marseille", territoire:"SAS-13", actif:true },
-  { id:"u-019", idNational:"SASN-100019", email:"regul.osnp.paris2@sas.gouv.fr", nom:"Colin",    prenom:"Maxime",   roles:["regulateur_osnp"], ville:"75015 Paris",     territoire:"SAS-75", actif:false },
-  { id:"u-020", idNational:"SASN-100020", email:"regul.osnp.rennes@sas.gouv.fr", nom:"Guerin",   prenom:"Sophie",   roles:["regulateur_osnp"], ville:"35000 Rennes",    territoire:"SAS-35", actif:true },
-  // Régulateurs SU
-  { id:"u-021", idNational:"SASN-100021", email:"regul.su.paris@sas.gouv.fr",  nom:"Lambert",  prenom:"Inès",     roles:["regulateur_su"],  ville:"75012 Paris",     territoire:"SAS-75", actif:true },
-  { id:"u-022", idNational:"SASN-100022", email:"regul.su.lyon@sas.gouv.fr",   nom:"Marchand", prenom:"Karim",    roles:["regulateur_su"],  ville:"69002 Lyon",      territoire:"SAS-69", actif:true },
+  { id:"u-010", email:"g.compte.lille@sas.gouv.fr", nom:"Chevalier", prenom:"Marion", roles:["gestionnaire_compte"], ville:"59000 Lille", territoires:["SAS-59"], actif:true,
+    createdBy:{ userId:"u-001" } },
+  { id:"u-011", email:"nadia.robert@sas.gouv.fr", nom:"Robert", prenom:"Nadia", roles:["regulateur_ioa"], ville:"31400 Toulouse", territoires:["SAS-31"], actif:true,
+    rpps:"10005678901", createdBy:{ userId:"u-001" } },
+  { id:"u-012", email:"manuel.lopez@sas.gouv.fr", nom:"Lopez", prenom:"Manuel", roles:["regulateur_ioa"], ville:"33000 Bordeaux", territoires:["SAS-33"], actif:true,
+    rpps:"10010123456", createdBy:{ userId:"u-001" } },
+  { id:"u-013", email:"msp.strasbourg@structure.fr", nom:"Meyer", prenom:"Chloé", roles:["gestionnaire_structure"], ville:"67100 Strasbourg", territoires:["SAS-67"], actif:true,
+    rpps:"10011234567", createdBy:{ userId:"u-001" },
+    structures:[ {type:"cpts_msp",finess:"670200120",nom:"MSP Strasbourg Neudorf"} ] },
+  { id:"u-014", email:"lucas.blanc@sas.gouv.fr", nom:"Blanc", prenom:"Lucas", roles:["regulateur_osnp"], ville:"13008 Marseille", territoires:["SAS-13"], actif:true,
+    rpps:"10012345678", createdBy:{ userId:"u-001" } },
+  { id:"u-015", email:"testinterop.editeur-a@sas.gouv.fr", nom:"Éditeur A", prenom:"Test", roles:["testinterop"], ville:"", territoires:[], actif:true,
+    createdBy:{ userId:"u-001" } },
+  // Régulateurs OSNP (sans RPPS)
+  { id:"u-016", email:"regul.osnp.lyon@sas.gouv.fr", nom:"Nguyen", prenom:"Linh", roles:["regulateur_osnp"], ville:"69003 Lyon", territoires:["SAS-69"], actif:true,
+    // Créateur dont le compte a été supprimé : on affiche son rôle et son territoire
+    createdBy:{ userId:"u-099", roleLabel:"Gestionnaire de comptes", territoires:["SAS-69"] } },
+  { id:"u-017", email:"regul.osnp.lille@sas.gouv.fr", nom:"Dubois", prenom:"Antoine", roles:["regulateur_osnp"], ville:"59000 Lille", territoires:["SAS-59"], actif:true,
+    createdBy:{ userId:"u-010" } },
+  { id:"u-018", email:"regul.osnp.marseille@sas.gouv.fr", nom:"Barbier", prenom:"Léa", roles:["regulateur_osnp"], ville:"13008 Marseille", territoires:["SAS-13"], actif:true,
+    createdBy:{ userId:"u-001" } },
+  { id:"u-019", email:"regul.osnp.paris2@sas.gouv.fr", nom:"Colin", prenom:"Maxime", roles:["regulateur_osnp"], ville:"75015 Paris", territoires:["SAS-75"], actif:false,
+    createdBy:{ userId:"u-002" } },
+  { id:"u-020", email:"regul.osnp.rennes@sas.gouv.fr", nom:"Guerin", prenom:"Sophie", roles:["regulateur_osnp"], ville:"35000 Rennes", territoires:["SAS-35"], actif:true,
+    createdBy:{ userId:"u-001" } },
+  // Régulateurs IOA / Agents d'accueil
+  { id:"u-021", email:"regul.ioa.paris@sas.gouv.fr", nom:"Lambert", prenom:"Inès", roles:["regulateur_ioa"], ville:"75012 Paris", territoires:["SAS-75"], actif:true,
+    createdBy:{ userId:"u-002" } },
+  { id:"u-022", email:"regul.ioa.lyon@sas.gouv.fr", nom:"Marchand", prenom:"Karim", roles:["regulateur_ioa"], ville:"69002 Lyon", territoires:["SAS-69"], actif:true,
+    createdBy:{ userId:"u-003" } },
+  // Gestionnaire de comptes multi-territoires + comptes de son périmètre
+  { id:"u-023", email:"g.compte.idf-est@sas.gouv.fr", nom:"Benali", prenom:"Yasmine", roles:["gestionnaire_compte"], ville:"93100 Montreuil", territoires:["SAS-92","SAS-93"], actif:true,
+    createdBy:{ userId:"u-001" }, derniereConnexion:"2026-09-30T08:12:00.000Z" },
+  { id:"u-024", email:"antoine.simon@sas.gouv.fr", nom:"Simon", prenom:"Antoine", roles:["regulateur_osnp"], ville:"92100 Boulogne-Billancourt", territoires:["SAS-92"], actif:true,
+    rpps:"10008901234", createdBy:{ userId:"u-023" } },
 ];
 
-/* Enrichissement des comptes de démonstration (champs Lot 1 : région, environnements,
-   mode de connexion, date de création, dernière connexion — variété déterministe). */
+/* Enrichissement des comptes de démonstration (identifiant national, profession issue du RPPS,
+   région, environnements, dates, mode de connexion — variété déterministe). */
 SEED_USERS.forEach((u, i) => {
-  u.roles = (u.roles || []).filter(r => r !== "administrateur");
-  if (!u.roles.length) u.roles = ["gestionnaire_compte"];
+  const pro = u.rpps ? RPPS_BY_ID[u.rpps] : null;
+  if (pro) { u.profession = pro.profession; u.specialite = pro.specialite; }
+  u.idNational = u.rpps ? idNationalFromRpps(u.rpps) : "SASN-" + String(100000 + i + 1);
+  u.territoire = (u.territoires || [])[0] || "";
   u.region = u.region || territoireRegion(u.territoire);
   u.environnements = u.environnements || (i % 4 === 0 ? ["Production", "Formation"] : ["Production"]);
-  u.modeConnexion = u.modeConnexion || (i % 3 === 0 ? "PSC" : "MdP");
   u.created_at = u.created_at || new Date(2025, i % 12, 1 + (i % 27)).toISOString();
-  // Quelques comptes ne se sont jamais connectés
-  u.derniereConnexion = (i % 5 === 2) ? null : new Date(2026, i % 6, 2 + (i % 25)).toISOString();
+  if (u.updatedBy) u.updated_at = new Date(2026, (i % 6) + 1, 3 + (i % 20)).toISOString();
+  // Quelques comptes ne se sont jamais connectés (statut « En attente de première connexion »)
+  if (!("derniereConnexion" in u)) u.derniereConnexion = (i % 5 === 2) ? null : new Date(2026, i % 6, 2 + (i % 25)).toISOString();
+  // Le mode de connexion est choisi par l'utilisateur à l'activation : inconnu s'il ne s'est jamais connecté
+  u.modeConnexion = u.derniereConnexion ? (i % 3 === 0 ? "PSC" : "MdP") : null;
 });
 
 /* Conditions générales d'utilisation (texte éditable par l'administrateur) */
@@ -219,7 +265,8 @@ const BANDEAU_SEED = [
 /* ---------------------------------------------------------------- *
  *  ÉTAT
  * ---------------------------------------------------------------- */
-const USERS_KEY = "bo-sas-users-v8";
+const USERS_KEY = "bo-sas-users-v9";   // v9 : modèle de la refonte (territoires multiples, créateur, journal)
+const LOG_KEY   = "bo-sas-journal-v1";
 const TERR_KEY  = "bo-sas-territoires-v2";
 const DEP_KEY   = "bo-sas-departements-v1";
 const SUP_KEY   = "bo-sas-support-v1";
@@ -235,8 +282,9 @@ const state = {
   support: loadSupport(),
   cgu: loadCgu(),
   bandeaux: loadBandeaux(),
+  journal: loadJournal(),   // journal des actions sur les comptes (RG-POST-07)
   identityIdx: currentIdentityIdx(),
-  view: "list",   // "list" | "create" | "statistiques" | "cgu" | "bandeaux" | "territoires" | "departements" | "support"
+  view: "list",   // "list" | "create" | "statistiques" | "journal" | "cgu" | "bandeaux" | "territoires" | "departements" | "support"
   editId: null,   // utilisateur en cours de modification
   filters: { ...EMPTY_FILTERS },
   form: newForm(),
@@ -257,13 +305,20 @@ const state = {
 function normalizeUser(u) {
   if (!u.roles) u.roles = u.role ? [u.role] : [];
   delete u.role;
+  if (!Array.isArray(u.territoires)) u.territoires = u.territoire ? [u.territoire] : [];
+  u.territoire = u.territoires[0] || "";
   return u;
 }
 function loadUsers() {
   try { const raw = localStorage.getItem(USERS_KEY); if (raw) return JSON.parse(raw).map(normalizeUser); } catch (e) {}
-  return SEED_USERS.map(u => ({ ...u }));
+  return SEED_USERS.map(u => normalizeUser(JSON.parse(JSON.stringify(u))));
 }
 function saveUsers() { try { localStorage.setItem(USERS_KEY, JSON.stringify(state.users)); } catch (e) {} }
+function loadJournal() {
+  try { const raw = localStorage.getItem(LOG_KEY); if (raw) return JSON.parse(raw); } catch (e) {}
+  return [];
+}
+function saveJournal() { try { localStorage.setItem(LOG_KEY, JSON.stringify(state.journal.slice(0, 500))); } catch (e) {} }
 function normalizeTerritoire(t) {
   // Rétro-compatibilité : ancien modèle mono-département { code, dep }
   if (!Array.isArray(t.departements)) t.departements = t.dep ? [t.dep] : [];
@@ -298,47 +353,39 @@ function loadBandeaux() {
 function saveBandeaux() { try { localStorage.setItem(BAN_KEY, JSON.stringify(state.bandeaux)); } catch (e) {} }
 
 function newForm() {
-  return { roles: [], idNational:"", email:"", nom:"", prenom:"", ville:"", territoire:"",
-           region:"", environnements:[], modeConnexion:"MdP",
-           rpps:"", pro:null,
+  return { roles: [], email:"", nom:"", prenom:"", ville:"",
+           territoires: [],           // aucun / un seul (régulateur) / plusieurs selon les rôles
+           region:"", environnements:[],
+           rpps:"", pro:null,         // pro = fiche Annuaire Santé trouvée pour le RPPS
            structures: [],            // [{ type, finess, nom, ville }] — plusieurs par type possible
            draftType: "sos_medecins", // type sélectionné dans le sélecteur d'ajout
            regionAuto:true,           // la région suit le territoire tant qu'on ne la modifie pas à la main
-           errors:{}, success:null };
+           errors:{}, success:null, failure:null };
 }
 function formFromUser(u) {
   const f = newForm();
   f.roles = [...(u.roles || [])];
-  f.idNational = u.idNational || "";
-  f.email = u.email; f.nom = u.nom; f.prenom = u.prenom; f.ville = u.ville; f.territoire = u.territoire;
-  f.region = u.region || territoireRegion(u.territoire);
-  f.regionAuto = !u.region || u.region === territoireRegion(u.territoire);
+  f.email = u.email; f.nom = u.nom; f.prenom = u.prenom; f.ville = u.ville || "";
+  f.territoires = [...userTerritoires(u)];
+  f.region = u.region || territoireRegion(f.territoires[0]);
+  f.regionAuto = !u.region || u.region === territoireRegion(f.territoires[0]);
   f.environnements = [...(u.environnements || [])];
-  f.modeConnexion = u.modeConnexion || "MdP";
-  if (u.roles && u.roles.includes("effecteur") && u.profession) {
-    f.rpps = u.rpps || "";
-    f.pro = { nom: u.nom, prenom: u.prenom, profession: u.profession, specialite: u.specialite, rpps: u.rpps };
-  }
+  if (u.rpps) { f.rpps = u.rpps; f.pro = RPPS_BY_ID[u.rpps] || null; }
   f.structures = (u.structures || []).map(s => {
     const e = FINESS_BY_ID[s.finess];
     return { type: s.type, finess: s.finess, nom: (e ? e.nom : s.nom), ville: (e ? e.ville : (s.ville || "")) };
   });
   return f;
 }
-/* Ville par défaut d'un CDS pour préremplissage (première structure CDS trouvée) */
-function cdsPrefillVille(structures) {
-  const cds = (structures || []).find(s => s.type === "cds");
-  if (!cds) return "";
-  const e = FINESS_BY_ID[cds.finess];
-  return (e && e.ville) || cds.ville || "";
-}
 function identity() { return IDENTITIES[state.identityIdx]; }
 function acRole() { return identity().role || null; }            // administrateur | gestionnaire_compte
-function acTerr() { return identity().territoire || null; }      // territoire du gestionnaire de compte
+function acTerrs() { return identityTerritoires(identity()); }   // territoires du gestionnaire de comptes
+function acTerr() { return acTerrs()[0] || null; }               // premier territoire (pages SAS-DATA)
+function isAdminCreator() { return acRole() === "administrateur"; }
 
 /* Composant technique ouvert (Keycloak / SAS-DATA), passé par l'URL depuis le portail */
 const AC_COMPONENTS = {
-  keycloak: { key: "utilisateurs", title: "Keycloak", sub: "Gestion des utilisateurs",           views: ["list","create","statistiques","cgu"] },
+  keycloak: { key: "utilisateurs", title: "Keycloak", sub: "Gestion des utilisateurs",           views: ["list","create","statistiques","journal","cgu"] },
   sasdata:  { key: "sasdata",      title: "SAS-DATA", sub: "Bandeaux · Territoires · Départements · Support", views: ["bandeaux","territoires","departements","support"] },
 };
 function currentComponent() {
@@ -347,13 +394,18 @@ function currentComponent() {
 }
 function acCompKey() { return AC_COMPONENTS[currentComponent()].key; }   // "utilisateurs" | "sasdata"
 function acLevel()   { return habLevel(identity(), acCompKey()); }       // null | "lecture" | "ecriture"
-function acHasAccess() { return acLevel() != null; }
+/* RG-ACC-01 : seuls le SAS Administrateur et le Gestionnaire de comptes accèdent à la gestion des comptes */
+function acHasAccess() {
+  if (acCompKey() === "utilisateurs" && !["administrateur", "gestionnaire_compte"].includes(acRole())) return false;
+  return acLevel() != null;
+}
 function acWrite()   { return acLevel() === "ecriture"; }
 function acPage()    { return "acces.html?component=" + currentComponent(); }
 function allowedViews() {
   return AC_COMPONENTS[currentComponent()].views.filter(v => {
     if (v === "territoires" && acRole() !== "administrateur") return false; // territoires = admin uniquement
     if (v === "cgu" && acRole() !== "administrateur") return false;         // édition des CGU = admin uniquement
+    if (v === "journal" && acRole() !== "administrateur") return false;     // journal des actions = admin uniquement
     if (v === "create" && !acWrite()) return false;                        // création = écriture uniquement
     return true;
   });
@@ -366,7 +418,77 @@ function esc(s) { return String(s ?? "").replace(/[&<>"]/g, c => ({ "&":"&amp;",
 function el(id) { return document.getElementById(id); }
 function structuresOf(u) { return u.structures || []; }
 function rolesOf(u) { return u.roles || []; }
-function hasAdminTag(u) { return rolesOf(u).some(r => ADMIN_TAG_KEYS.includes(r)); }
+function userTerritoires(u) {
+  if (Array.isArray(u.territoires)) return u.territoires;
+  return u.territoire ? [u.territoire] : [];
+}
+
+/* ── Règles métier de la spécification ───────────────────────────── */
+/* Qualité d'effecteur : déduite du RPPS dans l'Annuaire Santé (RG-EFF-01) */
+function isEffecteur(u) { return !!(u.rpps && RPPS_BY_ID[u.rpps]); }
+/* Régulateur Médecin : Régulateur OSNP dont le RPPS est celui d'un effecteur (RG-EFF-04) */
+function isRegulateurMedecin(u) { return rolesOf(u).includes("regulateur_osnp") && isEffecteur(u); }
+/* Rôles tels qu'affichés dans la liste (OSNP → Régulateur Médecin le cas échéant) */
+function displayRoles(u) {
+  return rolesOf(u).map(r => (r === "regulateur_osnp" && isEffecteur(u)) ? "regulateur_medecin" : r);
+}
+function isRegulateur(u) { return rolesOf(u).some(r => REGULATEUR_ROLES.includes(r)); }
+
+/* Matrice de création (section 4) : le Gestionnaire de comptes ne crée ni SAS Administrateur
+   ni TestInterop ; il peut créer un autre Gestionnaire de comptes (sur ses territoires). */
+function creatableRoles() {
+  return isAdminCreator() ? ROLES : ROLES.filter(r => !ROLES_RESERVES_ADMIN.includes(r.value));
+}
+/* Territoires proposés : tous (SAS Administrateur) ou ceux du créateur (RG-ACC-07) */
+function creatorTerritoires() {
+  return isAdminCreator() ? state.territoires.map(t => t.code) : acTerrs();
+}
+/* Exigence de territoire selon les rôles cochés : "aucun" | "un" | "plusieurs" */
+function territoireMode(roles) {
+  const modes = roles.map(r => (ROLE_BY_VALUE[r] || {}).territoire).filter(Boolean);
+  if (modes.includes("un")) return "un";             // un régulateur impose un territoire unique
+  if (modes.includes("plusieurs")) return "plusieurs";
+  return "aucun";                                    // SAS Administrateur / TestInterop seuls
+}
+/* Auteur courant d'une action (profil « Connecté en tant que » du mock) */
+function currentActor() {
+  return { label: identity().label,
+           roleLabel: isAdminCreator() ? "SAS Administrateur" : "Gestionnaire de comptes",
+           territoires: isAdminCreator() ? [] : acTerrs() };
+}
+/* Libellé d'un auteur : le compte s'il existe encore, sinon son rôle et son territoire
+   (ex. « Gestionnaire de comptes du SAS 69 ») */
+function describeActor(a) {
+  if (!a) return "—";
+  if (a.userId) {
+    const u = state.users.find(x => x.id === a.userId);
+    if (u) return `${u.prenom} ${u.nom}`;
+    const terr = (a.territoires || []).map(t => "SAS " + String(t).replace("SAS-", "")).join(", ");
+    return `${a.roleLabel || "Compte supprimé"}${terr ? " du " + terr : ""} (compte supprimé)`;
+  }
+  return a.label || "—";
+}
+
+/* Journal des actions (RG-POST-07) : toute action sur un compte, réussie ou en échec */
+function logAction(action, user, ok, detail) {
+  state.journal.unshift({
+    at: new Date().toISOString(), action, ok: !!ok, detail: detail || "",
+    cible: user ? `${user.prenom || ""} ${user.nom || ""} <${user.email || ""}>`.trim() : "",
+    auteur: identity().label,
+  });
+  saveJournal();
+}
+/* Synchronisation des régulateurs avec les éditeurs via l'API Interop (RG-POST-04) :
+   à la création, à la modification et à la suppression. Simulée ici. */
+function syncInterop(user, operation) {
+  logAction(`Synchronisation API Interop (${operation})`, user, true, "Éditeurs notifiés");
+  return "Compte synchronisé avec les éditeurs via l'API Interop.";
+}
+/* Simulation d'un échec Keycloak : un email en « @echec-keycloak.test » fait échouer la création */
+function keycloakFailure(email) {
+  return /@echec-keycloak\.test$/i.test(email.trim())
+    ? "Keycloak indisponible (délai de réponse dépassé). Aucun compte n'a été créé." : null;
+}
 function depOf(code) { const t = state.territoires.find(x => x.code === code); return t ? t.dep : ""; }
 
 /* Modale simple de confirmation */
@@ -403,8 +525,9 @@ function renderSidebar() {
 
   const ALL_ITEMS = {
     list:         { view:"list",         icon:"fr-icon-user-line",         label:"Utilisateurs" },
-    create:       { view:"create",       icon:"fr-icon-user-add-line",     label:"Créer un utilisateur" },
+    create:       { view:"create",       icon:"fr-icon-user-add-line",     label:"Ajouter un utilisateur" },
     statistiques: { view:"statistiques", icon:"fr-icon-line-chart-line",   label:"Statistiques" },
+    journal:      { view:"journal",      icon:"fr-icon-file-text-line",    label:"Journal des actions" },
     cgu:          { view:"cgu",          icon:"fr-icon-file-text-line",    label:"Édition des CGU" },
     bandeaux:     { view:"bandeaux",     icon:"fr-icon-info-line",         label:"Bandeaux d'information" },
     territoires:  { view:"territoires",  icon:"fr-icon-map-pin-2-line",    label:"Territoires SAS" },
@@ -442,83 +565,104 @@ function renderSidebar() {
  *  VUE LISTE UTILISATEURS
  * ================================================================ */
 function visibleUsers() {
-  const id = identity();
+  // RG-ACC-03 : le SAS Administrateur voit tous les comptes de la plateforme
   if (acRole() === "administrateur") return state.users;
-  // Les utilisateurs porteurs d'un rôle réservé ne sont visibles que par les admins
-  if (acRole() === "gestionnaire_compte") return state.users.filter(u => u.territoire === acTerr() && !hasAdminTag(u));
+  // RG-ACC-04 : le Gestionnaire de comptes voit les comptes partageant AU MOINS UN territoire avec lui ;
+  // les comptes SAS Administrateur et TestInterop restent réservés aux administrateurs (RG-TI-01)
+  if (acRole() === "gestionnaire_compte") {
+    const mine = acTerrs();
+    return state.users.filter(u =>
+      !rolesOf(u).some(r => ROLES_VISIBLES_ADMIN.includes(r)) &&
+      userTerritoires(u).some(t => mine.includes(t)));
+  }
   return [];
+}
+/* Valeurs spéciales du filtre « Rôle » (qualités déduites du RPPS) */
+const ROLE_FILTER_EXTRA = [
+  { value: "regulateur_medecin", label: "Régulateur Médecin (OSNP + RPPS effecteur)" },
+  { value: "qualite_effecteur",  label: "Qualité d'effecteur (déduite du RPPS)" },
+];
+function matchRoleFilter(u, v) {
+  if (v === "regulateur_medecin") return isRegulateurMedecin(u);
+  if (v === "qualite_effecteur") return isEffecteur(u);
+  return rolesOf(u).includes(v);
 }
 function filteredUsers() {
   const f = state.filters;
   const q = f.q.trim().toLowerCase();
   return visibleUsers().filter(u => {
-    if (f.role && !rolesOf(u).includes(f.role)) return false;
-    if (f.territoire && u.territoire !== f.territoire) return false;
+    if (f.role && !matchRoleFilter(u, f.role)) return false;
+    if (f.territoire && !userTerritoires(u).includes(f.territoire)) return false;
     if (f.region && (u.region || territoireRegion(u.territoire)) !== f.region) return false;
     if (f.ville && u.ville !== f.ville) return false;
     if (f.profSpec && u.profession !== f.profSpec && u.specialite !== f.profSpec) return false;
     if (f.structure && !structuresOf(u).some(s => s.type === f.structure)) return false;
     if (f.statut && statutEtat(u).key !== f.statut) return false;
     if (!q) return true;
-    const hay = [u.nom,u.prenom,u.email,u.idNational,u.ville,u.territoire,u.rpps,u.profession,u.specialite,
-      ...rolesOf(u).map(r => ROLE_LABEL[r]),
+    const hay = [u.nom,u.prenom,u.email,u.idNational,u.ville,...userTerritoires(u),u.rpps,u.profession,u.specialite,
+      ...displayRoles(u).map(r => ROLE_LABEL[r]),
       ...structuresOf(u).flatMap(s => [s.nom, s.finess, STRUCTURE_LABEL[s.type]])
     ].filter(Boolean).join(" ").toLowerCase();
     return hay.includes(q);
   });
 }
 
-function roleBadge(role) { return `<span class="fr-badge fr-badge--sm badge-role badge-${role}">${esc(ROLE_LABEL[role])}</span>`; }
+function roleBadge(role) { return `<span class="fr-badge fr-badge--sm badge-role badge-${role}">${esc(ROLE_LABEL[role] || role)}</span>`; }
+function rolesBadgesOf(u) {
+  const badges = displayRoles(u).map(roleBadge);
+  if (isEffecteur(u) && !isRegulateurMedecin(u))
+    badges.push(`<span class="fr-badge fr-badge--sm badge-role badge-qualite-effecteur" title="Qualité d'effecteur déduite du RPPS (Annuaire Santé)">Effecteur · RPPS</span>`);
+  return badges.join(" ");
+}
 
-/* Statut à 3 états : Aucune connexion (jamais connecté) / Actif / Inactif.
-   Badges plats (sans icône) pour rester cohérent avec les badges de rôle. */
+/* Statut à 3 états (section 8) :
+   Inactif (compte désactivé) · En attente de première connexion (jamais connecté) · Actif. */
 function statutEtat(u) {
-  if (!u.derniereConnexion) return { key: "aucune", label: "Aucune connexion", cls: "badge-statut-aucune" };
-  if (u.actif) return { key: "actif", label: "Actif", cls: "badge-statut-actif" };
-  return { key: "inactif", label: "Inactif", cls: "badge-statut-inactif" };
+  if (!u.actif) return { key: "inactif", label: "Inactif", cls: "badge-statut-inactif" };
+  if (!u.derniereConnexion) return { key: "attente", label: "En attente de première connexion", cls: "badge-statut-aucune" };
+  return { key: "actif", label: "Actif", cls: "badge-statut-actif" };
 }
 const STATUT_OPTS = [
   { value: "actif",   label: "Actif" },
+  { value: "attente", label: "En attente de première connexion" },
   { value: "inactif", label: "Inactif" },
-  { value: "aucune",  label: "Aucune connexion" },
 ];
 function fmtDate(iso) {
   if (!iso) return "—";
   try { return new Date(iso).toLocaleDateString("fr-FR", { day: "2-digit", month: "2-digit", year: "numeric" }); }
   catch (e) { return "—"; }
 }
-function modeConnexionLabel(m) { return MODE_CONNEXION[m] || MODE_CONNEXION.MdP; }
+function modeConnexionLabel(m) { return m ? (MODE_CONNEXION[m] || m) : "Non choisi (jamais connecté)"; }
 
 function userRow(u) {
   const et = statutEtat(u);
   const statut = `<span class="fr-badge fr-badge--sm ${et.cls}">${et.label}</span>`;
-  const modeBadge = `<span class="fr-badge fr-badge--sm badge-mode badge-mode-${(u.modeConnexion||"MdP")}" title="Mode de connexion">${u.modeConnexion === "PSC" ? "PSC" : "Mot de passe"}</span>`;
+  const modeBadge = u.modeConnexion
+    ? `<span class="fr-badge fr-badge--sm badge-mode badge-mode-${u.modeConnexion}" title="Mode de connexion choisi par l'utilisateur">${u.modeConnexion === "PSC" ? "PSC" : "Mot de passe"}</span>` : "";
   const parts = [];
   if (u.specialite) parts.push(`${esc(u.profession || "")} — ${esc(u.specialite)}`);
   if (structuresOf(u).length) parts.push(structuresOf(u).map(s => `${STRUCTURE_SHORT[s.type]} : ${esc(s.nom)}`).join(", "));
   const extra = parts.length ? " · " + parts.join(" · ") : "";
-  const region = u.region || territoireRegion(u.territoire);
-  const canResend = acWrite() && !u.derniereConnexion;
+  const terrs = userTerritoires(u);
+  const region = u.region || territoireRegion(terrs[0]);
+  const where = [u.ville, terrs.length ? terrs.join(", ") : "Sans territoire (national)", region].filter(Boolean).map(esc).join(" · ");
   return `
     <div class="user-row">
       <div class="user-row__body">
         <div class="user-row__l1">
           <span class="user-row__name">${esc(u.prenom)} ${esc(u.nom)}</span>
-          ${rolesOf(u).map(roleBadge).join(" ")} ${statut} ${modeBadge}
+          ${rolesBadgesOf(u)} ${statut} ${modeBadge}
         </div>
         <div class="user-row__l2" title="${esc(u.email)}">
-          ${esc(u.email)} · ${esc(u.ville)}${u.territoire ? " · " + esc(u.territoire) : ""}${region ? " · " + esc(region) : ""}${extra}
+          ${esc(u.email)} · ${where}${extra}
         </div>
         <div class="user-row__meta">
-          Créé le ${fmtDate(u.created_at)} · ${u.derniereConnexion ? "Dernière connexion le " + fmtDate(u.derniereConnexion) : "Jamais connecté"}
+          Créé le ${fmtDate(u.created_at)} par ${esc(describeActor(u.createdBy))} · ${u.derniereConnexion ? "Dernière connexion le " + fmtDate(u.derniereConnexion) : "Jamais connecté"}
         </div>
       </div>
-      ${acWrite() ? `<div class="user-row__actions">
-        <button class="act-edit"   data-edit="${u.id}">Modifier</button>
-        ${canResend ? `<button class="act-resend" data-resend="${u.id}">Renvoyer le mail d'activation</button>` : ""}
-        <button class="act-toggle" data-toggle="${u.id}">${u.actif ? "Désactiver" : "Activer"}</button>
-        <button class="act-del"    data-del="${u.id}">Supprimer</button>
-      </div>` : ""}
+      <div class="user-row__actions">
+        <button class="act-edit" data-edit="${u.id}">${acWrite() ? "Modifier" : "Consulter"}</button>
+      </div>
     </div>`;
 }
 
@@ -532,29 +676,33 @@ function selectField(key, label, options, includeAll = "Tous") {
 }
 
 function renderList() {
-  const id = identity();
   const isAdmin = acRole() === "administrateur";
   const list = filteredUsers();
   const total = visibleUsers().length;
   const f = state.filters;
   const hasFilters = f.q || f.role || f.territoire || f.region || f.ville || f.profSpec || f.structure || f.statut;
-  const villes = [...new Set(visibleUsers().map(u => u.ville))].sort();
+  const villes = [...new Set(visibleUsers().map(u => u.ville).filter(Boolean))].sort();
   // Professions + spécialités présentes dans le périmètre visible
   const profSpecs = [...new Set(visibleUsers().flatMap(u => [u.profession, u.specialite]).filter(Boolean))].sort();
   // Régions présentes dans le périmètre visible
   const regions = [...new Set(visibleUsers().map(u => u.region || territoireRegion(u.territoire)).filter(Boolean))].sort();
+  // Filtre Territoire : tous (admin) ou ceux du gestionnaire s'il en a plusieurs
+  const terrFilter = isAdmin
+    ? state.territoires.map(t => ({ value:t.code, label:`${t.code} · ${t.dep}` }))
+    : (acTerrs().length > 1 ? acTerrs().map(c => ({ value:c, label:c })) : null);
+  const roleOpts = (isAdmin ? ROLES : creatableRoles()).map(r => ({ value:r.value, label:r.label })).concat(ROLE_FILTER_EXTRA);
 
   el("view-list").innerHTML = `
     <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:1rem;">
       <div>
         <h1 class="fr-h4" style="margin:0;">Utilisateurs</h1>
         <p class="page-sub">${isAdmin
-          ? "Vue administrateur — tous les territoires."
-          : "Vue gestionnaire de compte — territoire <strong>"+esc(acTerr())+"</strong>."}</p>
+          ? "Vue SAS Administrateur — tous les comptes de la plateforme."
+          : "Vue Gestionnaire de comptes — comptes partageant au moins un de vos territoires : <strong>"+esc(acTerrs().join(", "))+"</strong>."}</p>
       </div>
       <div style="display:flex;gap:.5rem;flex-wrap:wrap;">
         <button class="fr-btn fr-btn--sm fr-btn--secondary" id="export-csv">Exporter (CSV)</button>
-        ${acWrite() ? `<button class="fr-btn fr-btn--sm fr-btn--icon-left fr-icon-user-add-line" data-goto="create">Créer un utilisateur</button>` : ""}
+        ${acWrite() ? `<button class="fr-btn fr-btn--sm fr-btn--icon-left fr-icon-user-add-line" data-goto="create">Ajouter un utilisateur</button>` : ""}
       </div>
     </div>
 
@@ -563,8 +711,8 @@ function renderList() {
         <label class="fr-label" for="flt-q">Rechercher</label>
         <input class="fr-input" type="search" id="flt-q" placeholder="Nom, email, ville, RPPS, FINESS…" value="${esc(f.q)}">
       </div>
-      ${selectField("role", "Rôle", (isAdmin ? [...ROLES, ...ADMIN_TAGS] : ROLES).map(r => ({ value:r.value, label:r.label })))}
-      ${isAdmin ? selectField("territoire", "Territoire", state.territoires.map(t => ({ value:t.code, label:`${t.code} · ${t.dep}` }))) : ""}
+      ${selectField("role", "Rôle", roleOpts)}
+      ${terrFilter ? selectField("territoire", "Territoire", terrFilter) : ""}
       ${selectField("region", "Région", regions.map(v => ({ value:v, label:v })))}
       ${selectField("ville", "Ville", villes.map(v => ({ value:v, label:v })))}
       ${selectField("profSpec", "Profession / Spécialité", profSpecs.map(v => ({ value:v, label:v })))}
@@ -596,15 +744,13 @@ function showToast(msg) {
   t.className = "toast";
   t.textContent = msg;
   root.appendChild(t);
-  setTimeout(() => { t.classList.add("toast--out"); setTimeout(() => t.remove(), 400); }, 2600);
+  setTimeout(() => { t.classList.add("toast--out"); setTimeout(() => t.remove(), 400); }, 3200);
 }
 
-/* Export CSV — email, rôle(s), région, territoire, structure(s), statut (actif/inactif/aucune
-   connexion), mode de connexion. Sert notamment de liste de diffusion et distingue les
-   comptes login/mot de passe des comptes PSC/France Connect. */
+/* Export CSV (RG-LIST-02) — même périmètre que la liste (filtres compris). */
 function exportUsersCsv(list) {
-  const cols = ["Email","Prénom","Nom","Identifiant national","Rôle(s)","Région","Territoire","Ville",
-                "Structure(s)","Statut","Mode de connexion","Liste de diffusion","Date de création","Dernière connexion"];
+  const cols = ["Email","Prénom","Nom","Identifiant national","RPPS","Rôle(s)","Qualité d'effecteur","Région","Territoire(s)","Ville",
+                "Structure(s)","Statut","Mode de connexion","Date de création","Créé par","Dernière modification","Modifié par","Dernière connexion"];
   const cell = (v) => {
     const s = String(v ?? "");
     return /[";\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
@@ -612,12 +758,14 @@ function exportUsersCsv(list) {
   const rows = list.map(u => {
     const et = statutEtat(u);
     const structs = structuresOf(u).map(s => `${STRUCTURE_SHORT[s.type]} ${s.nom}`).join(" | ");
-    const roles = rolesOf(u).map(r => ROLE_LABEL[r] || r).join(" | ");
+    const roles = displayRoles(u).map(r => ROLE_LABEL[r] || r).join(" | ");
     return [
-      u.email, u.prenom, u.nom, u.idNational || "", roles,
-      u.region || territoireRegion(u.territoire), u.territoire || "", u.ville || "",
-      structs, et.label, modeConnexionLabel(u.modeConnexion), u.email,
-      fmtDate(u.created_at), u.derniereConnexion ? fmtDate(u.derniereConnexion) : "Jamais",
+      u.email, u.prenom, u.nom, u.idNational || "", u.rpps || "", roles, isEffecteur(u) ? "Oui" : "Non",
+      u.region || territoireRegion(u.territoire), userTerritoires(u).join(" | "), u.ville || "",
+      structs, et.label, u.modeConnexion ? modeConnexionLabel(u.modeConnexion) : "",
+      fmtDate(u.created_at), describeActor(u.createdBy),
+      u.updated_at ? fmtDate(u.updated_at) : "", u.updatedBy ? describeActor(u.updatedBy) : "",
+      u.derniereConnexion ? fmtDate(u.derniereConnexion) : "Jamais",
     ].map(cell).join(";");
   });
   const csv = "﻿" + [cols.join(";"), ...rows].join("\r\n");
@@ -628,6 +776,7 @@ function exportUsersCsv(list) {
   a.href = url; a.download = `utilisateurs-sas-${stamp}.csv`;
   document.body.appendChild(a); a.click(); a.remove();
   setTimeout(() => URL.revokeObjectURL(url), 1000);
+  logAction("Export de la liste des utilisateurs", null, true, `${list.length} compte(s)`);
   showToast(`Export CSV — ${list.length} utilisateur${list.length > 1 ? "s" : ""}.`);
 }
 
@@ -635,24 +784,6 @@ function bindRowActions(root) {
   root.querySelectorAll("[data-edit]").forEach(b => b.onclick = () => {
     const u = state.users.find(x => x.id === b.dataset.edit);
     if (u) { state.form = formFromUser(u); state.editId = u.id; state.view = "create"; render(); window.scrollTo({top:0}); }
-  });
-  root.querySelectorAll("[data-toggle]").forEach(b => b.onclick = () => {
-    const u = state.users.find(x => x.id === b.dataset.toggle);
-    if (u) { u.actif = !u.actif; saveUsers(); render(); }
-  });
-  root.querySelectorAll("[data-resend]").forEach(b => b.onclick = () => {
-    const u = state.users.find(x => x.id === b.dataset.resend);
-    if (u) showModal({
-      title: "Mail d'activation",
-      bodyHtml: `<p>Un nouveau mail d'activation va être envoyé à&nbsp;: <strong>${esc(u.email)}</strong>.</p>
-                 <p class="mock-note">Maquette&nbsp;: aucun mail n'est réellement envoyé.</p>`,
-      confirmLabel: "Envoyer",
-      onConfirm: () => showToast(`Mail d'activation renvoyé à ${u.email}.`),
-    });
-  });
-  root.querySelectorAll("[data-del]").forEach(b => b.onclick = () => {
-    const u = state.users.find(x => x.id === b.dataset.del);
-    if (u && confirm(`Supprimer ${u.prenom} ${u.nom} ?`)) { state.users = state.users.filter(x => x.id !== u.id); saveUsers(); render(); }
   });
 }
 
@@ -683,7 +814,8 @@ function bindListEvents() {
   if (resetSeed) resetSeed.onclick = (e) => {
     e.preventDefault();
     if (confirm("Réinitialiser toutes les données de démonstration ?")) {
-      state.users = SEED_USERS.map(u=>({...u}));
+      state.users = SEED_USERS.map(u=>normalizeUser(JSON.parse(JSON.stringify(u))));
+      state.journal = [];
       state.territoires = SEED_TERRITOIRES.map(t=>normalizeTerritoire({...t}));
       state.departements = DEPARTEMENTS.map(d=>({...d}));
       state.support = JSON.parse(JSON.stringify(SUPPORT_REORIENTATIONS));
@@ -691,7 +823,7 @@ function bindListEvents() {
       state.cguDraft = null;
       state.bandeaux = JSON.parse(JSON.stringify(BANDEAU_SEED));
       state.banEdits = {};
-      saveUsers(); saveTerritoires(); saveDepartements(); saveSupport(); saveCgu(); saveBandeaux(); render();
+      saveUsers(); saveJournal(); saveTerritoires(); saveDepartements(); saveSupport(); saveCgu(); saveBandeaux(); render();
     }
   };
   bindRowActions(root);
@@ -703,49 +835,62 @@ function bindListEvents() {
 function renderCreate() {
   const f = state.form;
   const editing = !!state.editId;
-  const isEffecteur = f.roles.includes("effecteur");
+  const u = editing ? state.users.find(x => x.id === state.editId) : null;
+  const readOnly = !acWrite();
   const isStructure = f.roles.includes("gestionnaire_structure");
   const hasRoles = f.roles.length > 0;
-  // Le rôle administrateur seul n'a pas besoin de territoire
-  const needsTerritoire = f.roles.some(r => r !== "administrateur" && !ADMIN_TAG_KEYS.includes(r));
-  const locked = isEffecteur && f.pro;
+  const tMode = territoireMode(f.roles);
+  const locked = !!f.pro;   // nom / prénom repris du RPPS : non modifiables (RG-EFF-03)
   const err = (k) => f.errors[k] ? `<p class="fr-error-text">${esc(f.errors[k])}</p>` : "";
   const grp = (k) => `fr-input-group ${f.errors[k]?"fr-input-group--error":""}`;
   const req = ' <span style="color:#ce0500">*</span>';
+  const dis = readOnly ? "disabled" : "";
 
+  // Issue de l'enregistrement (RG-POST-05 / RG-POST-06)
   const success = f.success ? `
     <div class="fr-alert fr-alert--success fr-mb-3w">
-      <h3 class="fr-alert__title">Utilisateur ${f.success.mode==='edit'?'modifié':'créé'}</h3>
-      <p>${esc(f.success.prenom)} ${esc(f.success.nom)} (${esc(f.success.email)}) a été ${f.success.mode==='edit'?'mis à jour':'créé'}.</p>
-      <button class="fr-btn fr-btn--sm" data-goto-list>Voir la liste</button>
+      <h3 class="fr-alert__title">${f.success.mode==='edit' ? "Compte modifié" : "Le compte a bien été créé"}</h3>
+      <p>${esc(f.success.prenom)} ${esc(f.success.nom)} (${esc(f.success.email)}).</p>
+      ${f.success.mode==='create' ? `<p>Un mail d'activation a été envoyé : l'utilisateur choisira de créer son mot de passe ou de se connecter avec Pro Santé Connect.</p>` : ""}
+      ${f.success.sync ? `<p>${esc(f.success.sync)}</p>` : ""}
+      <button class="fr-btn fr-btn--sm fr-mt-1w" data-goto-list>Retourner à la liste des utilisateurs</button>
+    </div>` : "";
+  const failure = f.failure ? `
+    <div class="fr-alert fr-alert--error fr-mb-3w">
+      <h3 class="fr-alert__title">Échec de la création du compte</h3>
+      <p>${esc(f.failure)}</p>
     </div>` : "";
 
-  const canAssignTags = acRole() === "administrateur";
-  const roleCheckbox = (r) => `
+  // Rôles proposés selon le créateur ; Régulateur OSNP et IOA s'excluent mutuellement (RG-REG-03)
+  const roleCheckbox = (r) => {
+    const other = REGULATEUR_ROLES.includes(r.value) ? REGULATEUR_ROLES.find(x => x !== r.value) : null;
+    const blocked = other && f.roles.includes(other) && !f.roles.includes(r.value);
+    return `
     <div class="fr-checkbox-group">
-      <input type="checkbox" id="role-${r.value}" data-role="${r.value}" ${f.roles.includes(r.value)?"checked":""}>
-      <label class="fr-label" for="role-${r.value}">${esc(r.label)}</label>
+      <input type="checkbox" id="role-${r.value}" data-role="${r.value}" ${f.roles.includes(r.value)?"checked":""} ${blocked||readOnly?"disabled":""}>
+      <label class="fr-label" for="role-${r.value}">${esc(r.label)}
+        <span class="fr-hint-text">${esc(blocked ? "Non cumulable avec " + ROLE_LABEL[other] + "." : r.desc)}</span></label>
     </div>`;
-  const rolesCheckboxes = ROLES.map(roleCheckbox).join("");
-  const tagsCheckboxes = ADMIN_TAGS.map(roleCheckbox).join("");
+  };
+  // En modification, un rôle déjà porté mais non attribuable par le créateur reste affiché (lecture)
+  const roleList = creatableRoles().concat(ROLES.filter(r => f.roles.includes(r.value) && !creatableRoles().includes(r)));
+  const rolesCheckboxes = roleList.map(roleCheckbox).join("");
 
-  // Bloc structures — placé juste sous le champ Rôle.
-  // Rattachement à PLUSIEURS structures, y compris du même type
-  // (ex. 2 CPTS + 3 MSP + 2 SOS Médecins).
+  // Bloc structures (gestionnaire de structure) — FINESS juridique, sans doublon (RG-GS-01/02)
   const addedItems = f.structures.map((s, i) => `
     <div class="struct-item">
       <div><strong>${esc(STRUCTURE_SHORT[s.type])}</strong> — ${esc(s.nom)} <span class="mock-note">FINESS ${esc(s.finess)}</span></div>
-      <button type="button" class="fr-link" data-struct-remove="${i}">Retirer</button>
+      ${readOnly ? "" : `<button type="button" class="fr-link" data-struct-remove="${i}">Retirer</button>`}
     </div>`).join("");
   const typeOpts = STRUCTURE_TYPES.map(s => `<option value="${s.value}" ${f.draftType===s.value?"selected":""}>${esc(s.label)}</option>`).join("");
   const finessOpts = FINESS_DIRECTORY.filter(x => x.type===f.draftType).map(x => `${esc(x.nom)} — FINESS ${x.finess} (${esc(x.ville)})`);
   const structureBlock = isStructure ? `
     <fieldset class="struct-fieldset ${f.errors.structures?'has-err':''}">
       <legend>Structures rattachées${req}</legend>
-      <p class="fr-hint-text" style="margin-top:0;">Un gestionnaire peut être rattaché à plusieurs structures, y compris du même type (ex. 2 CPTS + 3 MSP + 2 SOS Médecins).</p>
+      <p class="fr-hint-text" style="margin-top:0;">Au moins une structure : association SOS Médecins, CPTS ou centre de santé, identifiée par son FINESS juridique. Une même structure ne peut être rattachée qu'une fois.</p>
       ${addedItems}
       <p class="struct-count">${f.structures.length} structure${f.structures.length>1?"s":""} rattachée${f.structures.length>1?"s":""}</p>
-      <div class="struct-add">
+      ${readOnly ? "" : `<div class="struct-add">
         <div class="fr-input-group sa-type">
           <label class="fr-label" for="struct-type">Type</label>
           <select class="fr-select" id="struct-type">${typeOpts}</select>
@@ -756,136 +901,195 @@ function renderCreate() {
           <datalist id="struct-finess-list">${finessOpts.map(o=>`<option value="${esc(o)}">`).join("")}</datalist>
         </div>
         <button class="fr-btn fr-btn--sm" type="button" id="struct-add-btn">Ajouter</button>
-      </div>
+      </div>`}
       ${err('structures')}
     </fieldset>` : "";
 
-  const rppsBlock = isEffecteur ? `
+  // RPPS facultatif : vérifié dans l'Annuaire Santé, unique, préremplit nom/prénom (RG-EFF-02/03)
+  const rppsBlock = `
     <div class="${grp('rpps')}">
-      <label class="fr-label" for="rpps">Numéro RPPS${req}
-        <span class="fr-hint-text">Pré-remplit automatiquement nom, prénom, profession et spécialité (Annuaire Santé).</span></label>
+      <label class="fr-label" for="rpps">Numéro RPPS (facultatif)
+        <span class="fr-hint-text">Vérifié dans l'Annuaire Santé. Remplit nom et prénom, qui deviennent non modifiables, et détermine la qualité d'effecteur.</span></label>
       <div style="display:flex;gap:.5rem;">
-        <input class="fr-input" id="rpps" inputmode="numeric" placeholder="Ex : 10001234567" value="${esc(f.rpps)}">
-        <button class="fr-btn" type="button" id="rpps-search">Rechercher</button>
+        <input class="fr-input" id="rpps" inputmode="numeric" placeholder="Ex : 10003456789" value="${esc(f.rpps)}" ${locked||readOnly?"readonly":""}>
+        ${readOnly ? "" : (locked
+          ? `<button class="fr-btn fr-btn--secondary" type="button" id="rpps-clear">Retirer</button>`
+          : `<button class="fr-btn" type="button" id="rpps-search">Rechercher</button>`)}
       </div>
-      ${f.pro ? `<div class="fr-alert fr-alert--info fr-alert--sm fr-mt-1w"><p><strong>${esc(f.pro.prenom)} ${esc(f.pro.nom)}</strong> — ${esc(f.pro.profession)} · ${esc(f.pro.specialite)}</p></div>` : ""}
+      ${f.pro ? `<div class="fr-alert fr-alert--info fr-alert--sm fr-mt-1w"><p><strong>${esc(f.pro.prenom)} ${esc(f.pro.nom)}</strong> — ${esc(f.pro.profession)} · ${esc(f.pro.specialite)}<br>
+        Qualité d'effecteur : oui (déduite du RPPS)${f.roles.includes("regulateur_osnp") ? " — le compte sera listé comme <strong>Régulateur Médecin</strong>" : ""}.</p></div>` : ""}
       ${err('rpps')}
-      <p class="mock-note" style="margin-top:.4rem;">RPPS de démo : 10001234567, 10002345678, 10003456789…</p>
-    </div>` : "";
+      ${readOnly ? "" : `<p class="mock-note" style="margin-top:.4rem;">RPPS de démo libres : 10003456789, 10006789012, 10007890123… (10001234567 est déjà porté par un compte).</p>`}
+    </div>`;
 
-  const territoireOptions = `<option value="">— Sélectionner —</option>` +
-    state.territoires.map(t => `<option value="${t.code}" ${f.territoire===t.code?"selected":""}>${esc(t.code)} · ${esc(t.dep)}</option>`).join("");
+  // Territoire(s) — RG-FORM / RG-REG-02 / RG-GS-03 / RG-GC-02
+  const options = creatorTerritoires();
+  const terrLabel = (c) => { const t = state.territoires.find(x => x.code === c); return t ? `${t.code} · ${t.dep}` : c; };
+  const autoTerr = !isAdminCreator() && options.length === 1;   // créateur rattaché à un seul territoire : attribué d'office
+  let territoireBlock = "";
+  if (tMode === "aucun" && hasRoles) {
+    territoireBlock = `<div class="fr-input-group"><label class="fr-label">Territoire</label>
+      <p class="mock-note" style="margin:.2rem 0 0;">Aucun territoire : compte de portée nationale (SAS Administrateur / TestInterop).</p></div>`;
+  } else if (tMode !== "aucun" && autoTerr) {
+    territoireBlock = `<div class="fr-input-group"><label class="fr-label">Territoire SAS</label>
+      <p style="margin:.2rem 0 0;"><strong>${esc(terrLabel(options[0]))}</strong> <span class="readonly-note">(attribué d'office : votre unique territoire)</span></p>${err('territoires')}</div>`;
+  } else if (tMode === "un") {
+    territoireBlock = `<div class="${grp('territoires')}">
+      <label class="fr-label" for="territoire">Territoire SAS${req}<span class="fr-hint-text">Un seul territoire pour un régulateur${isAdminCreator() ? "" : " — parmi vos territoires"}.</span></label>
+      <select class="fr-select" id="territoire" ${dis}><option value="">— Sélectionner —</option>
+        ${options.map(c => `<option value="${esc(c)}" ${f.territoires[0]===c?"selected":""}>${esc(terrLabel(c))}</option>`).join("")}
+      </select>${err('territoires')}</div>`;
+  } else if (tMode === "plusieurs") {
+    territoireBlock = `<div class="${grp('territoires')}">
+      <label class="fr-label">Territoire(s) SAS${req}<span class="fr-hint-text">Au moins un territoire${isAdminCreator() ? "" : ", parmi les vôtres"}.</span></label>
+      <div class="roles-checkboxes terr-checkboxes">
+        ${options.map(c => `<div class="fr-checkbox-group">
+          <input type="checkbox" id="terr-${esc(c)}" data-terr="${esc(c)}" ${f.territoires.includes(c)?"checked":""} ${dis}>
+          <label class="fr-label" for="terr-${esc(c)}">${esc(terrLabel(c))}</label></div>`).join("")}
+      </div>${err('territoires')}</div>`;
+  }
 
   const regionOptions = `<option value="">— Sélectionner —</option>` +
     REGIONS.map(r => `<option value="${esc(r)}" ${f.region===r?"selected":""}>${esc(r)}</option>`).join("");
-  const regionBlock = `
+  const regionBlock = tMode === "aucun" ? "" : `
     <div class="${grp('region')}">
       <label class="fr-label" for="region">Région
         <span class="fr-hint-text">Renseignée automatiquement d'après le territoire SAS ; modifiable.</span></label>
-      <select class="fr-select" id="region">${regionOptions}</select>${err('region')}
+      <select class="fr-select" id="region" ${dis}>${regionOptions}</select>${err('region')}
     </div>`;
 
   // Environnement(s) — réservé à l'Admin BO (création multi-environnement)
-  const isAdminBOUser = isAdminBO(identity());
-  const envBlock = isAdminBOUser ? `
+  const envBlock = isAdminBO(identity()) ? `
     <div class="${grp('environnements')}">
       <label class="fr-label">Environnement(s)
         <span class="fr-hint-text">Création multi-environnement (réservé à l'Admin BO).</span></label>
       <div class="roles-checkboxes">
         ${ENVIRONNEMENTS.map(e => `
           <div class="fr-checkbox-group">
-            <input type="checkbox" id="env-${esc(e)}" data-env="${esc(e)}" ${f.environnements.includes(e)?"checked":""}>
+            <input type="checkbox" id="env-${esc(e)}" data-env="${esc(e)}" ${f.environnements.includes(e)?"checked":""} ${dis}>
             <label class="fr-label" for="env-${esc(e)}">${esc(e)}</label>
           </div>`).join("")}
       </div>${err('environnements')}
     </div>` : "";
 
+  // Page de modification : informations et actions sur le compte (section 8)
+  const infoPanel = (editing && u) ? (() => {
+    const et = statutEtat(u);
+    return `
+    <section class="account-info">
+      <div class="account-info__head">
+        <span class="fr-badge fr-badge--sm ${et.cls}">${et.label}</span>
+        ${rolesBadgesOf(u)}
+        <span class="mock-note">Identifiant national : ${esc(u.idNational || "—")}</span>
+      </div>
+      <dl class="account-info__grid">
+        <dt>Création</dt><dd>${fmtDate(u.created_at)} — par ${esc(describeActor(u.createdBy))}</dd>
+        <dt>Dernière modification</dt><dd>${u.updated_at ? `${fmtDate(u.updated_at)} — par ${esc(describeActor(u.updatedBy))}` : "Jamais modifié"}</dd>
+        <dt>Dernière connexion</dt><dd>${u.derniereConnexion ? fmtDate(u.derniereConnexion) : "Jamais connecté"}</dd>
+        <dt>Mode de connexion</dt><dd>${esc(modeConnexionLabel(u.modeConnexion))}</dd>
+      </dl>
+      ${acWrite() ? `<div class="account-info__actions">
+        <button type="button" class="fr-btn fr-btn--sm fr-btn--secondary fr-icon-mail-line fr-btn--icon-left" id="act-resend">Renvoyer le mail de bienvenue</button>
+        <button type="button" class="fr-btn fr-btn--sm fr-btn--secondary" id="act-toggle">${u.actif ? "Désactiver le compte" : "Activer le compte"}</button>
+        <button type="button" class="fr-btn fr-btn--sm fr-btn--tertiary act-danger" id="act-delete">Supprimer le compte</button>
+      </div>` : ""}
+    </section>`; })() : "";
+
   el("view-create").innerHTML = `
-    <h1 class="fr-h4" style="margin:0;">${editing ? "Modifier l'utilisateur" : "Créer un utilisateur"}</h1>
-    <p class="page-sub" style="margin-bottom:1.25rem;">Les champs varient selon les rôles sélectionnés.</p>
-    ${success}
+    <h1 class="fr-h4" style="margin:0;">${editing ? (readOnly ? "Consulter l'utilisateur" : "Modifier l'utilisateur") : "Ajouter un utilisateur"}</h1>
+    <p class="page-sub" style="margin-bottom:1.25rem;">${isAdminCreator()
+      ? "SAS Administrateur — tous les rôles et tous les territoires."
+      : "Gestionnaire de comptes — territoires : <strong>" + esc(acTerrs().join(", ")) + "</strong>. Les rôles SAS Administrateur et TestInterop ne sont pas attribuables."}</p>
+    ${success}${failure}
+    ${infoPanel}
     <form class="bo-form" id="create-form" novalidate>
       <div class="${grp('roles')}">
-        <label class="fr-label">Rôle(s)${req}<span class="fr-hint-text">Un utilisateur peut cumuler plusieurs rôles.</span></label>
-        <div class="roles-checkboxes">${rolesCheckboxes}</div>
-        ${canAssignTags ? `
-        <div class="roles-reserved">
-          <span class="roles-reserved__title">Rôles réservés (administrateur)</span>
-          <div class="roles-checkboxes">${tagsCheckboxes}</div>
-        </div>` : ""}
+        <label class="fr-label">Rôle(s)${req}<span class="fr-hint-text">Les rôles sont cumulables, sauf Régulateur OSNP et Régulateur IOA.</span></label>
+        <div class="roles-checkboxes roles-checkboxes--stack">${rolesCheckboxes}</div>
         ${err('roles')}
       </div>
 
       ${structureBlock}
 
       ${hasRoles ? `
+        <div class="${grp('email')}">
+          <label class="fr-label" for="email">Adresse électronique${req}<span class="fr-hint-text">Identifiant de connexion, unique sur la plateforme. Destinataire du mail d'activation.</span></label>
+          <input class="fr-input" type="email" id="email" placeholder="prenom.nom@exemple.fr" value="${esc(f.email)}" ${dis}>${err('email')}
+        </div>
         ${rppsBlock}
         <div class="${grp('prenom')}">
           <label class="fr-label" for="prenom">Prénom${req}${locked?' <span class="readonly-note">(via RPPS)</span>':''}</label>
-          <input class="fr-input" id="prenom" value="${esc(f.prenom)}" ${locked?"readonly":""}>${err('prenom')}
+          <input class="fr-input" id="prenom" value="${esc(f.prenom)}" ${locked||readOnly?"readonly":""}>${err('prenom')}
         </div>
         <div class="${grp('nom')}">
           <label class="fr-label" for="nom">Nom${req}${locked?' <span class="readonly-note">(via RPPS)</span>':''}</label>
-          <input class="fr-input" id="nom" value="${esc(f.nom)}" ${locked?"readonly":""}>${err('nom')}
+          <input class="fr-input" id="nom" value="${esc(f.nom)}" ${locked||readOnly?"readonly":""}>${err('nom')}
         </div>
-        ${(isEffecteur && f.pro) ? `
-          <div class="fr-input-group"><label class="fr-label">Profession</label><input class="fr-input" value="${esc(f.pro.profession)}" readonly></div>
-          <div class="fr-input-group"><label class="fr-label">Spécialité</label><input class="fr-input" value="${esc(f.pro.specialite)}" readonly></div>` : ""}
-        <div class="${grp('idNational')}">
-          <label class="fr-label" for="idNational">Identifiant national${req}<span class="fr-hint-text">Identifiant national du compte utilisateur</span></label>
-          <input class="fr-input" id="idNational" placeholder="Ex : SASN-100016" value="${esc(f.idNational)}">${err('idNational')}
-        </div>
-        <div class="${grp('email')}">
-          <label class="fr-label" for="email">Adresse électronique${req}</label>
-          <input class="fr-input" type="email" id="email" placeholder="prenom.nom@exemple.fr" value="${esc(f.email)}">${err('email')}
-        </div>
+        ${territoireBlock}
         <div class="${grp('ville')}">
-          <label class="fr-label" for="ville">Ville${req}<span class="fr-hint-text">Commune de rattachement (Base Adresse Nationale)</span></label>
-          <input class="fr-input" id="ville" list="communes-list" placeholder="Commune ou code postal…" value="${esc(f.ville)}">
+          <label class="fr-label" for="ville">Ville (facultatif)<span class="fr-hint-text">Commune de rattachement (Base Adresse Nationale)</span></label>
+          <input class="fr-input" id="ville" list="communes-list" placeholder="Commune ou code postal…" value="${esc(f.ville)}" ${dis}>
           <datalist id="communes-list">${COMMUNES.map(c=>`<option value="${esc(c)}">`).join("")}</datalist>${err('ville')}
         </div>
-        ${needsTerritoire ? `
-        <div class="${grp('territoire')}">
-          <label class="fr-label" for="territoire">Territoire SAS${req}<span class="fr-hint-text">Format SAS-[n° département]</span></label>
-          <select class="fr-select" id="territoire">${territoireOptions}</select>${err('territoire')}
-        </div>` : ""}
         ${regionBlock}
         ${envBlock}
       ` : ""}
       <div style="display:flex;gap:.5rem;margin-top:1rem;">
-        <button class="fr-btn" type="submit">${editing ? "Enregistrer les modifications" : "Créer l'utilisateur"}</button>
-        <button class="fr-btn fr-btn--secondary" type="button" data-goto-list>Annuler</button>
+        ${readOnly ? "" : `<button class="fr-btn" type="submit">${editing ? "Enregistrer les modifications" : "Créer le compte"}</button>`}
+        <button class="fr-btn fr-btn--secondary" type="button" data-goto-list>${readOnly ? "Retour à la liste" : "Annuler"}</button>
       </div>
+      ${(!editing && !readOnly) ? `<p class="mock-note" style="margin-top:.8rem;">Démo : un email en <code>@echec-keycloak.test</code> simule un échec de création côté Keycloak.</p>` : ""}
     </form>`;
 
   bindCreateEvents();
 }
 
+/* Applique les règles de territoire après un changement de rôles */
+function normalizeFormTerritoires(f) {
+  const mode = territoireMode(f.roles);
+  const options = creatorTerritoires();
+  f.territoires = f.territoires.filter(t => options.includes(t));
+  if (mode === "aucun") f.territoires = [];
+  if (mode === "un" && f.territoires.length > 1) f.territoires = f.territoires.slice(0, 1);
+  // RG-REG-02 : créateur rattaché à un seul territoire → ce territoire est attribué d'office
+  if (mode !== "aucun" && !isAdminCreator() && options.length === 1) f.territoires = [options[0]];
+  if (f.regionAuto) f.region = territoireRegion(f.territoires[0]);
+}
+
 function bindCreateEvents() {
   const root = el("view-create");
   const f = state.form;
+  const editing = !!state.editId;
+  const user = editing ? state.users.find(x => x.id === state.editId) : null;
 
-  root.querySelectorAll("[data-goto-list]").forEach(b => b.onclick = () => { state.view="list"; state.editId=null; render(); });
+  root.querySelectorAll("[data-goto-list]").forEach(b => b.onclick = () => { state.view="list"; state.editId=null; state.form=newForm(); render(); });
 
   root.querySelectorAll("[data-role]").forEach(cb => cb.onchange = () => {
     const val = cb.dataset.role;
     if (cb.checked) { if (!f.roles.includes(val)) f.roles.push(val); }
     else f.roles = f.roles.filter(r => r !== val);
-    // Nettoyage des champs devenus inutiles
-    if (!f.roles.includes("effecteur")) { f.rpps=""; f.pro=null; }
     if (!f.roles.includes("gestionnaire_structure")) f.structures = [];
-    delete f.errors.roles;
+    normalizeFormTerritoires(f);
+    delete f.errors.roles; delete f.errors.territoires;
     render();
   });
 
   const bind = (id, key) => { const e = root.querySelector("#"+id); if (e) e.oninput = () => { f[key] = e.value; }; };
-  bind("email","email"); bind("nom","nom"); bind("prenom","prenom"); bind("ville","ville"); bind("idNational","idNational");
+  bind("email","email"); bind("nom","nom"); bind("prenom","prenom"); bind("ville","ville");
+
   const terr = root.querySelector("#territoire");
   if (terr) terr.onchange = () => {
-    f.territoire = terr.value;
-    // La région suit le territoire tant que l'utilisateur ne l'a pas modifiée à la main
-    if (f.regionAuto) { f.region = territoireRegion(terr.value); render(); }
+    f.territoires = terr.value ? [terr.value] : [];
+    if (f.regionAuto) f.region = territoireRegion(terr.value);
+    render();
   };
+  root.querySelectorAll("[data-terr]").forEach(cb => cb.onchange = () => {
+    const v = cb.dataset.terr;
+    if (cb.checked) { if (!f.territoires.includes(v)) f.territoires.push(v); }
+    else f.territoires = f.territoires.filter(x => x !== v);
+    if (f.regionAuto) f.region = territoireRegion(f.territoires[0]);
+    render();
+  });
   const regionSel = root.querySelector("#region");
   if (regionSel) regionSel.onchange = () => { f.region = regionSel.value; f.regionAuto = false; };
   root.querySelectorAll("[data-env]").forEach(cb => cb.onchange = () => {
@@ -894,17 +1098,23 @@ function bindCreateEvents() {
     else f.environnements = f.environnements.filter(x => x !== v);
   });
 
+  // RPPS : recherche dans l'Annuaire Santé + unicité de l'identifiant national
   const rppsInput = root.querySelector("#rpps");
-  if (rppsInput) rppsInput.oninput = () => { f.rpps = rppsInput.value; f.pro = null; };
+  if (rppsInput && !rppsInput.readOnly) rppsInput.oninput = () => { f.rpps = rppsInput.value; f.pro = null; };
   const rppsBtn = root.querySelector("#rpps-search");
   if (rppsBtn) rppsBtn.onclick = () => {
-    const entry = RPPS_DIRECTORY.find(x => x.rpps === f.rpps.trim());
-    if (entry) { f.pro = entry; f.nom = entry.nom; f.prenom = entry.prenom; delete f.errors.rpps; }
-    else { f.pro = null; f.errors.rpps = "Aucun professionnel trouvé pour ce n° RPPS."; }
+    const rpps = f.rpps.trim();
+    const entry = RPPS_BY_ID[rpps];
+    const owner = state.users.find(x => x.id !== state.editId && x.idNational === idNationalFromRpps(rpps));
+    if (!entry) { f.pro = null; f.errors.rpps = "Aucun professionnel trouvé dans l'Annuaire Santé pour ce RPPS."; }
+    else if (owner) { f.pro = null; f.errors.rpps = "Ce RPPS est déjà porté par un autre compte : un compte = un identifiant national."; }
+    else { f.pro = entry; f.nom = entry.nom; f.prenom = entry.prenom; delete f.errors.rpps; delete f.errors.nom; delete f.errors.prenom; }
     render();
   };
+  const rppsClear = root.querySelector("#rpps-clear");
+  if (rppsClear) rppsClear.onclick = () => { f.rpps = ""; f.pro = null; render(); };
 
-  // Ajout de structures (plusieurs, même type autorisé)
+  // Ajout de structures (plusieurs, même type autorisé, sans doublon)
   const typeSel = root.querySelector("#struct-type");
   if (typeSel) typeSel.onchange = () => { f.draftType = typeSel.value; render(); };
   const addBtn = root.querySelector("#struct-add-btn");
@@ -913,17 +1123,17 @@ function bindCreateEvents() {
     const m = inp.value.match(/FINESS (\d+)/);
     const entry = m ? FINESS_BY_ID[m[1]] : null;
     if (!entry || entry.type !== f.draftType) { f.errors.structures = "Choisissez une structure dans la liste."; render(); return; }
-    if (f.structures.some(s => s.finess === entry.finess)) { f.errors.structures = "Cette structure est déjà rattachée."; render(); return; }
+    if (f.structures.some(s => s.finess === entry.finess)) { f.errors.structures = "Cette structure est déjà rattachée à cet utilisateur."; render(); return; }
     f.structures.push({ type: entry.type, finess: entry.finess, nom: entry.nom, ville: entry.ville });
     delete f.errors.structures;
-    // GS CDS : préremplissage de la ville et du territoire d'après le CDS rattaché
+    // CDS : préremplissage de la ville et du territoire (s'il fait partie des territoires proposés)
     if (entry.type === "cds") {
       if (!f.ville.trim() && entry.ville) f.ville = entry.ville;
-      if (!f.territoire) {
+      if (!f.territoires.length) {
         const dep = (entry.ville.match(/^(\d{2,3})/) || [])[1];
         const code = dep ? "SAS-" + dep.slice(0, 2) : "";
-        if (code && state.territoires.some(t => t.code === code)) {
-          f.territoire = code;
+        if (code && creatorTerritoires().includes(code)) {
+          f.territoires = [code];
           if (f.regionAuto) f.region = territoireRegion(code);
         }
       }
@@ -934,67 +1144,173 @@ function bindCreateEvents() {
     f.structures.splice(Number(b.dataset.structRemove), 1); render();
   });
 
-  root.querySelector("#create-form").onsubmit = (e) => { e.preventDefault(); submitForm(); };
+  // Actions de la page de modification (section 8)
+  if (user) {
+    const resend = root.querySelector("#act-resend");
+    if (resend) resend.onclick = () => showModal({
+      title: "Renvoyer le mail de bienvenue",
+      bodyHtml: `<p>Un nouveau mail va être envoyé à&nbsp;: <strong>${esc(user.email)}</strong>.</p>
+                 <p>Il propose deux options : créer un mot de passe ou se connecter avec Pro Santé Connect.</p>
+                 <p class="mock-note">Maquette&nbsp;: aucun mail n'est réellement envoyé.</p>`,
+      confirmLabel: "Envoyer",
+      onConfirm: () => { logAction("Renvoi du mail de bienvenue", user, true); showToast(`Mail de bienvenue renvoyé à ${user.email}.`); },
+    });
+    const toggle = root.querySelector("#act-toggle");
+    if (toggle) toggle.onclick = () => showModal({
+      title: user.actif ? "Désactiver le compte" : "Activer le compte",
+      bodyHtml: `<p>${user.actif ? "Le compte passera au statut <strong>Inactif</strong> : l'utilisateur ne pourra plus se connecter."
+                                 : "Le compte sera réactivé."}</p>`,
+      confirmLabel: user.actif ? "Désactiver" : "Activer",
+      onConfirm: () => {
+        user.actif = !user.actif;
+        user.updated_at = new Date().toISOString(); user.updatedBy = currentActor();
+        saveUsers();
+        logAction(user.actif ? "Activation du compte" : "Désactivation du compte", user, true);
+        const sync = isRegulateur(user) ? syncInterop(user, "modification") : "";
+        showToast(`Compte ${user.actif ? "activé" : "désactivé"}.${sync ? " " + sync : ""}`);
+        render();
+      },
+    });
+    const del = root.querySelector("#act-delete");
+    if (del) del.onclick = () => showModal({
+      title: "Supprimer le compte",
+      bodyHtml: `<p>Le compte de <strong>${esc(user.prenom)} ${esc(user.nom)}</strong> (${esc(user.email)}) sera supprimé définitivement et n'apparaîtra plus dans la liste.</p>
+                 ${isRegulateur(user) ? "<p>La suppression sera synchronisée avec les éditeurs via l'API Interop.</p>" : ""}`,
+      confirmLabel: "Supprimer",
+      onConfirm: () => {
+        state.users = state.users.filter(x => x.id !== user.id);
+        saveUsers();
+        logAction("Suppression du compte", user, true);
+        const sync = isRegulateur(user) ? syncInterop(user, "suppression") : "";
+        state.view = "list"; state.editId = null; state.form = newForm();
+        render();
+        showToast(`Compte de ${user.prenom} ${user.nom} supprimé.${sync ? " " + sync : ""}`);
+      },
+    });
+  }
+
+  const form = root.querySelector("#create-form");
+  if (form) form.onsubmit = (e) => { e.preventDefault(); if (acWrite()) submitForm(); };
 }
 
 function submitForm() {
   const f = state.form;
   const editing = !!state.editId;
-  const isEffecteur = f.roles.includes("effecteur");
   const isStructure = f.roles.includes("gestionnaire_structure");
+  const mode = territoireMode(f.roles);
+  const options = creatorTerritoires();
   const errors = {};
+  f.success = null; f.failure = null;
+
+  // Rôle obligatoire, attribuable par le créateur, OSNP + IOA non cumulables
   if (!f.roles.length) errors.roles = "Sélectionnez au moins un rôle.";
-  if (!f.idNational.trim()) errors.idNational = "Identifiant national requis.";
-  if (!f.email.trim() || !f.email.includes("@")) errors.email = "Email invalide.";
+  const forbidden = f.roles.filter(r => !creatableRoles().some(x => x.value === r));
+  const before = editing ? rolesOf(state.users.find(x => x.id === state.editId)) : [];
+  if (forbidden.some(r => !before.includes(r))) errors.roles = "Vous ne pouvez pas attribuer le rôle " + ROLE_LABEL[forbidden[0]] + ".";
+  if (REGULATEUR_ROLES.every(r => f.roles.includes(r))) errors.roles = "Régulateur OSNP et Régulateur IOA ne peuvent pas être attribués au même compte.";
+
+  // Email obligatoire et unique : un email déjà présent dans Keycloak bloque la création
+  const email = f.email.trim();
+  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) errors.email = "Adresse électronique invalide.";
+  else if (state.users.some(x => x.id !== state.editId && x.email.toLowerCase() === email.toLowerCase()))
+    errors.email = editing ? "Cette adresse est déjà utilisée par un autre compte." : "Cet email existe déjà dans Keycloak : la création est bloquée.";
+
   if (!f.nom.trim()) errors.nom = "Nom requis.";
   if (!f.prenom.trim()) errors.prenom = "Prénom requis.";
-  if (!f.ville.trim()) errors.ville = "Ville requise.";
-  const needsTerritoire = f.roles.some(r => r !== "administrateur" && !ADMIN_TAG_KEYS.includes(r));
-  if (needsTerritoire && !f.territoire) errors.territoire = "Territoire SAS requis.";
-  if (isEffecteur && !f.pro) errors.rpps = "Renseignez un n° RPPS valide.";
+
+  // RPPS facultatif : s'il est saisi, il doit avoir été vérifié et être unique
+  if (f.rpps.trim() && !f.pro) errors.rpps = "Lancez la recherche : le RPPS doit exister dans l'Annuaire Santé.";
+  if (f.pro && state.users.some(x => x.id !== state.editId && x.idNational === idNationalFromRpps(f.rpps.trim())))
+    errors.rpps = "Ce RPPS est déjà porté par un autre compte : un compte = un identifiant national.";
+
+  // Territoires
+  if (mode !== "aucun" && f.territoires.length === 0) errors.territoires = "Territoire SAS requis.";
+  if (mode === "un" && f.territoires.length > 1) errors.territoires = "Un régulateur est rattaché à un seul territoire.";
+  if (f.territoires.some(t => !options.includes(t))) errors.territoires = "Vous ne pouvez rattacher le compte qu'à vos territoires.";
+
   if (isStructure && f.structures.length === 0) errors.structures = "Ajoutez au moins une structure.";
   f.errors = errors;
   if (Object.keys(errors).length) { render(); return; }
 
-  const terrValue = needsTerritoire ? f.territoire : "";
+  const terrs = mode === "aucun" ? [] : [...f.territoires];
   const base = {
-    idNational: f.idNational.trim(), email: f.email.trim(), nom: f.nom.trim(), prenom: f.prenom.trim(),
-    roles: [...f.roles], ville: f.ville.trim(), territoire: terrValue,
-    region: f.region || territoireRegion(terrValue),
+    email, nom: f.nom.trim(), prenom: f.prenom.trim(),
+    roles: [...f.roles], ville: f.ville.trim(), territoires: terrs, territoire: terrs[0] || "",
+    region: terrs.length ? (f.region || territoireRegion(terrs[0])) : "",
     environnements: [...f.environnements],
-    modeConnexion: f.modeConnexion === "PSC" ? "PSC" : "MdP",
   };
-  if (isEffecteur && f.pro) { base.rpps = f.rpps.trim(); base.profession = f.pro.profession; base.specialite = f.pro.specialite; }
-  if (isStructure) {
-    base.structures = f.structures.map(s => ({ type: s.type, finess: s.finess, nom: s.nom, ville: s.ville }));
+  if (f.pro) { base.rpps = f.rpps.trim(); base.profession = f.pro.profession; base.specialite = f.pro.specialite; base.idNational = idNationalFromRpps(base.rpps); }
+  if (isStructure) base.structures = f.structures.map(s => ({ type: s.type, finess: s.finess, nom: s.nom, ville: s.ville }));
+
+  // Simulation d'un échec Keycloak (création uniquement) — RG-POST-06
+  const ko = !editing ? keycloakFailure(email) : null;
+  if (ko) {
+    logAction("Création du compte", base, false, ko);
+    f.failure = ko;
+    render(); window.scrollTo({ top: 0, behavior: "smooth" });
+    return;
   }
 
   let saved;
+  let wasRegulateur = false;
   if (editing) {
     const u = state.users.find(x => x.id === state.editId);
-    delete u.rpps; delete u.profession; delete u.specialite; delete u.structures; delete u.role;
-    Object.assign(u, base);
+    wasRegulateur = isRegulateur(u);
+    delete u.rpps; delete u.profession; delete u.specialite; delete u.structures;
+    if (!base.idNational && /^8\d{11}$/.test(u.idNational || "")) base.idNational = "SASN-" + Date.now().toString().slice(-6);
+    Object.assign(u, base, { updated_at: new Date().toISOString(), updatedBy: currentActor() });
     saved = u;
+    logAction("Modification du compte", saved, true);
   } else {
-    // Nouveau compte : jamais connecté (statut « Aucune connexion »), date de création = aujourd'hui
+    // Nouveau compte : créé dans Keycloak, statut « En attente de première connexion »
     saved = { id: "u-" + Math.random().toString(36).slice(2, 8), actif: true,
-              created_at: new Date().toISOString(), derniereConnexion: null, ...base };
+              idNational: base.idNational || ("SASN-" + Date.now().toString().slice(-6)),
+              created_at: new Date().toISOString(), createdBy: currentActor(),
+              derniereConnexion: null, modeConnexion: null, ...base };
     state.users.unshift(saved);
+    logAction("Création du compte", saved, true, "Compte créé dans Keycloak ; mail d'activation envoyé");
   }
   saveUsers();
+  const sync = (isRegulateur(saved) || wasRegulateur) ? syncInterop(saved, editing ? "modification" : "création") : "";
 
-  const mode = editing ? "edit" : "create";
-  state.editId = null;
-  state.form = newForm();
-  state.form.success = { prenom: saved.prenom, nom: saved.nom, email: saved.email, mode };
+  const mode2 = editing ? "edit" : "create";
+  if (editing) {
+    state.form = formFromUser(saved);   // on reste sur la page de modification du compte
+  } else {
+    state.editId = null;
+    state.form = newForm();
+  }
+  state.form.success = { prenom: saved.prenom, nom: saved.nom, email: saved.email, mode: mode2, sync };
   render();
   window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
 /* ================================================================ *
+ *  VUE JOURNAL DES ACTIONS (RG-POST-07)
+ * ================================================================ */
+function renderJournal() {
+  const rows = state.journal;
+  el("view-journal").innerHTML = `
+    <h1 class="fr-h4" style="margin:0;">Journal des actions</h1>
+    <p class="page-sub">Toute action sur un compte est tracée, qu'elle réussisse ou échoue : création, modification, activation, désactivation, renvoi du mail, suppression, synchronisation Interop, export.</p>
+    ${rows.length ? `
+    <div class="journal-table-wrap"><table class="journal-table">
+      <thead><tr><th>Date</th><th>Action</th><th>Résultat</th><th>Compte</th><th>Auteur</th><th>Détail</th></tr></thead>
+      <tbody>${rows.map(r => `<tr>
+        <td>${esc(new Date(r.at).toLocaleString("fr-FR"))}</td>
+        <td>${esc(r.action)}</td>
+        <td><span class="fr-badge fr-badge--sm ${r.ok ? "badge-statut-actif" : "badge-log-ko"}">${r.ok ? "Succès" : "Échec"}</span></td>
+        <td>${esc(r.cible || "—")}</td>
+        <td>${esc(r.auteur)}</td>
+        <td>${esc(r.detail || "")}</td>
+      </tr>`).join("")}</tbody>
+    </table></div>` : `<p class="mock-note" style="padding:1rem 0;">Aucune action enregistrée pour l'instant. Créez, modifiez ou supprimez un compte pour alimenter le journal.</p>`}`;
+}
+
+/* ================================================================ *
  *  VUE TERRITOIRES SAS (CRUD)
  * ================================================================ */
-function usersInTerritoire(code) { return state.users.filter(u => u.territoire === code).length; }
+function usersInTerritoire(code) { return state.users.filter(u => userTerritoires(u).includes(code)).length; }
 
 function renderTerritoires() {
   const t = state.terr;
@@ -1109,7 +1425,7 @@ function saveTerritoireForm() {
     const oldCode = x.code;
     x.code = code; x.departements = departements; x.insee = insee; x.dep = departements.join(", ");
     // Répercuter le changement de code sur les utilisateurs rattachés
-    if (oldCode !== code) state.users.forEach(u => { if (u.territoire === oldCode) u.territoire = code; });
+    if (oldCode !== code) state.users.forEach(u => { u.territoires = userTerritoires(u).map(t => t === oldCode ? code : t); u.territoire = u.territoires[0] || ""; });
     saveUsers();
   } else {
     state.territoires.push({ code, departements, insee, dep: departements.join(", ") });
@@ -1127,7 +1443,7 @@ function depVisible() {
   const id = identity();
   if (acRole() === "administrateur") return state.departements;
   // Gestionnaire de compte : uniquement le département de son territoire SAS
-  return state.departements.filter(d => (d.territory || []).some(t => t.name === acTerr()));
+  return state.departements.filter(d => (d.territory || []).some(t => acTerrs().includes(t.name)));
 }
 function depFiltered() {
   const q = state.depSearch.trim().toLowerCase();
@@ -1168,7 +1484,7 @@ function renderDepartements() {
 
   el("view-departements").innerHTML = `
     <h1 class="fr-h4" style="margin:0;">Départements</h1>
-    <p class="page-sub">${isAdmin ? "Tous les territoires SAS." : "Territoire <strong>"+esc(acTerr())+"</strong>."} ${acWrite() ? "Paramétrez les rayons de recherche par défaut." : "Consultation en lecture seule."}</p>
+    <p class="page-sub">${isAdmin ? "Tous les territoires SAS." : "Territoire(s) <strong>"+esc(acTerrs().join(", "))+"</strong>."} ${acWrite() ? "Paramétrez les rayons de recherche par défaut." : "Consultation en lecture seule."}</p>
     ${acWrite() ? `<div class="save-bar">
       <button class="fr-btn fr-btn--sm" id="dep-save" ${n?"":"disabled"}>Enregistrer</button>
       <span class="mock-note" id="dep-pending">${n ? `${n} modification${n>1?"s":""} en attente` : "Aucune modification"}</span>
@@ -1261,7 +1577,7 @@ function bindDepartementsEvents() {
 function supTerrToken(t) { return String(t).split(" ")[0]; }
 function supVisibleTerritories(cat) {
   if (acRole() === "administrateur") return cat.territories;
-  return cat.territories.filter(x => supTerrToken(x.territory) === acTerr());
+  return cat.territories.filter(x => acTerrs().includes(supTerrToken(x.territory)));
 }
 function supKey(catKey, territory) { return catKey + "||" + territory; }
 function supEntry(catKey, territory) {
@@ -1339,7 +1655,7 @@ function renderSupport() {
     <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:1rem;">
       <div>
         <h1 class="fr-h4" style="margin:0;">Gestion Support</h1>
-        <p class="page-sub">${isAdmin ? "Tous les territoires." : "Territoire <strong>"+esc(acTerr())+"</strong>."}
+        <p class="page-sub">${isAdmin ? "Tous les territoires." : "Territoire(s) <strong>"+esc(acTerrs().join(", "))+"</strong>."}
           Mails de réorientation — tous les supports en colonnes. Un email par champ (ajout / suppression). Toute modification déclenche une notification de changement.</p>
       </div>
       ${isAdmin ? `<div style="display:flex;gap:.5rem;flex-wrap:wrap;">
@@ -1522,7 +1838,7 @@ function statScopeUsers() {
   const base = visibleUsers();                      // admins : tous · gestionnaire : son territoire
   if (acRole() !== "administrateur") return base;   // gestionnaire de compte : périmètre déjà limité
   const s = state.stat;
-  if (s.level === "territoire" && s.territoire) return base.filter(u => u.territoire === s.territoire);
+  if (s.level === "territoire" && s.territoire) return base.filter(u => userTerritoires(u).includes(s.territoire));
   if (s.level === "region" && s.region) return base.filter(u => (u.region || territoireRegion(u.territoire)) === s.region);
   return base;                                      // national
 }
@@ -1561,19 +1877,19 @@ function renderStatistiques() {
 
   // Périmètre courant (libellé)
   let scopeLabel = "National — tous les territoires";
-  if (!isAdmin) scopeLabel = "Territoire " + acTerr();
+  if (!isAdmin) scopeLabel = "Territoire(s) " + acTerrs().join(", ");
   else if (s.level === "region" && s.region) scopeLabel = "Région " + s.region;
   else if (s.level === "territoire" && s.territoire) scopeLabel = "Territoire " + s.territoire;
 
   // KPI statut
-  const actifs   = users.filter(u => u.derniereConnexion && u.actif).length;
-  const inactifs = users.filter(u => u.derniereConnexion && !u.actif).length;
-  const aucune   = users.filter(u => !u.derniereConnexion).length;
+  const actifs   = users.filter(u => statutEtat(u).key === "actif").length;
+  const inactifs = users.filter(u => statutEtat(u).key === "inactif").length;
+  const aucune   = users.filter(u => statutEtat(u).key === "attente").length;
 
   // Répartitions
-  const byRole = statCountBy(users, u => rolesOf(u).filter(r => !ADMIN_TAG_KEYS.includes(r)));
+  const byRole = statCountBy(users, u => displayRoles(u));
   const byStructType = statCountBy(users, u => [...new Set(structuresOf(u).map(x => x.type))]); // gestionnaires par type de structure
-  const byMode = statCountBy(users, u => u.modeConnexion || "MdP");
+  const byMode = statCountBy(users, u => u.modeConnexion || "aucun");
 
   // Contrôles de périmètre (admins uniquement)
   const regions = [...new Set(visibleUsers().map(u => u.region || territoireRegion(u.territoire)).filter(Boolean))].sort();
@@ -1593,7 +1909,7 @@ function renderStatistiques() {
           <option value="">— Tous les territoires —</option>
           ${state.territoires.map(t => `<option value="${esc(t.code)}" ${s.territoire===t.code?"selected":""}>${esc(t.code)} · ${esc(t.dep)}</option>`).join("")}
         </select>` : ""}
-    </div>` : `<p class="mock-note">Périmètre : territoire <strong>${esc(acTerr())}</strong> (gestionnaire de compte).</p>`;
+    </div>` : `<p class="mock-note">Périmètre : comptes partageant au moins un de vos territoires (<strong>${esc(acTerrs().join(", "))}</strong>).</p>`;
 
   el("view-statistiques").innerHTML = `
     <h1 class="fr-h4" style="margin:0;">Statistiques</h1>
@@ -1604,13 +1920,13 @@ function renderStatistiques() {
       <div class="stat-kpi"><span class="stat-kpi__n">${total}</span><span class="stat-kpi__l">Comptes</span></div>
       <div class="stat-kpi stat-kpi--ok"><span class="stat-kpi__n">${actifs}</span><span class="stat-kpi__l">Actifs</span></div>
       <div class="stat-kpi"><span class="stat-kpi__n">${inactifs}</span><span class="stat-kpi__l">Inactifs</span></div>
-      <div class="stat-kpi stat-kpi--warn"><span class="stat-kpi__n">${aucune}</span><span class="stat-kpi__l">Aucune connexion</span></div>
+      <div class="stat-kpi stat-kpi--warn"><span class="stat-kpi__n">${aucune}</span><span class="stat-kpi__l">En attente de première connexion</span></div>
     </div>
 
     <div class="stat-grid">
       ${statBlock("Comptes par rôle", byRole, total, k => ROLE_LABEL[k] || k)}
       ${statBlock("Gestionnaires par type de structure", byStructType, total, k => STRUCTURE_LABEL[k] || k)}
-      ${statBlock("Comptes par mode de connexion", byMode, total, k => modeConnexionLabel(k))}
+      ${statBlock("Comptes par mode de connexion", byMode, total, k => k === "aucun" ? "Non choisi (jamais connecté)" : modeConnexionLabel(k))}
     </div>
     <p class="mock-note" style="margin-top:1rem;">Statistiques calculées sur le périmètre visible (données de démonstration).</p>`;
 
@@ -1737,7 +2053,7 @@ function banSetEdit(scope, audience, field, val) {
 function banEditCount() { let n = 0; for (const k in state.banEdits) n += Object.keys(state.banEdits[k]).length; return n; }
 function banScopesForIdentity() {
   if (acRole() === "administrateur") return ["national", ...state.territoires.map(t => t.code)];
-  return ["national", acTerr()];    // gestionnaire de compte : national (lecture) + son territoire
+  return ["national", ...acTerrs()];    // gestionnaire de comptes : national (lecture) + ses territoires
 }
 /* Audiences visibles : le gestionnaire de compte n'a pas accès au bandeau
    « non connecté » (réservé à l'administrateur). */
@@ -1748,7 +2064,7 @@ function banAudiencesForIdentity() {
 function banCanEdit(scope) {
   if (!acWrite()) return false;
   if (acRole() === "administrateur") return true;
-  return scope === acTerr();          // gestionnaire : uniquement son territoire (national en lecture)
+  return acTerrs().includes(scope);    // gestionnaire : uniquement ses territoires (national en lecture)
 }
 function banScopeLabel(scope) {
   if (scope === "national") return "National (tous les territoires)";
@@ -1896,6 +2212,7 @@ function render() {
   el("view-list").hidden        = denied || state.view !== "list";
   el("view-create").hidden      = denied || state.view !== "create";
   el("view-statistiques").hidden= denied || state.view !== "statistiques";
+  el("view-journal").hidden     = denied || state.view !== "journal";
   el("view-cgu").hidden         = denied || state.view !== "cgu";
   el("view-bandeaux").hidden    = denied || state.view !== "bandeaux";
   el("view-territoires").hidden = denied || state.view !== "territoires";
@@ -1914,6 +2231,7 @@ function render() {
   if (state.view === "list") renderList();
   else if (state.view === "create") renderCreate();
   else if (state.view === "statistiques") renderStatistiques();
+  else if (state.view === "journal") renderJournal();
   else if (state.view === "cgu") renderCgu();
   else if (state.view === "bandeaux") renderBandeaux();
   else if (state.view === "territoires") renderTerritoires();

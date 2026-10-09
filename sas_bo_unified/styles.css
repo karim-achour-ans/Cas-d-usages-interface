@@ -86,13 +86,15 @@ body { margin: 0; background: #fff; color: #1a1a1a; font-size: 14px; line-height
 
 /* ── Badges de rôle (couleurs système DSFR, sobres) ──────── */
 .badge-role { text-transform: none; }
-.badge-administrateur         { background:#fee7fc; color:#6e445a; }
+.badge-sas_administrateur     { background:#fee7fc; color:#6e445a; }
 .badge-gestionnaire_compte    { background:#e3e3fd; color:#000091; }
 .badge-gestionnaire_structure { background:#e8edff; color:#0063cb; }
 .badge-regulateur_osnp        { background:#e3fdeb; color:#297254; }
-.badge-regulateur_su          { background:#d6f4ec; color:#0b6b58; }
-.badge-effecteur              { background:#f7f0e9; color:#695240; }
-/* Mode de connexion */
+.badge-regulateur_medecin     { background:#c3fad5; color:#18753c; font-weight:700; }
+.badge-regulateur_ioa         { background:#d6f4ec; color:#0b6b58; }
+.badge-testinterop            { background:#e5e5e5; color:#3a3a3a; }
+.badge-qualite-effecteur      { background:#f7f0e9; color:#695240; font-weight:500; }
+
 .badge-mode { text-transform: none; font-weight: 500; }
 .badge-mode-PSC { background:#e8edff; color:#0063cb; }
 .badge-mode-MdP { background:#eee; color:#666; }
@@ -101,9 +103,7 @@ body { margin: 0; background: #fff; color: #1a1a1a; font-size: 14px; line-height
 .badge-statut-inactif { background:#ececec; color:#666; }
 .badge-statut-aucune  { background:#ffe9c6; color:#976a00; }
 /* Rôles réservés (administrateur) */
-.badge-referent_territoriale  { background:#fceeac; color:#716043; }
-.badge-ambassadeur            { background:#dee5fd; color:#2f4077; }
-.badge-testlrm                { background:#e5e5e5; color:#3a3a3a; }
+.badge-log-ko          { background:#ffe9e6; color:#ce0500; }
 
 .roles-reserved { margin-top:.7rem; padding-top:.6rem; border-top:1px dashed #ddd; }
 .roles-reserved__title { display:block; font-size:.8rem; font-weight:600; color:#666; margin-bottom:.15rem; }
@@ -423,3 +423,20 @@ body { margin: 0; background: #fff; color: #1a1a1a; font-size: 14px; line-height
 .sup-email-add { border:none; background:none; color:#000091; font-family:inherit; font-size:.78rem; cursor:pointer; padding:.1rem 0; }
 .sup-email-add:hover { text-decoration:underline; }
 .sup-email-ro { font-size:.82rem; padding:.1rem 0; color:#3a3a3a; }
+
+/* ── Refonte comptes SAS : rôles empilés, territoires, fiche compte, journal ── */
+.roles-checkboxes--stack { display:flex; flex-direction:column; gap:.35rem; }
+.roles-checkboxes--stack .fr-hint-text { margin-top:0; }
+.terr-checkboxes { display:flex; flex-wrap:wrap; gap:.25rem 1.25rem; }
+.account-info { border:1px solid #ddd; border-radius:6px; padding:1rem 1.1rem; margin-bottom:1.5rem; background:#fafafa; max-width:46rem; }
+.account-info__head { display:flex; flex-wrap:wrap; align-items:center; gap:.45rem; margin-bottom:.7rem; }
+.account-info__grid { display:grid; grid-template-columns: 11rem 1fr; gap:.3rem 1rem; margin:0; font-size:.85rem; }
+.account-info__grid dt { color:#666; font-weight:500; }
+.account-info__grid dd { margin:0; }
+.account-info__actions { display:flex; flex-wrap:wrap; gap:.5rem; margin-top:.9rem; padding-top:.8rem; border-top:1px solid #e5e5e5; }
+.act-danger { color:#ce0500 !important; }
+.journal-table-wrap { overflow-x:auto; margin-top:1rem; }
+.journal-table { width:100%; border-collapse:collapse; font-size:.8rem; }
+.journal-table th, .journal-table td { text-align:left; padding:.45rem .6rem; border-bottom:1px solid #e5e5e5; vertical-align:top; }
+.journal-table th { background:#f6f6f6; font-weight:600; white-space:nowrap; }
+@media (max-width: 640px) { .account-info__grid { grid-template-columns: 1fr; } }

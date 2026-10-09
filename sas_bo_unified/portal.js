@@ -36,7 +36,7 @@ function render() {
     const level = habLevel(identity, g.key);
     if (level) {
       const scope = (identity.role === "gestionnaire_compte" && identity.territoire && g.key !== "interop")
-        ? `<span class="bo-tile__role">Territoire : ${esc(identity.territoire)}</span>` : "";
+        ? `<span class="bo-tile__role">Territoire${identityTerritoires(identity).length>1?"s":""} : ${esc(identityTerritoires(identity).join(", "))}</span>` : "";
       return `<a class="bo-tile" href="${urlWithIdentity(g.page, idx)}">
         <span class="bo-tile__icon ${g.icon}" aria-hidden="true" style="font-size:2rem;"></span>
         <span class="bo-tile__tech">${esc(g.tech)}</span>

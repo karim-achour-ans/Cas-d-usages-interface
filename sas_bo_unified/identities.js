@@ -4,7 +4,8 @@
    arrière-guichet : null (aucun) · "lecture" · "ecriture".
    - Admin BO : super-rôle, écriture partout + gère les accès.
    - Admin    : niveaux Lecture/Écriture par guichet (fixés par l'Admin BO).
-   - Gestionnaire de compte : profil territorial (scoping par territoire).
+   - Gestionnaire de comptes : profil territorial, rattaché à UN OU PLUSIEURS
+     territoires (`territoires`). `territoire` = le premier (compatibilité).
    L'identité active est propagée entre les pages via ?identity=<index>.
    ================================================================== */
 
@@ -36,13 +37,17 @@ const IDENTITIES = [
   { label: "Admin — Offre de soins (écriture)", role: "administrateur", adminBO: false, territoire: null,
     hab: { utilisateurs: null, sasdata: null, offre_soins: "ecriture", interop: null } },
 
-  { label: "Gestionnaire de compte — SAS-75 (Paris)", role: "gestionnaire_compte", adminBO: false, territoire: "SAS-75",
+  { label: "Gestionnaire de comptes — SAS-75 (Paris)", role: "gestionnaire_compte", adminBO: false, territoire: "SAS-75", territoires: ["SAS-75"],
     hab: { utilisateurs: "ecriture", sasdata: "ecriture", offre_soins: "ecriture", interop: null } },
 
-  { label: "Gestionnaire de compte — SAS-69 (Rhône)", role: "gestionnaire_compte", adminBO: false, territoire: "SAS-69",
+  { label: "Gestionnaire de comptes — SAS-69 (Rhône)", role: "gestionnaire_compte", adminBO: false, territoire: "SAS-69", territoires: ["SAS-69"],
     hab: { utilisateurs: "ecriture", sasdata: "ecriture", offre_soins: "ecriture", interop: "lecture" } },
 
-  { label: "Gestionnaire de compte — SAS-59 (Nord)", role: "gestionnaire_compte", adminBO: false, territoire: "SAS-59",
+  { label: "Gestionnaire de comptes — SAS-59 (Nord)", role: "gestionnaire_compte", adminBO: false, territoire: "SAS-59", territoires: ["SAS-59"],
+    hab: { utilisateurs: "ecriture", sasdata: "ecriture", offre_soins: "ecriture", interop: null } },
+
+  // Gestionnaire de comptes rattaché à PLUSIEURS territoires (visibilité : au moins un territoire commun)
+  { label: "Gestionnaire de comptes — SAS-92 + SAS-93", role: "gestionnaire_compte", adminBO: false, territoire: "SAS-92", territoires: ["SAS-92", "SAS-93"],
     hab: { utilisateurs: "ecriture", sasdata: "ecriture", offre_soins: "ecriture", interop: null } },
 
   { label: "Exploitant interopérabilité (écriture)", role: "administrateur", adminBO: false, territoire: null,
@@ -57,6 +62,11 @@ function habLevel(id, comp) {
 }
 function habHas(id, comp)   { return habLevel(id, comp) != null; }
 function habWrite(id, comp) { return habLevel(id, comp) === "ecriture"; }
+function identityTerritoires(id) {
+  if (!id) return [];
+  if (Array.isArray(id.territoires) && id.territoires.length) return id.territoires;
+  return id.territoire ? [id.territoire] : [];
+}
 
 // Rôles du BO Interopérabilité (mapping indicatif niveau ↔ rôle technique)
 const INTEROP_ROLE_BY_LEVEL = { lecture: "ROLE_AUTHENTICATED_USER", ecriture: "ROLE_ADMINISTRATOR" };

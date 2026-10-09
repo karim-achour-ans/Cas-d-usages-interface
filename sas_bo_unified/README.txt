@@ -38,48 +38,52 @@ en tant que » est partagé entre les pages (via l'URL) pour la démo.
 
 CE QUE FAIT LA MAQUETTE
 -----------------------
-1. LISTE DES UTILISATEURS (menu « Utilisateurs »)
-   - Affichage en lignes (chaque ligne indique le nom, les rôles, le statut,
-     le mode de connexion, l'email, la ville, le territoire, la région, la
-     date de création et la dernière connexion).
-   - Visible par l'Administrateur (tous les territoires) et par le
-     Gestionnaire de Compte (uniquement les utilisateurs de SON territoire) ;
-     utilisez le sélecteur de profil en bas du menu de gauche.
-   - Recherche libre + filtres : Rôle, Territoire, Région, Ville,
-     Profession/Spécialité, Structure, Statut.
-   - STATUT à 3 états : Actif · Inactif · Aucune connexion (compte jamais
-     activé). Un bouton « Renvoyer le mail d'activation » apparaît sur les
-     comptes jamais connectés.
-   - MODE DE CONNEXION affiché : PSC (France Connect / Pro Santé Connect) ou
-     Mot de passe.
-   - EXPORT CSV (bouton « Exporter (CSV) ») : email, rôle(s), région,
-     territoire, structure(s), statut, mode de connexion, liste de diffusion,
-     dates. Sert de liste de diffusion et distingue les comptes login/mot de
-     passe des comptes PSC. L'export respecte les filtres actifs.
-   - Pour les gestionnaires de structure, le type (SOS Médecins / CDS / CPTS/MSP)
-     est indiqué dans le libellé de chaque structure.
+1. LISTE DES UTILISATEURS (menu « Utilisateurs ») — refonte de la gestion des comptes
+   Conforme à la spécification « Création et gestion des comptes utilisateurs SAS ».
+   - ACCÈS : seuls le SAS Administrateur et le Gestionnaire de comptes accèdent à
+     la liste et aux formulaires (autre profil : « Accès non autorisé »).
+   - VISIBILITÉ : le SAS Administrateur voit tous les comptes ; le Gestionnaire de
+     comptes voit les comptes qui partagent AU MOINS UN territoire avec lui
+     (essayez le profil « Gestionnaire de comptes — SAS-92 + SAS-93 »). Les comptes
+     SAS Administrateur et TestInterop ne sont visibles que des administrateurs.
+   - STATUT à 3 états : Actif · En attente de première connexion · Inactif
+     (désactivé). Un compte supprimé n'apparaît plus.
+   - « RÉGULATEUR MÉDECIN » : un Régulateur OSNP dont le RPPS est celui d'un
+     effecteur est affiché sous ce libellé (filtre « Rôle » dédié).
+   - MODE DE CONNEXION : choisi par l'utilisateur à l'activation (PSC ou mot de
+     passe) ; non renseigné tant qu'il ne s'est jamais connecté.
+   - EXPORT CSV : même périmètre que la liste (filtres compris), avec RPPS,
+     qualité d'effecteur, territoire(s), créateur et auteur de modification.
 
-2. CRÉER / MODIFIER UN UTILISATEUR
-   - « Créer un utilisateur » ou le lien « Modifier » sur chaque ligne.
-   - RÔLES MULTIPLES : un utilisateur peut cumuler 1 à tous les rôles
-     (cases à cocher).
-   - RÔLES RÉSERVÉS (Referent Territoriale, Ambassadeur, TestLRM) :
-     assignables uniquement par un administrateur. Les utilisateurs qui
-     portent l'un de ces rôles ne sont visibles et filtrables que par les
-     administrateurs (masqués aux gestionnaires de compte).
-   - Champs communs : identifiant national, email, nom, prénom, ville (Base
-     Adresse Nationale), territoire SAS (format SAS-[n° département]) et RÉGION
-     (préremplie automatiquement d'après le territoire, modifiable).
-   - ENVIRONNEMENT(S) — Production, PréProduction, Intégration, Formation :
-     création multi-environnement réservée à l'Admin BO (cases à cocher).
-   - GESTIONNAIRE DE STRUCTURE + CDS : l'ajout d'un Centre de Santé (CDS)
-     préremplit la ville et le territoire s'ils sont encore vides.
-   - Effecteur : n° RPPS -> pré-remplit nom, prénom, profession et spécialité
-     (essayez 10001234567, 10002345678, 10003456789…).
-   - Gestionnaire de Structure : rattachement à PLUSIEURS structures, y
-     compris du même type (ex. 2 CPTS + 3 MSP + 2 SOS Médecins). On ajoute
-     autant de structures que voulu via Type + recherche + « Ajouter » (bloc
-     situé juste sous le champ Rôle).
+2. AJOUTER / MODIFIER UN UTILISATEUR
+   - RÔLES : SAS Administrateur · Gestionnaire de comptes – Référent territorial ·
+     Gestionnaire de structure · Régulateur OSNP · Régulateur IOA / Agent
+     d'accueil · TestInterop. Cumulables, sauf Régulateur OSNP + Régulateur IOA.
+   - MATRICE : le Gestionnaire de comptes ne peut créer ni SAS Administrateur ni
+     TestInterop ; il peut créer un autre Gestionnaire de comptes, sur ses
+     territoires uniquement.
+   - TERRITOIRE : aucun pour SAS Administrateur / TestInterop ; un seul pour un
+     régulateur ; un ou plusieurs pour Gestionnaire de comptes / de structure.
+     Proposés : tous (administrateur) ou ceux du créateur. Créateur rattaché à un
+     seul territoire : ce territoire est attribué d'office.
+   - EMAIL obligatoire et unique : un email déjà présent dans Keycloak bloque la
+     création.
+   - RPPS facultatif (le rôle Effecteur est supprimé) : vérifié dans l'Annuaire
+     Santé, unique (un compte = un identifiant national « 8 » + RPPS), il
+     préremplit nom et prénom (non modifiables) et donne la qualité d'effecteur.
+     RPPS libres : 10003456789, 10006789012, 10007890123…
+   - GESTIONNAIRE DE STRUCTURE : au moins une structure (SOS Médecins, CPTS, CDS,
+     FINESS juridique), sans doublon.
+   - APRÈS ENREGISTREMENT : compte créé dans Keycloak, mail d'activation à deux
+     options (mot de passe ou PSC), synchronisation Interop si régulateur, message
+     de succès avec retour à la liste — ou message d'échec avec sa cause.
+     Démo : un email en « @echec-keycloak.test » simule un échec Keycloak.
+   - PAGE DE MODIFICATION : statut, date et auteur de création (si son compte est
+     supprimé : son rôle et son territoire), date et auteur de la dernière
+     modification, dernière connexion ; actions « Renvoyer le mail de bienvenue »,
+     « Activer / Désactiver », « Supprimer » (synchronisées si régulateur).
+   - JOURNAL DES ACTIONS (menu, administrateur) : toute action sur un compte,
+     réussie ou en échec, est tracée.
 
 3. STATISTIQUES (menu « Statistiques »)
    - Répartition des comptes : par rôle, par type de structure (gestionnaires)
@@ -170,12 +174,11 @@ Interface : épurée pour une lecture confortable sur écran 15 pouces.
 
 RÔLES GÉRÉS
 -----------
-Gestionnaire de Compte · Gestionnaire de Structure (SOS Médecins, CDS,
-CPTS/MSP) · Régulateur OSNP · Régulateur SU (droits identiques au Régulateur
-OSNP) · Effecteur.
-Le rôle « Administrateur » a été retiré de la gestion des utilisateurs :
-l'administrateur du BO dispose par défaut de l'accès national (voir les
-habilitations par arrière-guichet ci-dessus).
+SAS Administrateur (ex-administrateur national ; l'ancien rôle sas_administrateur
+est supprimé) · Gestionnaire de comptes – Référent territorial · Gestionnaire de
+structure (SOS Médecins, CDS, CPTS/MSP) · Régulateur OSNP · Régulateur IOA /
+Agent d'accueil · TestInterop.
+Le rôle Effecteur est supprimé : la qualité d'effecteur est déduite du RPPS.
 
 DONNÉES
 -------
