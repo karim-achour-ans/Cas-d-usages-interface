@@ -1,0 +1,155 @@
+@font-face{font-family:"Marianne";src:url("../sas_bo_unified/vendor/fonts/Marianne-Regular.woff2") format("woff2");font-weight:400;font-display:swap}
+@font-face{font-family:"Marianne";src:url("../sas_bo_unified/vendor/fonts/Marianne-Medium.woff2") format("woff2");font-weight:500 600;font-display:swap}
+@font-face{font-family:"Marianne";src:url("../sas_bo_unified/vendor/fonts/Marianne-Bold.woff2") format("woff2");font-weight:700;font-display:swap}
+/* Agenda SAS - expiration des disponibilites recurrentes.
+   Layout : bandeau horloge pleine largeur en haut, deux volets côte à côte (effecteur | régulateur), journal en bas. Tokens alignés sur les couleurs DSFR. */
+:root{
+  --bg:#f6f6f6; --surface:#ffffff; --surface-2:#eeeeee; --fg:#161616; --muted:#666666; --line:#dddddd;
+  --blue:#000091; --on-blue:#ffffff; --blue-soft:#e3e3fd;
+  --info:#0063cb; --info-soft:#e8edff; --warn:#b34000; --warn-soft:#ffe9e6;
+  --ok:#18753c; --ok-soft:#b8fec9; --hatch:#c9c9c9; --flash:#fff3b0;
+  --font:"Marianne", Arial, "Helvetica Neue", sans-serif;
+  --mono:ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+}
+
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{margin:0; background:var(--bg); color:var(--fg); font-family:var(--font); font-size:15px; line-height:1.5}
+.wrap{max-width:1180px; margin:0 auto; padding:20px max(16px, env(safe-area-inset-right, 0px)) 48px max(16px, env(safe-area-inset-left, 0px)); display:flex; flex-direction:column; gap:20px}
+h1,h2,h3{text-wrap:balance; margin:0}
+h1{font-size:1.6rem; line-height:1.2}
+h2{font-size:1.05rem}
+h3{font-size:.95rem}
+p{margin:0}
+.eyebrow{font-size:.75rem; letter-spacing:.06em; text-transform:uppercase; color:var(--blue); font-weight:700}
+.lead{color:var(--muted); max-width:70ch}
+.num{font-variant-numeric:tabular-nums}
+
+button{font:inherit; cursor:pointer; border-radius:4px; padding:7px 14px; border:1px solid var(--blue); background:transparent; color:var(--blue); font-weight:600}
+button.primary{background:var(--blue); color:var(--on-blue)}
+button.tertiary{border-color:transparent; text-decoration:underline; padding-inline:6px}
+button:disabled{opacity:.4; cursor:not-allowed}
+button:focus-visible, input:focus-visible, select:focus-visible{outline:2px solid var(--info); outline-offset:2px}
+
+/* Horloge */
+.clock{background:var(--surface); border:1px solid var(--line); border-radius:6px; padding:18px 20px; display:flex; flex-direction:column; gap:14px}
+.clock-top{display:flex; flex-wrap:wrap; gap:12px 24px; align-items:center; justify-content:space-between}
+.today{display:flex; align-items:baseline; gap:10px}
+.today b{font-size:1.4rem}
+.today span{color:var(--muted); font-size:.85rem}
+.controls{display:flex; flex-wrap:wrap; gap:8px}
+.gauge-box{overflow-x:auto}
+.gauge{position:relative; min-width:560px; height:96px; margin-inline:8px}
+.track{position:absolute; left:0; right:0; top:44px; height:10px; background:var(--surface-2); border-radius:5px}
+.seg{position:absolute; top:44px; height:10px; border-radius:5px}
+.seg.past{background:var(--line)}
+.seg.active{background:var(--blue)}
+.seg.off{background:repeating-linear-gradient(45deg, var(--hatch) 0 5px, transparent 5px 10px); border:1px solid var(--hatch)}
+.tick{position:absolute; top:58px; font-size:.7rem; color:var(--muted); transform:translateX(-50%); white-space:nowrap}
+.tick::before{content:""; position:absolute; left:50%; top:-6px; height:4px; border-left:1px solid var(--line)}
+.mark{position:absolute; top:39px; width:20px; height:20px; transform:translateX(-50%); display:grid; place-items:center}
+.mark i{width:12px; height:12px; transform:rotate(45deg); border:2px solid var(--surface)}
+.mark.relance i{background:var(--info)}
+.mark.echeance i{background:var(--warn)}
+.mark.suppr i{background:var(--fg)}
+.mark.orient i{width:10px; height:10px; border-radius:50%; transform:none; background:var(--ok)}
+.mlabel{position:absolute; font-size:.72rem; white-space:nowrap; transform:translateX(-50%); font-weight:600}
+.mlabel.up{top:6px} .mlabel.down{top:74px}
+.mlabel.relance{color:var(--info)} .mlabel.echeance{color:var(--warn)} .mlabel.suppr{color:var(--fg)}
+.now{position:absolute; top:28px; height:36px; border-left:2px dashed var(--fg); transform:translateX(-1px)}
+.jalons{display:flex; flex-wrap:wrap; gap:8px; align-items:center}
+.jalons .lbl{font-size:.8rem; color:var(--muted)}
+.chip-btn{border-radius:999px; padding:4px 12px; font-size:.82rem; font-weight:600}
+.chip-btn.relance{border-color:var(--info); color:var(--info)}
+.chip-btn.echeance{border-color:var(--warn); color:var(--warn)}
+.chip-btn.suppr{border-color:var(--fg); color:var(--fg)}
+.rule{font-size:.88rem; background:var(--blue-soft); border-radius:4px; padding:8px 12px}
+
+/* Volets */
+.split{display:grid; grid-template-columns:1fr 1fr; gap:20px}
+@media (max-width:860px){ .split{grid-template-columns:1fr} }
+.pane{background:var(--surface); border:1px solid var(--line); border-radius:6px; display:flex; flex-direction:column; min-width:0}
+.pane-head{padding:14px 18px; border-bottom:1px solid var(--line); display:flex; justify-content:space-between; gap:12px; align-items:center}
+.pane-head .who{font-size:.78rem; color:var(--muted)}
+.pane-body{padding:18px; display:flex; flex-direction:column; gap:16px}
+.persona{display:inline-flex; align-items:center; gap:6px; font-size:.75rem; font-weight:700; padding:3px 8px; border-radius:4px}
+.persona.eff{background:var(--ok-soft); color:var(--ok)}
+.persona.reg{background:var(--info-soft); color:var(--info)}
+
+.alert{border-left:4px solid; padding:10px 12px; border-radius:2px; display:flex; flex-wrap:wrap; gap:8px 14px; align-items:center; justify-content:space-between; font-size:.9rem}
+.alert.info{border-color:var(--info); background:var(--info-soft)}
+.alert.warn{border-color:var(--warn); background:var(--warn-soft)}
+.alert.ok{border-color:var(--ok); background:var(--ok-soft)}
+
+form{display:flex; flex-direction:column; gap:12px}
+fieldset{border:0; padding:0; margin:0; display:flex; flex-wrap:wrap; gap:8px 14px}
+legend{font-weight:600; font-size:.88rem; margin-bottom:6px; padding:0}
+label{font-size:.88rem}
+.row{display:flex; flex-wrap:wrap; gap:12px}
+.field{display:flex; flex-direction:column; gap:4px; min-width:0}
+input[type=time], input[type=text]{font:inherit; padding:6px 8px; border:0; border-bottom:2px solid var(--fg); background:var(--surface-2); color:var(--fg); border-radius:4px 4px 0 0}
+input[type=text]{width:100%}
+.hint{font-size:.8rem; color:var(--muted)}
+
+.rec{border:1px solid var(--line); border-radius:4px; padding:14px; display:flex; flex-direction:column; gap:10px; transition:background .6s}
+.rec.flash{background:var(--flash)}
+.rec-top{display:flex; justify-content:space-between; gap:10px; flex-wrap:wrap; align-items:flex-start}
+.rec-title{font-weight:700}
+.rec-sub{font-size:.85rem; color:var(--muted)}
+.kv{display:grid; grid-template-columns:auto 1fr; gap:4px 14px; font-size:.88rem}
+.kv dt{color:var(--muted)} .kv dd{margin:0; font-weight:600}
+.actions{display:flex; flex-wrap:wrap; gap:8px}
+.badge{display:inline-block; font-size:.72rem; font-weight:700; text-transform:uppercase; letter-spacing:.03em; padding:2px 8px; border-radius:4px; white-space:nowrap}
+.badge.active{background:var(--ok-soft); color:var(--ok)}
+.badge.soon{background:var(--warn-soft); color:var(--warn)}
+.badge.off{background:var(--surface-2); color:var(--muted)}
+.badge.src{background:var(--blue-soft); color:var(--blue)}
+
+.occ{display:flex; flex-wrap:wrap; gap:6px}
+.occ span, .slot{font-size:.8rem; padding:5px 10px; border-radius:4px; border:1px solid var(--line); background:var(--surface)}
+.occ span.off{background:repeating-linear-gradient(45deg, var(--surface-2) 0 5px, transparent 5px 10px); color:var(--muted)}
+.occ span.rdv{border-color:var(--ok); color:var(--ok); font-weight:600}
+
+.search{display:flex; flex-wrap:wrap; gap:6px; font-size:.82rem}
+.search span{background:var(--surface-2); padding:4px 10px; border-radius:999px}
+.card{border:1px solid var(--line); border-radius:4px; padding:14px; display:flex; flex-direction:column; gap:10px}
+.card .name{font-weight:700}
+.slots{display:flex; flex-wrap:wrap; gap:6px}
+.slot{cursor:pointer; color:var(--blue); border-color:var(--blue); font-weight:600}
+.slot[aria-disabled="true"]{cursor:default; color:var(--muted); border-color:var(--line); text-decoration:line-through}
+.empty{border:1px dashed var(--line); border-radius:4px; padding:18px; text-align:center; color:var(--muted); font-size:.9rem; display:flex; flex-direction:column; gap:6px}
+.empty b{color:var(--fg)}
+.confirm{border:1px solid var(--blue); background:var(--blue-soft); border-radius:4px; padding:12px; display:flex; flex-direction:column; gap:10px; font-size:.9rem}
+
+/* Journal */
+.journal{background:var(--surface); border:1px solid var(--line); border-radius:6px; padding:16px 18px; display:flex; flex-direction:column; gap:10px}
+.tbl{overflow-x:auto}
+table{border-collapse:collapse; width:100%; font-size:.85rem; min-width:520px}
+th{text-align:left; font-size:.72rem; text-transform:uppercase; letter-spacing:.04em; color:var(--muted); padding:6px 8px; border-bottom:2px solid var(--line)}
+td{padding:7px 8px; border-bottom:1px solid var(--line); vertical-align:top}
+td:first-child{font-variant-numeric:tabular-nums; white-space:nowrap}
+
+/* Mail */
+.overlay{position:fixed; inset:0; background:rgba(22,22,22,.55); display:grid; place-items:center; z-index:50;
+  padding:max(16px, env(safe-area-inset-top, 0px)) max(16px, env(safe-area-inset-right, 0px)) max(16px, env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px))}
+.mail{background:var(--surface); color:var(--fg); width:min(600px, 100%); max-height:100%; overflow:auto; border-radius:6px; box-shadow:0 10px 40px rgba(0,0,0,.35)}
+.mail-head{background:var(--surface-2); padding:12px 18px; font-size:.82rem; display:flex; flex-direction:column; gap:2px}
+.mail-head .tag{font-size:.7rem; font-weight:700; text-transform:uppercase; letter-spacing:.06em; color:var(--blue)}
+.mail-body{padding:18px; display:flex; flex-direction:column; gap:12px; font-size:.92rem}
+.mail-body ul{margin:0; padding-left:20px}
+.mail-foot{font-size:.78rem; color:var(--muted); border-top:1px solid var(--line); padding-top:10px}
+.mail-actions{display:flex; flex-wrap:wrap; gap:8px}
+
+.toast{position:fixed; left:50%; transform:translateX(-50%); bottom:max(20px, calc(env(safe-area-inset-bottom, 0px) + 12px)); background:var(--fg); color:var(--bg); padding:10px 16px; border-radius:4px; font-size:.88rem; z-index:60; max-width:calc(100% - 32px)}
+@media (prefers-reduced-motion: reduce){ .rec{transition:none} }
+
+/* En-tete commun (sas_page_components/header.html) */
+#div_header{margin-bottom:0}
+#header_title p{margin:4px 0 0; font-size:14px; color:#666666}
+
+/* Neutralise les styles de tableau globaux de template_integration.css */
+.journal table{width:100%; margin:0; box-shadow:none; font-family:var(--font)}
+.journal th{background:none; color:var(--muted); border:0; border-bottom:2px solid var(--line); text-align:left; padding:6px 8px}
+.journal td{border:0; border-bottom:1px solid var(--line); padding:7px 8px}
+.journal tr:hover{background:none; cursor:default}
+.pane input[type=radio], .pane input[type=checkbox]{padding:0}
