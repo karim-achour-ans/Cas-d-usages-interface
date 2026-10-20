@@ -158,6 +158,10 @@ td{padding:7px 8px; border-bottom:1px solid var(--line); vertical-align:middle}
 .regpanel .seg button{padding:4px 10px; font-size:.8rem}
 .regpanel .seg button.on{background:var(--blue); color:var(--on-blue)}
 .regpanel textarea{font:inherit; width:100%; min-height:54px; padding:6px 8px; border:0; border-bottom:2px solid var(--fg); background:var(--surface-2); color:var(--fg); border-radius:4px 4px 0 0}
+.dispo-sas{display:flex; flex-wrap:wrap; gap:6px 10px; align-items:center; font-size:.82rem; margin-top:-4px}
+.ds-badge{font-size:.68rem; font-weight:700; text-transform:uppercase; letter-spacing:.02em; padding:4px 9px; border-radius:4px; background:var(--ok-soft); color:var(--ok)}
+.ds-seg{border-left:3px solid var(--ok); padding:1px 0 1px 7px; display:inline-flex; gap:4px; align-items:center; flex-wrap:wrap}
+.ds-seg .ct{background:var(--ok-soft)}
 .rc-note{font-size:.75rem; color:var(--muted); border-top:1px dashed var(--line); padding-top:8px}
 
 /* Modale de création (reprend l'interface existante) */

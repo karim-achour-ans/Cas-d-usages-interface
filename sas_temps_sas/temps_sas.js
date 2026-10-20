@@ -365,9 +365,8 @@
       const labs = ch => `${ch.byReg ? '<span class="rlab" title="Renseigné par la régulation (SAS 94)">Ajout régulation</span>' : ''}${ch.conf ? `<span class="rlab ok" title="Confirmé par la régulation (${ch.conf.sas})">✓ Confirmé ${ch.conf.at}</span>` : ''}`;
       it.sigs.forEach(x => c += `<div class="sigchip"><span>${hm(x.pl.start)}–${hm(x.pl.end)}</span><span class="rlab warn">${esc(x.sig.motif)}</span><span class="hint">${x.sig.at} · ${x.sig.sas}</span>${x.sig.comment ? `<span class="hint">${esc(x.sig.comment)}</span>` : ''}</div>`);
       if (p.interfaced){
-        it.chips.forEach(ch => c += `<div class="sas-band" title="Le médecin est joignable par la régulation sur ce temps"><b>Temps SAS</b><span>Joignable</span><span>${hm(ch.start)}–${hm(ch.end)}</span><span class="meta">${ch.consult.map(x => `<span class="ct" title="${CONSULT[x]}">${LETTER[x]}</span>`).join('')}</span>${labs(ch)}</div>`);
         const all = [...it.chips.flatMap(ch => ch.slots.map(x => ({...x, in:true}))), ...it.outs.map(x => ({...x, in:false}))].sort((x, y) => toMin(x.s) - toMin(y.s));
-        all.forEach(x => c += `<button type="button" class="chip-s ${x.in ? 'sasin' : 'out'}" data-slot="${x.s}" data-key="${x.k}" ${x.in ? 'data-in="1" title="Créneau éditeur dans le Temps SAS"' : 'title="Créneau éditeur"'}>${x.s.replace(':', 'h')}</button>`);
+        all.forEach(x => c += `<button type="button" class="chip-s ${x.in ? 'sasin' : 'out'}" data-slot="${x.s}" data-key="${x.k}" ${x.in ? 'data-in="1" title="Créneau éditeur pendant la période Disponible SAS"' : 'title="Créneau éditeur"'}>${x.s.replace(':', 'h')}</button>`);
       } else {
         it.chips.forEach(ch => c += `<button type="button" class="chip-p" data-chip="${ch.keys.join(',')}" data-label="${hm(ch.start)}–${hm(ch.end)}">
           <span>${hm(ch.start)}–${hm(ch.end)}</span>
@@ -376,6 +375,11 @@
       if (!c) c = '<div class="dash">–</div>';
       return `<div class="col ${i === 0 ? 'cur' : ''}"><div class="colh">${i === 0 && d === 0 ? 'Aujourd’hui' : `${DAYLBL[d]} ${DATES[d]}`}</div><div class="chips">${c}</div></div>`;
     }).join('');
+    let dispoLine = '';
+    if (p.interfaced){
+      const segs = days.flatMap((d, i) => dayItems(p, d).chips.map(ch => `<span class="ds-seg"><b>${i === 0 && d === 0 ? 'Aujourd’hui' : `${DAYLBL[d]} ${DATES[d]}`}</b> ${hm(ch.start)}–${hm(ch.end)}${ch.consult.map(x => ` <span class="ct" title="${CONSULT[x]}">${LETTER[x]}</span>`).join('')}${ch.byReg ? ' <span class="rlab">Ajout régulation</span>' : ''}${ch.conf ? ` <span class="rlab ok">✓ Confirmé ${ch.conf.at}</span>` : ''}</span>`));
+      if (segs.length) dispoLine = `<div class="dispo-sas" title="Le médecin est joignable par la régulation sur ces périodes"><span class="ds-badge">Disponible SAS</span>${segs.join('')}</div>`;
+    }
     let conf = '';
     if (pend){
       const what = pend.kind === 'slot' ? `sur le créneau de ${pend.slot.replace(':', 'h')}` : pend.kind === 'hors' ? 'hors disponibilité' : `sur la plage ${pend.label}`;
@@ -385,6 +389,7 @@
     return `<article class="rcard">
       <div class="rc-top"><span class="rc-name">${esc(p.name)} ›</span>
         <div class="rc-tags"><span class="pill sas">Participe au SAS</span><span class="pill">Médecine générale</span><span class="pill">Secteur 1</span>${p.interfaced ? '<span class="pill">Agenda interfacé</span>' : ''}</div></div>
+      ${dispoLine}
       <div class="rc-body">
         <div class="rc-info">
           <div><div class="lbl">Adresse 1</div>${esc(p.place)}<br>8 rue des Lilas, 94000 Créteil</div>
@@ -402,7 +407,7 @@
           ${conf}
         </div>
       </div>
-      <p class="rc-note">Démonstration : rang du ${dayName(d0).toLowerCase()} dans la recherche = ${r0} (${ranks[r0]}). ${p.interfaced ? 'Médecin interfacé : le bandeau vert indique le Temps SAS, pendant lequel il est joignable ; les créneaux en vert tombent dans ce temps. Aucune capacité n\u2019est consommée.' : 'Cliquez une plage pour orienter un patient sur cette plage.'}</p>
+      <p class="rc-note">Démonstration : rang du ${dayName(d0).toLowerCase()} dans la recherche = ${r0} (${ranks[r0]}). ${p.interfaced ? 'Médecin interfacé : « Disponible SAS » sous le nom indique quand il est joignable ; les créneaux en vert tombent dans cette période. Aucune capacité n\u2019est consommée.' : 'Cliquez une plage pour orienter un patient sur cette plage.'}</p>
     </article>`;
   }
 

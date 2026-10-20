@@ -17,7 +17,7 @@ Le mock démarre avant le déploiement : le bouton « Lancer la conversion » tr
 | Temps SAS | Matin, après-midi ou les deux ; avec récurrence = chaque semaine, sans récurrence = ponctuel sur la date |
 | Priorité | Indisponibilité > disponibilité ponctuelle (plage horaire ou Temps SAS ponctuel) > Temps SAS hebdomadaire |
 | Capacité | 1 patient par défaut, comptée par demi-journée ; une plage complète n'est plus affichée |
-| Médecin interfacé | Pas de limite de patients. Le Temps SAS s'affiche en bandeau « Joignable » ; les créneaux éditeur qui tombent dedans sont en vert ; réserver un créneau ne consomme rien |
+| Médecin interfacé | Pas de limite de patients. Sous le nom du médecin, la ligne « Disponible SAS » indique ses périodes joignables sur les 3 jours ; les créneaux éditeur qui tombent dans ces périodes sont en vert ; réserver un créneau ne consomme rien |
 | Recherche | Par journée ; matin et après-midi en Temps SAS s'affichent sur une ligne 8h00–20h00 |
 | Orientation | Clic sur une plage = orientation sur la plage (consomme 1) ; « Orientation hors disponibilité » ne consomme rien |
 | Conversion | Créneaux d'une même demi-journée → Temps SAS sur la demi-journée, capacité = nombre de créneaux, RDV conservés |
