@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Temps SAS et suppression des créneaux — Plateforme numérique du SAS</title>
+    <link rel="stylesheet" href="../template_integration.css">
+    <link rel="stylesheet" href="temps_sas.css">
+</head>
+<body>
+    <header>
+        <div id="div_header">
+            <div class="state_logo">
+                <img src="../images/logo-ANS.svg" alt="Agence du Numérique en Santé">
+            </div>
+            <div class="state_logo">
+                <img src="../images/logo-min_sante_acces_soins.svg" alt="Service d'Accès aux Soins">
+            </div>
+            <div id="header_title">
+                <h1>Interface Plateforme numérique du SAS</h1>
+                <h2>Présentation des Cas d'usages</h2>
+                <p>Temps SAS, suppression des créneaux et enrichissement par la régulation</p>
+            </div>
+        </div>
+    </header>
+
+<div class="wrap">
+  <header style="display:flex;flex-direction:column;gap:6px">
+    <span class="eyebrow">Agenda SAS · étape 1 · maquette pédagogique</span>
+    <h1>Temps SAS et suppression des créneaux</h1>
+    <p class="lead">À gauche, l'effecteur crée ses disponibilités depuis la modale existante, où le créneau est remplacé par le Temps SAS. À droite, la card de recherche du régulateur, lancée par journée, montre les plages du médecin et leur capacité, pour la semaine du 26 au 31 octobre 2026.</p>
+  </header>
+
+  <main class="split">
+    <section class="pane" aria-labelledby="effTitle">
+      <div class="pane-head">
+        <h2 id="effTitle"><span class="persona eff">Effecteur</span>Mon agenda SAS</h2>
+        <span class="who">Dr Claire Martin · médecin généraliste (fictif)</span>
+      </div>
+      <div class="pane-body" id="effBody"></div>
+    </section>
+
+    <section class="pane" aria-labelledby="regTitle">
+      <div class="pane-head">
+        <h2 id="regTitle"><span class="persona reg">Régulateur</span>Recherche d'offre de soins</h2>
+        <span class="who">OSNP · SAS 94 (fictif)</span>
+      </div>
+      <div class="pane-body" id="regBody"></div>
+    </section>
+  </main>
+
+  <section class="journal" aria-labelledby="logTitle">
+    <div class="block-head"><h2 id="logTitle">Journal de la simulation</h2><button class="tertiary" type="button" id="btnReset">Recommencer</button></div>
+    <div class="tbl"><table>
+      <thead><tr><th>Acteur</th><th>Événement</th><th>Effet</th></tr></thead>
+      <tbody id="log"></tbody>
+    </table></div>
+  </section>
+</div>
+
+<div class="overlay" id="overlay" hidden><div class="modal" role="dialog" aria-modal="true" aria-labelledby="mTitle" id="modal"></div></div>
+<div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+
+<script src="temps_sas.js"></script>
+</body>
+</html>
