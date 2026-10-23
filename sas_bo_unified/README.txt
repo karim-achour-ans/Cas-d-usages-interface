@@ -171,21 +171,14 @@ CE QUE FAIT LA MAQUETTE
      Téléphone exige une DESCRIPTION (qui / quoi) et alimente l'HISTORIQUE
      DES MODIFICATIONS (date, auteur, champs, description).
 
-10. PILOTAGE PLATEFORME (page pilotage.html, guichet « Base SAS (SQL) »)
-   Consultation seule. Informations strictement issues du schéma sasstore.
-   Exports CSV UTF-8, séparateur « ; » (ouverture directe dans Excel).
-   - OFFRE DE SOINS : nb de professionnels, de lieux d'exercice et de
-     structures ; lien Open-Search ; exports « professionnels inscrits »
-     (practitioner + location) et « structures inscrites » (organization).
-   - ORIENTATION SAS : nb de rendez-vous ; lien Suivi des RDV ; export des
-     rendez-vous (appointment + effecteur, structure, régulateur, interop).
-     Le gestionnaire de comptes ne voit que ses territoires
-     (appointment.territory).
-   - PARTICIPATION SAS : nb de professionnels et de structures participants ;
-     exports practitioner_participation, practitioner_participation_modality,
-     organization_participation.
-   - Libellés des énumérations entières (type, source, statut, modality…)
-     supposés pour la démo.
+10. PILOTAGE PLATEFORME (page pilotage.html, consultation seule)
+   Un tableau par onglet : Orientation · Participation SAS PS ·
+   Participation SAS structure. Données fictives.
+   - COLONNES : retirer (×) ou ajouter (« + Ajouter une colonne ») ;
+     « Toutes les colonnes » rétablit le tableau complet.
+   - EXPORT EXCEL : reprend exactement les colonnes affichées (CSV UTF-8,
+     séparateur « ; », ouverture directe dans Excel).
+   - PÉRIMÈTRE : le gestionnaire de comptes ne voit que ses territoires.
 
 Interface : épurée pour une lecture confortable sur écran 15 pouces.
 
