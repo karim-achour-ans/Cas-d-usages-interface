@@ -440,23 +440,7 @@ body { margin: 0; background: #fff; color: #1a1a1a; font-size: 14px; line-height
 .journal-table th, .journal-table td { text-align:left; padding:.45rem .6rem; border-bottom:1px solid #e5e5e5; vertical-align:top; }
 .journal-table th { background:#f6f6f6; font-weight:600; white-space:nowrap; }
 @media (max-width: 640px) { .account-info__grid { grid-template-columns: 1fr; } }
-
-/* ── Pilotage plateforme ─────────────────────────────────── */
-.main:has(#pl-view) { max-width:none; }
-.pl-head { display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:1rem; }
-.pl-cols { display:flex; flex-wrap:wrap; align-items:center; gap:.4rem; margin:1rem 0 .5rem; padding:.6rem .7rem;
-  border:1px solid #e5e5e5; border-radius:6px; background:#fafafa; }
-.pl-cols__label { font-size:.75rem; font-weight:700; color:#3a3a3a; margin-right:.25rem; }
-.pl-chip { display:inline-flex; align-items:center; gap:.25rem; background:#fff; border:1px solid #d0d0e0; border-radius:4px;
-  padding:.15rem .2rem .15rem .55rem; font-size:.78rem; color:#161616; }
-.pl-chip__x { border:none; background:none; cursor:pointer; color:#666; font-size:1rem; line-height:1; padding:0 .25rem; border-radius:3px; }
-.pl-chip__x:hover { background:#ffe9e6; color:#ce0500; }
-.pl-chip__x:focus-visible { outline:2px solid #000091; }
-.pl-cols__add { font-family:inherit; font-size:.78rem; padding:.2rem .4rem; border:1px dashed #000091; border-radius:4px;
-  background:#f5f5fe; color:#000091; cursor:pointer; }
-.pl-cols__reset { margin-left:.25rem; }
-.pl-table-wrap { overflow:auto; max-height:65vh; border:1px solid #ececec; border-radius:6px; }
-.pl-table { width:100%; border-collapse:collapse; font-size:.8rem; }
-.pl-table th, .pl-table td { text-align:left; padding:.4rem .6rem; border-bottom:1px solid #ececec; white-space:nowrap; }
-.pl-table th { font-weight:700; color:#3a3a3a; border-bottom:2px solid #000091; font-size:.75rem; position:sticky; top:0; background:#fff; }
-.pl-table tbody tr:hover { background:#f6f6f6; }
+.badge-tag { background:#fceeac; color:#716043; text-transform:none; font-weight:500; }
+.rattachement-box { border-left:3px solid #000091; background:#f5f5fe; padding:.6rem .9rem; margin:0 0 1.5rem; max-width:40rem; }
+.rattachement-box.has-err { border-left-color:#ce0500; background:#fff4f3; }
+.rattachement-box__title { display:block; font-size:.8rem; font-weight:600; color:#3a3a3a; }

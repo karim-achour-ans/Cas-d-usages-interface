@@ -16,7 +16,6 @@ STRUCTURE DE LA SUITE (un arrière-guichet par composant technique)
 - acces.html?component=sasdata  → SAS-DATA : bandeaux, territoires, départements, support.
 - opensearch.html    → Open-Search : offre de soins (index sas_consultation_place).
 - interop.html       → Interopérabilité : flux d'API (coquille, 6 onglets vides).
-- pilotage.html     → Pilotage plateforme : données de pilotage (base SAS, lecture seule).
 - gestion-acces.html → Gestion des accès (réservé à l'Admin BO).
 
 HABILITATIONS (niveau par arrière-guichet)
@@ -43,12 +42,22 @@ CE QUE FAIT LA MAQUETTE
    Conforme à la spécification « Création et gestion des comptes utilisateurs SAS ».
    - ACCÈS : seuls le SAS Administrateur et le Gestionnaire de comptes accèdent à
      la liste et aux formulaires (autre profil : « Accès non autorisé »).
+   - DEUX NOTIONS DE TERRITOIRE :
+       * territoire de RATTACHEMENT — calculé, jamais saisi, sert à la visibilité :
+         territoires de gestion (Gestionnaire de comptes) + territoires des
+         structures (Gestionnaire de structure) + territoire d'orientation
+         (régulateur) ;
+       * territoire d'ORIENTATION — un seul, propre aux régulateurs.
+     Exemple : Marc Richard gère une CPTS du SAS-75 et une du SAS-92 et régule
+     au SAS-75 → rattachement SAS-75 + SAS-92, orientation SAS-75.
    - VISIBILITÉ : le SAS Administrateur voit tous les comptes ; le Gestionnaire de
-     comptes voit les comptes qui partagent AU MOINS UN territoire avec lui
-     (essayez le profil « Gestionnaire de comptes — SAS-92 + SAS-93 »). Les comptes
-     SAS Administrateur et TestInterop ne sont visibles que des administrateurs.
+     comptes voit les comptes dont au moins un territoire de rattachement est
+     l'un des siens (essayez « Gestionnaire de comptes — SAS-92 + SAS-93 »). Les
+     comptes SAS Administrateur et TestInterop ne sont visibles que des
+     administrateurs.
    - STATUT à 3 états : Actif · En attente de première connexion · Inactif
      (désactivé). Un compte supprimé n'apparaît plus.
+   - TAG « RÉFÉRENT TERRITORIAL » : badge dans la liste, filtrable.
    - « RÉGULATEUR MÉDECIN » : un Régulateur OSNP dont le RPPS est celui d'un
      effecteur est affiché sous ce libellé (filtre « Rôle » dédié).
    - MODE DE CONNEXION : choisi par l'utilisateur à l'activation (PSC ou mot de
@@ -57,16 +66,25 @@ CE QUE FAIT LA MAQUETTE
      qualité d'effecteur, territoire(s), créateur et auteur de modification.
 
 2. AJOUTER / MODIFIER UN UTILISATEUR
-   - RÔLES : SAS Administrateur · Gestionnaire de comptes – Référent territorial ·
-     Gestionnaire de structure · Régulateur OSNP · Régulateur IOA / Agent
-     d'accueil · TestInterop. Cumulables, sauf Régulateur OSNP + Régulateur IOA.
+   - RÔLES : SAS Administrateur · Gestionnaire de comptes · Gestionnaire de
+     structure · Régulateur OSNP · Régulateur IOA / Agent d'accueil ·
+     TestInterop. Cumulables, sauf Régulateur OSNP + Régulateur IOA.
+   - TAG « Référent territorial » : proposé seulement si le compte porte le rôle
+     Gestionnaire de structure, Régulateur OSNP ou Régulateur IOA.
    - MATRICE : le Gestionnaire de comptes ne peut créer ni SAS Administrateur ni
      TestInterop ; il peut créer un autre Gestionnaire de comptes, sur ses
      territoires uniquement.
-   - TERRITOIRE : aucun pour SAS Administrateur / TestInterop ; un seul pour un
-     régulateur ; un ou plusieurs pour Gestionnaire de comptes / de structure.
-     Proposés : tous (administrateur) ou ceux du créateur. Créateur rattaché à un
-     seul territoire : ce territoire est attribué d'office.
+   - TERRITOIRES SAISIS : territoires de gestion (Gestionnaire de comptes, un ou
+     plusieurs) et territoire d'orientation (régulateur, un seul). Le
+     Gestionnaire de structure n'a aucun territoire à saisir : ce sont ceux de
+     ses structures. Le rattachement calculé est affiché en direct.
+     Proposés : tous (administrateur) ou ceux du créateur ; un Gestionnaire de
+     comptes ne voit que les structures de ses territoires. Créateur rattaché à
+     un seul territoire : ce territoire est attribué d'office.
+   - COMPTE PARTIELLEMENT HORS PÉRIMÈTRE (proposition de la spécification) : le
+     Gestionnaire de comptes voit les structures et territoires hors de son
+     périmètre en lecture seule ; la suppression complète est réservée au SAS
+     Administrateur (ou à un gestionnaire couvrant tout le rattachement).
    - EMAIL obligatoire et unique : un email déjà présent dans Keycloak bloque la
      création.
    - RPPS facultatif (le rôle Effecteur est supprimé) : vérifié dans l'Annuaire
@@ -171,23 +189,15 @@ CE QUE FAIT LA MAQUETTE
      Téléphone exige une DESCRIPTION (qui / quoi) et alimente l'HISTORIQUE
      DES MODIFICATIONS (date, auteur, champs, description).
 
-10. PILOTAGE PLATEFORME (page pilotage.html, consultation seule)
-   Un tableau par onglet : Orientation · Participation SAS PS ·
-   Participation SAS structure. Données fictives.
-   - COLONNES : retirer (×) ou ajouter (« + Ajouter une colonne ») ;
-     « Toutes les colonnes » rétablit le tableau complet.
-   - EXPORT EXCEL : reprend exactement les colonnes affichées (CSV UTF-8,
-     séparateur « ; », ouverture directe dans Excel).
-   - PÉRIMÈTRE : le gestionnaire de comptes ne voit que ses territoires.
-
 Interface : épurée pour une lecture confortable sur écran 15 pouces.
 
 RÔLES GÉRÉS
 -----------
 SAS Administrateur (ex-administrateur national ; l'ancien rôle sas_administrateur
-est supprimé) · Gestionnaire de comptes – Référent territorial · Gestionnaire de
-structure (SOS Médecins, CDS, CPTS/MSP) · Régulateur OSNP · Régulateur IOA /
-Agent d'accueil · TestInterop.
+est supprimé) · Gestionnaire de comptes · Gestionnaire de structure (SOS
+Médecins, CDS, CPTS/MSP) · Régulateur OSNP · Régulateur IOA / Agent d'accueil ·
+TestInterop. Tag : Référent territorial.
+La création multi-environnement (Production, PréProduction…) a été retirée.
 Le rôle Effecteur est supprimé : la qualité d'effecteur est déduite du RPPS.
 
 DONNÉES

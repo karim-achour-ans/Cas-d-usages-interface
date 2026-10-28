@@ -9,13 +9,12 @@
    L'identité active est propagée entre les pages via ?identity=<index>.
    ================================================================== */
 
-// Les arrière-guichets (composants techniques)
+// Les quatre arrière-guichets (composants techniques)
 const GUICHETS = [
   { key: "utilisateurs", tech: "Keycloak",        title: "Gestion des utilisateurs",              page: "acces.html?component=keycloak", icon: "fr-icon-user-line" },
   { key: "sasdata",      tech: "SAS-DATA",         title: "Territoires · Départements · Support",  page: "acces.html?component=sasdata",  icon: "fr-icon-building-line" },
   { key: "offre_soins",  tech: "Open-Search",      title: "Offre de soins",                        page: "opensearch.html",               icon: "fr-icon-search-line" },
   { key: "interop",      tech: "Interopérabilité", title: "Gestion des flux d'API",                page: "interop.html",                  icon: "fr-icon-settings-5-line" },
-  { key: "pilotage",     tech: "Base SAS (SQL)",   title: "Pilotage plateforme",                   page: "pilotage.html",                 icon: "fr-icon-line-chart-line" },
 ];
 const GUICHET_BY_KEY = Object.fromEntries(GUICHETS.map(g => [g.key, g]));
 
@@ -27,41 +26,37 @@ function levelLabel(l) { return l === "ecriture" ? "Écriture" : l === "lecture"
    hab  : niveau par guichet. */
 const IDENTITIES = [
   { label: "Admin BO (super-administrateur)", role: "administrateur", adminBO: true, territoire: null,
-    hab: { utilisateurs: "ecriture", sasdata: "ecriture", offre_soins: "ecriture", interop: "ecriture", pilotage: "lecture" } },
+    hab: { utilisateurs: "ecriture", sasdata: "ecriture", offre_soins: "ecriture", interop: "ecriture" } },
 
   { label: "Admin — accès complet (écriture)", role: "administrateur", adminBO: false, territoire: null,
-    hab: { utilisateurs: "ecriture", sasdata: "ecriture", offre_soins: "ecriture", interop: "ecriture", pilotage: "lecture" } },
+    hab: { utilisateurs: "ecriture", sasdata: "ecriture", offre_soins: "ecriture", interop: "ecriture" } },
 
   { label: "Admin — lecture seule", role: "administrateur", adminBO: false, territoire: null,
-    hab: { utilisateurs: "lecture", sasdata: "lecture", offre_soins: "lecture", interop: "lecture", pilotage: "lecture" } },
+    hab: { utilisateurs: "lecture", sasdata: "lecture", offre_soins: "lecture", interop: "lecture" } },
 
   { label: "Admin — Offre de soins (écriture)", role: "administrateur", adminBO: false, territoire: null,
-    hab: { utilisateurs: null, sasdata: null, offre_soins: "ecriture", interop: null, pilotage: null } },
+    hab: { utilisateurs: null, sasdata: null, offre_soins: "ecriture", interop: null } },
 
   { label: "Gestionnaire de comptes — SAS-75 (Paris)", role: "gestionnaire_compte", adminBO: false, territoire: "SAS-75", territoires: ["SAS-75"],
-    hab: { utilisateurs: "ecriture", sasdata: "ecriture", offre_soins: "ecriture", interop: null, pilotage: "lecture" } },
+    hab: { utilisateurs: "ecriture", sasdata: "ecriture", offre_soins: "ecriture", interop: null } },
 
   { label: "Gestionnaire de comptes — SAS-69 (Rhône)", role: "gestionnaire_compte", adminBO: false, territoire: "SAS-69", territoires: ["SAS-69"],
-    hab: { utilisateurs: "ecriture", sasdata: "ecriture", offre_soins: "ecriture", interop: "lecture", pilotage: "lecture" } },
+    hab: { utilisateurs: "ecriture", sasdata: "ecriture", offre_soins: "ecriture", interop: "lecture" } },
 
   { label: "Gestionnaire de comptes — SAS-59 (Nord)", role: "gestionnaire_compte", adminBO: false, territoire: "SAS-59", territoires: ["SAS-59"],
-    hab: { utilisateurs: "ecriture", sasdata: "ecriture", offre_soins: "ecriture", interop: null, pilotage: "lecture" } },
+    hab: { utilisateurs: "ecriture", sasdata: "ecriture", offre_soins: "ecriture", interop: null } },
 
   // Gestionnaire de comptes rattaché à PLUSIEURS territoires (visibilité : au moins un territoire commun)
   { label: "Gestionnaire de comptes — SAS-92 + SAS-93", role: "gestionnaire_compte", adminBO: false, territoire: "SAS-92", territoires: ["SAS-92", "SAS-93"],
-    hab: { utilisateurs: "ecriture", sasdata: "ecriture", offre_soins: "ecriture", interop: null, pilotage: "lecture" } },
+    hab: { utilisateurs: "ecriture", sasdata: "ecriture", offre_soins: "ecriture", interop: null } },
 
   { label: "Exploitant interopérabilité (écriture)", role: "administrateur", adminBO: false, territoire: null,
-    hab: { utilisateurs: null, sasdata: null, offre_soins: null, interop: "ecriture", pilotage: null } },
+    hab: { utilisateurs: null, sasdata: null, offre_soins: null, interop: "ecriture" } },
 ];
 
 /* ── Helpers d'habilitation ─────────────────────────────────────── */
 function isAdminBO(id) { return !!(id && id.adminBO); }
 function habLevel(id, comp) {
-  if (comp === "pilotage") {                       // Pilotage : consultation seule, pas de niveau Écriture
-    if (isAdminBO(id)) return "lecture";
-    return (id && id.hab && id.hab.pilotage) ? "lecture" : null;
-  }
   if (isAdminBO(id)) return "ecriture";           // l'Admin BO a tout en écriture
   return (id && id.hab && id.hab[comp]) || null;
 }

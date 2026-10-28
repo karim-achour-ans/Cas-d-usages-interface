@@ -10,9 +10,9 @@ function el(id){ return document.getElementById(id); }
 
 const GA_KEY = "bo-sas-admins-v1";
 const GA_SEED = [
-  { id:"ga-1", prenom:"Marie",  nom:"Durand",  email:"marie.durand@sas.gouv.fr",  hab:{ utilisateurs:"ecriture", sasdata:"ecriture", offre_soins:"ecriture", interop:"ecriture", pilotage:"lecture" } },
-  { id:"ga-2", prenom:"Luc",    nom:"Bernard", email:"luc.bernard@sas.gouv.fr",   hab:{ utilisateurs:"lecture",  sasdata:"lecture",  offre_soins:"lecture",  interop:"lecture", pilotage:"lecture" } },
-  { id:"ga-3", prenom:"Sophie", nom:"Petit",   email:"sophie.petit@sas.gouv.fr",  hab:{ utilisateurs:null,      sasdata:null,      offre_soins:"ecriture", interop:null, pilotage:null } },
+  { id:"ga-1", prenom:"Marie",  nom:"Durand",  email:"marie.durand@sas.gouv.fr",  hab:{ utilisateurs:"ecriture", sasdata:"ecriture", offre_soins:"ecriture", interop:"ecriture" } },
+  { id:"ga-2", prenom:"Luc",    nom:"Bernard", email:"luc.bernard@sas.gouv.fr",   hab:{ utilisateurs:"lecture",  sasdata:"lecture",  offre_soins:"lecture",  interop:"lecture" } },
+  { id:"ga-3", prenom:"Sophie", nom:"Petit",   email:"sophie.petit@sas.gouv.fr",  hab:{ utilisateurs:null,      sasdata:null,      offre_soins:"ecriture", interop:null } },
 ];
 function loadAdmins(){ try { const r = localStorage.getItem(GA_KEY); if (r) return JSON.parse(r); } catch(e){} return JSON.parse(JSON.stringify(GA_SEED)); }
 function saveAdmins(){ try { localStorage.setItem(GA_KEY, JSON.stringify(state.admins)); } catch(e){} }
@@ -26,11 +26,9 @@ const state = {
 function identity(){ return IDENTITIES[state.identityIdx]; }
 
 const LEVEL_OPTS = [{ v:"", l:"Aucun" }, { v:"lecture", l:"Lecture" }, { v:"ecriture", l:"Écriture" }];
-// Pilotage plateforme : consultation seule (aucune donnée modifiable) → pas de niveau Écriture
-function levelOptsFor(gkey) { return gkey === "pilotage" ? LEVEL_OPTS.filter(o => o.v !== "ecriture") : LEVEL_OPTS; }
 function levelSelect(adminId, gkey, current) {
   return `<select class="ga-level" data-admin="${esc(adminId)}" data-guichet="${gkey}">
-    ${levelOptsFor(gkey).map(o => `<option value="${o.v}" ${(current||"")===o.v?"selected":""}>${o.l}</option>`).join("")}
+    ${LEVEL_OPTS.map(o => `<option value="${o.v}" ${(current||"")===o.v?"selected":""}>${o.l}</option>`).join("")}
   </select>`;
 }
 
@@ -74,7 +72,7 @@ function renderCreate() {
         ${GUICHETS.map(g => `<div class="ga-draft-cell">
           <label class="fr-label fr-text--sm" for="ga-d-${g.key}">${esc(g.title)}<span class="mock-note"> · ${esc(g.tech)}</span></label>
           <select class="fr-select" id="ga-d-${g.key}" data-draft="${g.key}">
-            ${levelOptsFor(g.key).map(o => `<option value="${o.v}" ${(d.hab[g.key]||"")===o.v?"selected":""}>${o.l}</option>`).join("")}
+            ${LEVEL_OPTS.map(o => `<option value="${o.v}" ${(d.hab[g.key]||"")===o.v?"selected":""}>${o.l}</option>`).join("")}
           </select>
         </div>`).join("")}
       </div>
@@ -150,7 +148,7 @@ function bindEvents() {
       state.admins.push({
         id: "ga-" + Math.random().toString(36).slice(2,7),
         prenom: d.prenom.trim(), nom: d.nom.trim(), email: d.email.trim(),
-        hab: Object.fromEntries(GUICHETS.map(g => [g.key, d.hab[g.key] || null])),
+        hab: { utilisateurs: d.hab.utilisateurs||null, sasdata: d.hab.sasdata||null, offre_soins: d.hab.offre_soins||null, interop: d.hab.interop||null },
       });
       saveAdmins();
       state.creating = false; state.draft = null; render();
