@@ -16,6 +16,7 @@ STRUCTURE DE LA SUITE (un arrière-guichet par composant technique)
 - acces.html?component=sasdata  → SAS-DATA : bandeaux, territoires, départements, support.
 - opensearch.html    → Open-Search : offre de soins (index sas_consultation_place).
 - interop.html       → Interopérabilité : flux d'API (coquille, 6 onglets vides).
+- pilotage.html     → Pilotage plateforme : données de pilotage (base SAS, lecture seule).
 - gestion-acces.html → Gestion des accès (réservé à l'Admin BO).
 
 HABILITATIONS (niveau par arrière-guichet)
@@ -45,11 +46,11 @@ CE QUE FAIT LA MAQUETTE
    - DEUX NOTIONS DE TERRITOIRE :
        * territoire de RATTACHEMENT — calculé, jamais saisi, sert à la visibilité :
          territoires de gestion (Gestionnaire de comptes) + territoires des
-         structures (Gestionnaire de structure) + territoire d'orientation
+         structures (Gestionnaire de structure) + territoire du régulateur
          (régulateur) ;
-       * territoire d'ORIENTATION — un seul, propre aux régulateurs.
+       * TERRITOIRE DU RÉGULATEUR — un seul, propre aux régulateurs.
      Exemple : Marc Richard gère une CPTS du SAS-75 et une du SAS-92 et régule
-     au SAS-75 → rattachement SAS-75 + SAS-92, orientation SAS-75.
+     au SAS-75 → rattachement SAS-75 + SAS-92, territoire du régulateur SAS-75.
    - VISIBILITÉ : le SAS Administrateur voit tous les comptes ; le Gestionnaire de
      comptes voit les comptes dont au moins un territoire de rattachement est
      l'un des siens (essayez « Gestionnaire de comptes — SAS-92 + SAS-93 »). Les
@@ -75,16 +76,20 @@ CE QUE FAIT LA MAQUETTE
      TestInterop ; il peut créer un autre Gestionnaire de comptes, sur ses
      territoires uniquement.
    - TERRITOIRES SAISIS : territoires de gestion (Gestionnaire de comptes, un ou
-     plusieurs) et territoire d'orientation (régulateur, un seul). Le
+     plusieurs) et territoire du régulateur (un seul). Le
      Gestionnaire de structure n'a aucun territoire à saisir : ce sont ceux de
      ses structures. Le rattachement calculé est affiché en direct.
-     Proposés : tous (administrateur) ou ceux du créateur ; un Gestionnaire de
-     comptes ne voit que les structures de ses territoires. Créateur rattaché à
-     un seul territoire : ce territoire est attribué d'office.
+     Territoires de gestion et territoire du régulateur proposés : tous
+     (administrateur) ou ceux du créateur ; créateur rattaché à un seul
+     territoire : ce territoire est attribué d'office. Les STRUCTURES, elles,
+     sont toutes proposées, quel que soit leur territoire : si le compte n'est
+     plus rattaché à aucun territoire du Gestionnaire de comptes, il en est
+     averti (le compte ne lui sera plus visible).
    - COMPTE PARTIELLEMENT HORS PÉRIMÈTRE (proposition de la spécification) : le
-     Gestionnaire de comptes voit les structures et territoires hors de son
-     périmètre en lecture seule ; la suppression complète est réservée au SAS
-     Administrateur (ou à un gestionnaire couvrant tout le rattachement).
+     Gestionnaire de comptes voit les territoires de gestion et territoire du
+     régulateur hors de son périmètre en lecture seule ; la suppression complète
+     est réservée au SAS Administrateur (ou à un gestionnaire couvrant tout le
+     rattachement).
    - EMAIL obligatoire et unique : un email déjà présent dans Keycloak bloque la
      création.
    - RPPS facultatif (le rôle Effecteur est supprimé) : vérifié dans l'Annuaire
@@ -188,6 +193,15 @@ CE QUE FAIT LA MAQUETTE
      géolocalisation et score. Toute modification d'Adresse / Géoloc / Score /
      Téléphone exige une DESCRIPTION (qui / quoi) et alimente l'HISTORIQUE
      DES MODIFICATIONS (date, auteur, champs, description).
+
+10. PILOTAGE PLATEFORME (page pilotage.html, consultation seule)
+   Un tableau par onglet : Orientation · Participation SAS PS ·
+   Participation SAS structure. Données fictives.
+   - COLONNES : retirer (×) ou ajouter (« + Ajouter une colonne ») ;
+     « Toutes les colonnes » rétablit le tableau complet.
+   - EXPORT EXCEL : reprend exactement les colonnes affichées (CSV UTF-8,
+     séparateur « ; », ouverture directe dans Excel).
+   - PÉRIMÈTRE : le gestionnaire de comptes ne voit que ses territoires.
 
 Interface : épurée pour une lecture confortable sur écran 15 pouces.
 

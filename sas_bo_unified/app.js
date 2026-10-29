@@ -16,16 +16,16 @@
    Deux notions de territoire (spécification, section 2) :
    - territoire de RATTACHEMENT : calculé, jamais saisi — sert à la visibilité par les
      Gestionnaires de comptes = territoires de gestion (GC) + territoires des structures (GS)
-     + territoire d'orientation (régulateur) ;
-   - territoire d'ORIENTATION : un seul, propre aux régulateurs.
+     + territoire du régulateur ;
+   - TERRITOIRE DU RÉGULATEUR : un seul, propre aux régulateurs (champ territoireOrientation).
    territoire : "aucun" · "gestion" (GC, un ou plusieurs) · "structures" (déduit des structures)
                 · "orientation" (régulateur, exactement un). */
 const ROLES = [
   { value: "sas_administrateur",     label: "SAS Administrateur",                              territoire: "aucun",     desc: "Portée nationale : crée et gère tous les comptes." },
   { value: "gestionnaire_compte",    label: "Gestionnaire de comptes",                         territoire: "gestion",     desc: "Crée et gère les comptes de ses territoires de gestion." },
   { value: "gestionnaire_structure", label: "Gestionnaire de structure",                       territoire: "structures",  desc: "Rattaché aux territoires de ses structures (SOS Médecins, CPTS, CDS)." },
-  { value: "regulateur_osnp",        label: "Régulateur OSNP",                                 territoire: "orientation", desc: "Régulation des soins non programmés — un seul territoire d'orientation." },
-  { value: "regulateur_ioa",         label: "Régulateur IOA / Agent d'accueil",                territoire: "orientation", desc: "Infirmier d'orientation et d'accueil — un seul territoire d'orientation." },
+  { value: "regulateur_osnp",        label: "Régulateur OSNP",                                 territoire: "orientation", desc: "Régulation des soins non programmés — un seul territoire." },
+  { value: "regulateur_ioa",         label: "Régulateur IOA / Agent d'accueil",                territoire: "orientation", desc: "Infirmier d'orientation et d'accueil — un seul territoire." },
   { value: "testinterop",            label: "TestInterop",                                     territoire: "aucun",     desc: "Compte de test d'interopérabilité, visible des seuls SAS Administrateurs." },
 ];
 const ROLE_BY_VALUE = Object.fromEntries(ROLES.map(r => [r.value, r]));
@@ -156,7 +156,7 @@ function idNationalFromRpps(rpps) { return "8" + rpps; }
 
 /* Utilisateurs de démonstration.
    - roles : tableau (cumul autorisé, sauf Régulateur OSNP + Régulateur IOA) ;
-   - territoires (forme courte des seeds) : territoires de gestion (GC) / territoire d'orientation
+   - territoires (forme courte des seeds) : territoires de gestion (GC) / territoire du régulateur
      (régulateur, le premier) — convertis par normalizeUser ; ceux des GS viennent de leurs structures ;
    - tags : ["referent_territorial"] le cas échéant ;
    - createdBy / updatedBy : auteur ({ userId } pour un compte de la plateforme — s'il est supprimé,
@@ -219,7 +219,7 @@ const SEED_USERS = [
   { id:"u-024", email:"antoine.simon@sas.gouv.fr", nom:"Simon", prenom:"Antoine", roles:["regulateur_osnp"], ville:"92100 Boulogne-Billancourt", territoires:["SAS-92"], actif:true,
     rpps:"10008901234", createdBy:{ userId:"u-023" } },
   // Gestionnaire de structure MULTI-TERRITOIRES (SAS-75 + SAS-92) ET Régulateur OSNP orienté SAS-75 :
-  // rattachement SAS-75 + SAS-92 (visible des GC des deux territoires), orientation SAS-75 uniquement.
+  // rattachement SAS-75 + SAS-92 (visible des GC des deux territoires), territoire du régulateur SAS-75 uniquement.
   { id:"u-025", email:"marc.richard@sas.gouv.fr", nom:"Richard", prenom:"Marc", roles:["gestionnaire_structure","regulateur_osnp"], tags:["referent_territorial"],
     ville:"75013 Paris", territoires:["SAS-75"], actif:true, rpps:"10006789012", createdBy:{ userId:"u-001" },
     structures:[ {type:"cpts_msp",finess:"750200091",nom:"CPTS Paris 13"}, {type:"cpts_msp",finess:"920200139",nom:"CPTS Boulogne-Billancourt"} ] },
@@ -286,7 +286,7 @@ const BANDEAU_SEED = [
 /* ---------------------------------------------------------------- *
  *  ÉTAT
  * ---------------------------------------------------------------- */
-const USERS_KEY = "bo-sas-users-v10";  // v10 : rattachement calculé + territoire d'orientation + tags
+const USERS_KEY = "bo-sas-users-v10";  // v10 : rattachement calculé + territoire du régulateur + tags
 const LOG_KEY   = "bo-sas-journal-v1";
 const TERR_KEY  = "bo-sas-territoires-v2";
 const DEP_KEY   = "bo-sas-departements-v1";
@@ -327,7 +327,7 @@ function normalizeUser(u) {
   if (!u.roles) u.roles = u.role ? [u.role] : [];
   delete u.role;
   if (!Array.isArray(u.tags)) u.tags = [];
-  // Forme courte « territoires » → territoires de gestion (GC) et territoire d'orientation (régulateur)
+  // Forme courte « territoires » → territoires de gestion (GC) et territoire du régulateur
   const legacy = Array.isArray(u.territoires) ? u.territoires : (u.territoire ? [u.territoire] : []);
   if (!Array.isArray(u.territoiresGestion)) u.territoiresGestion = u.roles.includes("gestionnaire_compte") ? [...legacy] : [];
   if (typeof u.territoireOrientation !== "string") u.territoireOrientation = u.roles.some(r => REGULATEUR_ROLES.includes(r)) ? (legacy[0] || "") : "";
@@ -527,7 +527,7 @@ function logAction(action, user, ok, detail) {
 /* Synchronisation des régulateurs avec les éditeurs via l'API Interop (RG-POST-04) :
    à la création, à la modification et à la suppression. Simulée ici. */
 function syncInterop(user, operation) {
-  logAction(`Synchronisation API Interop (${operation})`, user, true, "Éditeurs notifiés — territoire d'orientation " + (user.territoireOrientation || "—"));
+  logAction(`Synchronisation API Interop (${operation})`, user, true, "Éditeurs notifiés — territoire du régulateur " + (user.territoireOrientation || "—"));
   return "Compte synchronisé avec les éditeurs via l'API Interop.";
 }
 /* Simulation d'un échec Keycloak : un email en « @echec-keycloak.test » fait échouer la création */
@@ -697,7 +697,7 @@ function userRow(u) {
   const region = u.region || territoireRegion(terrs[0]);
   const where = [u.ville,
     terrs.length ? "Rattachement : " + terrs.join(", ") : "Sans territoire (national)",
-    u.territoireOrientation ? "Orientation : " + u.territoireOrientation : "",
+    u.territoireOrientation ? "Territoire du régulateur : " + u.territoireOrientation : "",
     region].filter(Boolean).map(esc).join(" · ");
   return `
     <div class="user-row">
@@ -802,7 +802,7 @@ function showToast(msg) {
 
 /* Export CSV (RG-LIST-02) — même périmètre que la liste (filtres compris). */
 function exportUsersCsv(list) {
-  const cols = ["Email","Prénom","Nom","Identifiant national","RPPS","Rôle(s)","Tag(s)","Qualité d'effecteur","Région","Territoire(s) de rattachement","Territoire d'orientation","Ville",
+  const cols = ["Email","Prénom","Nom","Identifiant national","RPPS","Rôle(s)","Tag(s)","Qualité d'effecteur","Région","Territoire(s) de rattachement","Territoire du régulateur","Ville",
                 "Structure(s)","Statut","Mode de connexion","Date de création","Créé par","Dernière modification","Modifié par","Dernière connexion"];
   const cell = (v) => {
     const s = String(v ?? "");
@@ -965,20 +965,20 @@ function renderCreate() {
   // Structures (gestionnaire de structure) — FINESS juridique, sans doublon, filtrées par périmètre (RG-GS-01/02/04)
   const addedItems = f.structures.map((s, i) => {
     const t = structureTerritoire(s);
-    const mine = isAdminCreator() || options.includes(t);
     return `
     <div class="struct-item">
-      <div><strong>${esc(STRUCTURE_SHORT[s.type])}</strong> — ${esc(s.nom)} <span class="mock-note">FINESS ${esc(s.finess)} · ${esc(t || "territoire inconnu")}</span>${mine ? "" : outNote}</div>
-      ${(readOnly || !mine) ? "" : `<button type="button" class="fr-link" data-struct-remove="${i}">Retirer</button>`}
+      <div><strong>${esc(STRUCTURE_SHORT[s.type])}</strong> — ${esc(s.nom)} <span class="mock-note">FINESS ${esc(s.finess)} · ${esc(t || "territoire inconnu")}</span></div>
+      ${readOnly ? "" : `<button type="button" class="fr-link" data-struct-remove="${i}">Retirer</button>`}
     </div>`; }).join("");
   const typeOpts = STRUCTURE_TYPES.map(s => `<option value="${s.value}" ${f.draftType===s.value?"selected":""}>${esc(s.label)}</option>`).join("");
+  // Toutes les structures sont proposées, y compris hors des territoires du créateur (RG-GS-04)
   const finessOpts = FINESS_DIRECTORY
-    .filter(x => x.type === f.draftType && (isAdminCreator() || options.includes(structureTerritoire(x))))
+    .filter(x => x.type === f.draftType)
     .map(x => `${esc(x.nom)} — FINESS ${x.finess} (${esc(x.ville)})`);
   const structureBlock = isStructure ? `
     <fieldset class="struct-fieldset ${f.errors.structures?'has-err':''}">
       <legend>Structures rattachées${req}</legend>
-      <p class="fr-hint-text" style="margin-top:0;">Au moins une structure : association SOS Médecins, CPTS ou centre de santé, identifiée par son FINESS juridique. Le territoire du gestionnaire est celui de ses structures${isAdminCreator() ? "" : " ; seules les structures de vos territoires sont proposées"}.</p>
+      <p class="fr-hint-text" style="margin-top:0;">Au moins une structure : association SOS Médecins, CPTS ou centre de santé, identifiée par son FINESS juridique. Le territoire du gestionnaire est celui de ses structures. Toutes les structures sont proposées, quel que soit leur territoire.</p>
       ${addedItems}
       <p class="struct-count">${f.structures.length} structure${f.structures.length>1?"s":""} rattachée${f.structures.length>1?"s":""}</p>
       ${readOnly ? "" : `<div class="struct-add">
@@ -988,7 +988,7 @@ function renderCreate() {
         </div>
         <div class="fr-input-group sa-finess">
           <label class="fr-label" for="struct-finess">Structure (${esc(STRUCTURE_LABEL[f.draftType])})</label>
-          <input class="fr-input" id="struct-finess" list="struct-finess-list" placeholder="${finessOpts.length ? "Rechercher…" : "Aucune structure de ce type sur vos territoires"}">
+          <input class="fr-input" id="struct-finess" list="struct-finess-list" placeholder="Rechercher…">
           <datalist id="struct-finess-list">${finessOpts.map(o=>`<option value="${esc(o)}">`).join("")}</datalist>
         </div>
         <button class="fr-btn fr-btn--sm" type="button" id="struct-add-btn">Ajouter</button>
@@ -996,31 +996,32 @@ function renderCreate() {
       ${err('structures')}
     </fieldset>` : "";
 
-  // Territoire d'orientation (régulateur) — un seul (RG-REG-01/02, RG-TER-04)
+  // Territoire du régulateur — un seul (RG-REG-01/02, RG-TER-04)
   const orientOut = f.territoireOrientation && !options.includes(f.territoireOrientation);
   const orientationBlock = !isRegul ? "" : (orientOut ? `
-    <div class="fr-input-group"><label class="fr-label">Territoire d'orientation</label>
+    <div class="fr-input-group"><label class="fr-label">Territoire du régulateur</label>
       <p style="margin:.2rem 0 0;"><strong>${esc(terrLabel(f.territoireOrientation))}</strong>${outNote}</p></div>` : single ? `
-    <div class="fr-input-group"><label class="fr-label">Territoire d'orientation</label>
+    <div class="fr-input-group"><label class="fr-label">Territoire du régulateur</label>
       <p style="margin:.2rem 0 0;"><strong>${esc(terrLabel(options[0]))}</strong> <span class="readonly-note">(attribué d'office : votre unique territoire)</span></p>${err('territoireOrientation')}</div>` : `
     <div class="${grp('territoireOrientation')}">
-      <label class="fr-label" for="orientation">Territoire d'orientation${req}<span class="fr-hint-text">Un seul : territoire où ce régulateur oriente les patients${isStructure ? ", indépendamment des territoires de ses structures" : ""}.</span></label>
+      <label class="fr-label" for="orientation">Territoire du régulateur${req}<span class="fr-hint-text">Un seul territoire${isStructure ? ", indépendamment des territoires de ses structures" : ""}.</span></label>
       <select class="fr-select" id="orientation" ${dis}><option value="">— Sélectionner —</option>
         ${options.map(c => `<option value="${esc(c)}" ${f.territoireOrientation===c?"selected":""}>${esc(terrLabel(c))}</option>`).join("")}
       </select>${err('territoireOrientation')}</div>`);
 
   // Territoire(s) de rattachement : calculés, affichés en lecture (RG-TER-01)
   const ratt = formRattachement(f);
+  const horsVue = !isAdminCreator() && ratt.length > 0 && !ratt.some(t => options.includes(t));
   const rattachementBlock = !hasRoles ? "" : `
-    <div class="rattachement-box ${f.errors.rattachement ? 'has-err' : ''}">
+    <div class="rattachement-box ${horsVue ? 'has-warn' : ''}">
       <span class="rattachement-box__title">Territoire(s) de rattachement — calculé(s)</span>
       ${ratt.length
         ? `<p style="margin:.2rem 0 0;"><strong>${esc(ratt.join(", "))}</strong></p>
            <p class="mock-note" style="margin:.2rem 0 0;">Le compte sera visible des Gestionnaires de comptes de ${ratt.length > 1 ? "ces territoires" : "ce territoire"}.</p>`
         : `<p class="mock-note" style="margin:.2rem 0 0;">${f.roles.every(r => (ROLE_BY_VALUE[r] || {}).territoire === "aucun")
             ? "Aucun : compte de portée nationale (SAS Administrateur / TestInterop)."
-            : "Aucun pour l'instant : il sera calculé à partir des territoires de gestion, des structures et du territoire d'orientation."}</p>`}
-      ${err('rattachement')}
+            : "Aucun pour l'instant : il sera calculé à partir des territoires de gestion, des structures et du territoire du régulateur."}</p>`}
+      ${horsVue ? `<p class="rattachement-box__warn">Attention : aucun de ces territoires n'est l'un des vôtres. Après enregistrement, ce compte ne vous sera plus visible.</p>` : ""}
     </div>`;
 
   const regionOptions = `<option value="">— Sélectionner —</option>` +
@@ -1062,7 +1063,7 @@ function renderCreate() {
       </div>
       <dl class="account-info__grid">
         <dt>Rattachement</dt><dd>${esc(userTerritoires(u).join(", ") || "Aucun (national)")}</dd>
-        ${u.territoireOrientation ? `<dt>Orientation</dt><dd>${esc(u.territoireOrientation)}</dd>` : ""}
+        ${u.territoireOrientation ? `<dt>Territoire du régulateur</dt><dd>${esc(u.territoireOrientation)}</dd>` : ""}
         <dt>Création</dt><dd>${fmtDate(u.created_at)} — par ${esc(describeActor(u.createdBy))}</dd>
         <dt>Dernière modification</dt><dd>${u.updated_at ? `${fmtDate(u.updated_at)} — par ${esc(describeActor(u.updatedBy))}` : "Jamais modifié"}</dd>
         <dt>Dernière connexion</dt><dd>${u.derniereConnexion ? fmtDate(u.derniereConnexion) : "Jamais connecté"}</dd>
@@ -1073,7 +1074,7 @@ function renderCreate() {
         <button type="button" class="fr-btn fr-btn--sm fr-btn--secondary" id="act-toggle">${u.actif ? "Désactiver le compte" : "Activer le compte"}</button>
         ${canDelete
           ? `<button type="button" class="fr-btn fr-btn--sm fr-btn--tertiary act-danger" id="act-delete">Supprimer le compte</button>`
-          : `<span class="mock-note" style="align-self:center;">Suppression complète réservée au SAS Administrateur : le compte est aussi rattaché à des territoires hors de votre périmètre. Vous pouvez retirer vos structures.</span>`}
+          : `<span class="mock-note" style="align-self:center;">Suppression complète réservée au SAS Administrateur : le compte est aussi rattaché à des territoires hors de votre périmètre.</span>`}
       </div>` : ""}
     </section>`; })() : "";
 
@@ -1204,10 +1205,9 @@ function bindCreateEvents() {
     const m = inp.value.match(/FINESS (\d+)/);
     const entry = m ? FINESS_BY_ID[m[1]] : null;
     if (!entry || entry.type !== f.draftType) { f.errors.structures = "Choisissez une structure dans la liste."; render(); return; }
-    if (!isAdminCreator() && !creatorTerritoires().includes(structureTerritoire(entry))) { f.errors.structures = "Cette structure n'est pas sur l'un de vos territoires."; render(); return; }
     if (f.structures.some(s => s.finess === entry.finess)) { f.errors.structures = "Cette structure est déjà rattachée à cet utilisateur."; render(); return; }
     f.structures.push({ type: entry.type, finess: entry.finess, nom: entry.nom, ville: entry.ville });
-    delete f.errors.structures; delete f.errors.rattachement;
+    delete f.errors.structures;
     if (!f.ville.trim() && entry.ville) f.ville = entry.ville;
     refreshRegion();
     render();
@@ -1301,13 +1301,13 @@ function submitForm() {
   if (isGC && f.territoiresGestion.length === 0) errors.territoiresGestion = "Au moins un territoire de gestion est requis.";
   if (f.territoiresGestion.some(t => !options.includes(t) && !keptOut(t))) errors.territoiresGestion = "Vous ne pouvez attribuer que vos territoires.";
   if (isStructure && f.structures.length === 0) errors.structures = "Ajoutez au moins une structure.";
-  if (isRegul && !f.territoireOrientation) errors.territoireOrientation = "Le territoire d'orientation est requis (un seul).";
+  if (isRegul && !f.territoireOrientation) errors.territoireOrientation = "Le territoire du régulateur est requis (un seul).";
   if (isRegul && f.territoireOrientation && !options.includes(f.territoireOrientation) && !keptOut(f.territoireOrientation))
-    errors.territoireOrientation = "Le territoire d'orientation doit être l'un de vos territoires.";
-  // Un Gestionnaire de comptes doit garder le compte dans son périmètre (sinon il le perdrait de vue)
+    errors.territoireOrientation = "Le territoire du régulateur doit être l'un de vos territoires.";
+  // Structures de tout territoire autorisées (RG-GS-04) : si le compte sort du périmètre du
+  // Gestionnaire de comptes, il en est averti (formulaire) — l'enregistrement n'est pas bloqué.
   const ratt = formRattachement(f);
-  if (!isAdminCreator() && f.roles.length && !ratt.some(t => options.includes(t)))
-    errors.rattachement = "Le compte doit être rattaché à au moins un de vos territoires.";
+  const horsVue = !isAdminCreator() && ratt.length > 0 && !ratt.some(t => options.includes(t));
   f.errors = errors;
   if (Object.keys(errors).length) { render(); return; }
 
@@ -1340,7 +1340,7 @@ function submitForm() {
     if (!base.idNational && /^8\d{11}$/.test(u.idNational || "")) base.idNational = "SASN-" + Date.now().toString().slice(-6);
     Object.assign(u, base, { updated_at: new Date().toISOString(), updatedBy: currentActor() });
     saved = u;
-    logAction("Modification du compte", saved, true, `Rattachement : ${ratt.join(", ") || "aucun"}${base.territoireOrientation ? " · orientation : " + base.territoireOrientation : ""}`);
+    logAction("Modification du compte", saved, true, `Rattachement : ${ratt.join(", ") || "aucun"}${base.territoireOrientation ? " · territoire du régulateur : " + base.territoireOrientation : ""}`);
   } else {
     // Nouveau compte : créé dans Keycloak, statut « En attente de première connexion »
     saved = { id: "u-" + Math.random().toString(36).slice(2, 8), actif: true,
@@ -1360,7 +1360,9 @@ function submitForm() {
     state.editId = null;
     state.form = newForm();
   }
-  state.form.success = { prenom: saved.prenom, nom: saved.nom, email: saved.email, mode: mode2, sync };
+  state.form.success = { prenom: saved.prenom, nom: saved.nom, email: saved.email, mode: mode2,
+    sync: [sync, horsVue ? "Ce compte n'est rattaché à aucun de vos territoires : il ne vous est plus visible." : ""].filter(Boolean).join(" ") };
+  if (editing && horsVue) { state.view = "list"; state.editId = null; state.form = newForm(); render(); showToast("Compte modifié. Il n'est rattaché à aucun de vos territoires : il ne vous est plus visible."); return; }
   render();
   window.scrollTo({ top: 0, behavior: "smooth" });
 }
