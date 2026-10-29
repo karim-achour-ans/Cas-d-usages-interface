@@ -143,8 +143,9 @@ CE QUE FAIT LA MAQUETTE
    - TERRITOIRES SAS (lecture) : affiche par défaut les 107 territoires SAS,
      chacun avec son code SAMU (ex. SAS 76A ↔ FR76A), son département, sa
      région et son périmètre : département entier, ou liste de communes
-     (codes INSEE) pour les départements découpés (64A/64B, 76A/76B ; 42A/42B
-     à compléter). Filtres : recherche, région, périmètre. Indicateur de
+     (codes INSEE) pour les départements découpés (64A/64B, 76A/76B). SAS 42
+     couvre la Loire entière, code SAMU FR42A (historique).
+     Filtres : recherche, région, périmètre. Indicateur de
      couverture : % de territoires SAS rattachés à un territoire de régulation.
    - TERRITOIRES DE RÉGULATION (édition) : ceux que l'on retrouve sur les
      comptes (territoires de gestion, territoire de régulation) et sur l'offre
@@ -157,6 +158,12 @@ CE QUE FAIT LA MAQUETTE
        * Retirer un SAS d'un regroupement, ou supprimer le regroupement, lui
          rend son territoire par défaut. Suppression impossible tant que des
          comptes y sont rattachés.
+   - TESTER UNE OFFRE : professionnel de santé (RPPS ou nom, lieux
+     d'exercice lus dans l'Annuaire Santé via l'API tabulaire data.gouv.fr),
+     structure FINESS (centres de santé, maisons de santé, CPTS, lieux de
+     soins non programmés — sas-test-data.js) ou adresse saisie. Pour chaque
+     lieu : script DAX Power BI reproduit à l'identique vs règle corrigée,
+     territoire de régulation, écarts signalés.
    - OFFRE DE SOINS (Open-Search) : chaque adresse affiche son territoire SAS
      (code SAMU, mode de rattachement) et son territoire de régulation ; la
      liste se filtre par territoire de régulation. Règle de rattachement :

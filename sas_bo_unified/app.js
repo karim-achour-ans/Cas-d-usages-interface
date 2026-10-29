@@ -1558,6 +1558,7 @@ function offreResultHtml(o) {
         <tbody>${rows}</tbody></table></div>` : `<p class="mock-note">Aucun lieu d'exercice avec une adresse exploitable.</p>`}
     </section>`;
 }
+const EGE_CAT_LABEL = { CDS: "Centre de santé", MSP: "Maison de santé", CPTS: "CPTS", SNP: "Soins non programmés" };
 function structMatches(q) {
   const n = normKey(q);
   if (n.length < 2) return [];
@@ -1566,7 +1567,7 @@ function structMatches(q) {
 function structListHtml(q) {
   const m = structMatches(q);
   if (!q || normKey(q).length < 2) return `<p class="mock-note" style="margin:.4rem 0;">Saisissez au moins 2 caractères : nom, FINESS, commune ou code postal (${STRUCTURES_EGE.length} structures chargées).</p>`;
-  return m.length ? m.map(s => `<button class="test-struct" data-struct="${esc(s.finess)}"><strong>${esc(s.nom)}</strong> <span class="fr-badge fr-badge--sm">${esc(s.cat)}</span><br><span class="mock-note">FINESS ${esc(s.finess)} · ${esc(s.commune)} (${esc(s.cp)})</span></button>`).join("")
+  return m.length ? m.map(s => `<button class="test-struct" data-struct="${esc(s.finess)}"><strong>${esc(s.nom)}</strong> <span class="fr-badge fr-badge--sm">${esc(EGE_CAT_LABEL[s.cat] || s.cat)}</span><br><span class="mock-note">FINESS ${esc(s.finess)} · ${esc(s.commune)} (${esc(s.cp)})</span></button>`).join("")
     : `<p class="mock-note" style="margin:.4rem 0;">Aucune structure ne correspond.</p>`;
 }
 function testPanelHtml() {
@@ -1586,10 +1587,10 @@ function testPanelHtml() {
     </div>
     <p class="mock-note">Source : Annuaire Santé, fichier des professionnels et de leurs activités en libre accès sur data.gouv.fr, interrogé via l'API tabulaire. Un lieu d'exercice = une activité avec une adresse de structure.</p>`;
   else if (t.mode === "structure") form = `
-    <div class="filters"><div class="f-search"><label class="fr-label" for="test-sq">Rechercher une structure (centre de santé, maison de santé)</label>
+    <div class="filters"><div class="f-search"><label class="fr-label" for="test-sq">Rechercher une structure (centre de santé, maison de santé, CPTS, lieu de soins non programmés)</label>
       <input class="fr-input" type="search" id="test-sq" placeholder="Nom, FINESS, commune, code postal…" value="${esc(t.structQ)}"></div></div>
     <div id="test-struct-list" class="test-struct-list">${structListHtml(t.structQ)}</div>
-    <p class="mock-note">Source : exports FINESS du 29/10/2026 (300 centres de santé, 300 maisons de santé). L'export ne donne pas le code commune : seul le code postal est disponible.</p>`;
+    <p class="mock-note">Source : exports FINESS du 29/10/2026 (centres de santé, maisons de santé, CPTS, lieux de soins non programmés — ${STRUCTURES_EGE.length} structures, exports plafonnés à 300 lignes par catégorie). L'export ne donne pas le code commune : seul le code postal est disponible.</p>`;
   else form = `
     <div class="filters">
       <div class="f-field"><label class="fr-label" for="test-cp">Code postal</label><input class="fr-input" id="test-cp" placeholder="Ex : 76190" value="${esc(t.cp)}"></div>

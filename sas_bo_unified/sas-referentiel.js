@@ -1,4 +1,4 @@
-/* Référentiel des territoires SAS (généré depuis referentiel_sas.xlsx, v0 du 29/10/2026).
+/* Référentiel des territoires SAS (généré depuis referentiel_sas.xlsx, v1 du 29/10/2026).
    Source : liste SAS ↔ SAMU + fichiers d'association 64A/64B et 76A/76B (COG INSEE).
    Un SAS couvre un département entier, ou une liste de communes (codes INSEE) pour les départements découpés. */
 const SAS_REFERENTIEL = [{"code":"SAS 01","samu":"FR010","dep":"01","depLabel":"Ain","region":"Auvergne-Rhône-Alpes","perimetre":"departement"},
@@ -43,8 +43,7 @@ const SAS_REFERENTIEL = [{"code":"SAS 01","samu":"FR010","dep":"01","depLabel":"
 {"code":"SAS 39","samu":"FR390","dep":"39","depLabel":"Jura","region":"Bourgogne-Franche-Comté","perimetre":"departement"},
 {"code":"SAS 40","samu":"FR400","dep":"40","depLabel":"Landes","region":"Nouvelle-Aquitaine","perimetre":"departement"},
 {"code":"SAS 41","samu":"FR410","dep":"41","depLabel":"Loir-et-Cher","region":"Centre-Val de Loire","perimetre":"departement"},
-{"code":"SAS 42A","samu":"FR42A","dep":"42","depLabel":"Loire","region":"Auvergne-Rhône-Alpes","perimetre":"communes","communes":[],"alerte":"À compléter : liste des communes non fournie"},
-{"code":"SAS 42B","samu":"FR42B","dep":"42","depLabel":"Loire","region":"Auvergne-Rhône-Alpes","perimetre":"communes","communes":[],"alerte":"À compléter : liste des communes non fournie"},
+{"code":"SAS 42","samu":"FR42A","dep":"42","depLabel":"Loire","region":"Auvergne-Rhône-Alpes","perimetre":"departement"},
 {"code":"SAS 43","samu":"FR430","dep":"43","depLabel":"Haute-Loire","region":"Auvergne-Rhône-Alpes","perimetre":"departement"},
 {"code":"SAS 44","samu":"FR440","dep":"44","depLabel":"Loire-Atlantique","region":"Pays de la Loire","perimetre":"departement"},
 {"code":"SAS 45","samu":"FR450","dep":"45","depLabel":"Loiret","region":"Centre-Val de Loire","perimetre":"departement"},
@@ -108,7 +107,6 @@ const SAS_REFERENTIEL = [{"code":"SAS 01","samu":"FR010","dep":"01","depLabel":"
 {"code":"SAS 976","samu":"FR976","dep":"976","depLabel":"Mayotte","region":"Mayotte","perimetre":"departement"},
 {"code":"SAS 987","samu":"FR987","dep":"987","depLabel":"Polynésie française","region":"Outre-mer (COM)","perimetre":"departement","alerte":"À vérifier : collectivité d'outre-mer, hors liste des départements du COG"},
 {"code":"SAS 988","samu":"FR988","dep":"988","depLabel":"Nouvelle-Calédonie","region":"Outre-mer (COM)","perimetre":"departement","alerte":"À vérifier : collectivité d'outre-mer, hors liste des départements du COG"}];
-
 /* ==================================================================
    Territoires de RÉGULATION — ceux que l'on retrouve côté utilisateurs
    (territoires de gestion, territoire du régulateur) et côté offre de soins.
@@ -145,9 +143,19 @@ function buildRegulationSeed() {
 function loadRegulation() {
   try {
     const raw = localStorage.getItem(REG_KEY);
-    if (raw) { const l = JSON.parse(raw); if (Array.isArray(l) && l.length) return l; }
+    if (raw) { const l = JSON.parse(raw); if (Array.isArray(l) && l.length) return reconcileRegulation(l); }
   } catch (e) {}
   return buildRegulationSeed();
+}
+/* Aligne une liste enregistrée sur le référentiel courant : SAS disparus retirés (ex. 42A/42B),
+   territoires vidés supprimés, SAS sans territoire de régulation dotés de leur territoire par défaut. */
+function reconcileRegulation(list) {
+  const out = list.map(t => ({ ...t, sas: (t.sas || []).filter(c => SAS_BY_CODE[c]) })).filter(t => t.sas.length);
+  SAS_REFERENTIEL.forEach(s => {
+    if (!out.some(t => t.sas.includes(s.code)))
+      out.push({ code: defaultRegCode(s.code), nom: s.code + " · " + sasShortLabel(s), sas: [s.code] });
+  });
+  return out;
 }
 function saveRegulation(list) { try { localStorage.setItem(REG_KEY, JSON.stringify(list)); } catch (e) {} }
 function isDefaultRegulation(t) { return t.sas.length === 1 && t.code === defaultRegCode(t.sas[0]); }
