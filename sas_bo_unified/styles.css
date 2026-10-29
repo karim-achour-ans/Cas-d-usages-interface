@@ -466,3 +466,41 @@ body { margin: 0; background: #fff; color: #1a1a1a; font-size: 14px; line-height
 .pl-table th, .pl-table td { text-align:left; padding:.4rem .6rem; border-bottom:1px solid #ececec; white-space:nowrap; }
 .pl-table th { font-weight:700; color:#3a3a3a; border-bottom:2px solid #000091; font-size:.75rem; position:sticky; top:0; background:#fff; }
 .pl-table tbody tr:hover { background:#f6f6f6; }
+
+/* ---------- Territoires SAS / territoires de régulation ---------- */
+.terr-checkboxes { max-height: 260px; overflow-y: auto; padding-right: .25rem; }
+.terr-kpis { display: flex; gap: .75rem; flex-wrap: wrap; margin: 1rem 0 .5rem; }
+.terr-kpi { flex: 1 1 200px; border: 1px solid #dddddd; border-radius: 4px; padding: .6rem .8rem; display: flex; flex-direction: column; }
+.terr-kpi strong { font-size: 1.4rem; color: #000091; line-height: 1.2; }
+.terr-kpi span { font-size: .82rem; color: #3a3a3a; }
+.terr-kpi--ok strong { color: #18753c; }
+.terr-kpi--warn { border-color: #b34000; }
+.terr-kpi--warn strong { color: #b34000; }
+.terr-alert { border-left: 4px solid #000091; background: #f5f5fe; padding: .6rem .8rem; margin: .5rem 0; font-size: .86rem; display: flex; flex-wrap: wrap; gap: .4rem; align-items: center; }
+.terr-alert ul { margin: .3rem 0 0; padding-left: 1.2rem; width: 100%; }
+.terr-alert--warn { border-left-color: #b34000; background: #fff4f3; }
+.terr-alert--info { display: block; }
+.terr-tabs { display: flex; gap: .25rem; border-bottom: 2px solid #000091; margin-top: 1rem; }
+.terr-tab { background: #f6f6f6; border: 1px solid #dddddd; border-bottom: none; padding: .5rem 1rem; font-weight: 700; font-size: .9rem; color: #3a3a3a; cursor: pointer; border-radius: 4px 4px 0 0; }
+.terr-tab.is-active { background: #000091; color: #fff; border-color: #000091; }
+.terr-tab__n { font-weight: 400; margin-left: .3rem; opacity: .85; }
+.terr-scroll { overflow-x: auto; }
+.terr-row--alert td { background: #fff9e6; }
+.terr-alert-txt { font-size: .75rem; color: #b34000; font-weight: 400; }
+.terr-toggle { font-size: .86rem; }
+.terr-detail td { background: #f9f9f9; }
+.terr-communes { display: flex; flex-wrap: wrap; gap: .3rem .9rem; max-height: 220px; overflow-y: auto; font-size: .8rem; }
+.terr-commune code { font-size: .78rem; color: #000091; }
+.sas-chip { display: inline-block; font-size: .78rem; font-weight: 700; padding: .05rem .45rem; border-radius: 10px; background: #eeeeee; color: #161616; white-space: nowrap; margin: .1rem 0; }
+.sas-chip--reg { background: #e3e3fd; color: #000091; }
+.sas-chip--group { background: #000091; color: #fff; }
+.sas-chip--sel { background: #e3e3fd; color: #000091; }
+.sas-chip__x { border: none; background: none; color: inherit; cursor: pointer; font-weight: 700; padding: 0 0 0 .2rem; }
+.terr-reg-head { display: flex; justify-content: space-between; align-items: center; gap: 1rem; flex-wrap: wrap; }
+.reg-selected { display: flex; flex-wrap: wrap; gap: .3rem; margin-top: .3rem; }
+.reg-opts { max-height: 260px; overflow-y: auto; border: 1px solid #dddddd; border-radius: 4px; margin-top: .4rem; background: #fff; }
+.reg-opt { display: flex; align-items: center; gap: .5rem; padding: .35rem .6rem; border-bottom: 1px solid #f0f0f0; font-size: .86rem; cursor: pointer; flex-wrap: wrap; }
+.reg-opt:hover { background: #f5f5fe; }
+.reg-opt__now { font-size: .75rem; color: #b34000; margin-left: auto; }
+@media (max-width: 640px) { .terr-tab { padding: .45rem .6rem; font-size: .82rem; } }
+.os-badge-reg { background:#e3e3fd; color:#000091; }

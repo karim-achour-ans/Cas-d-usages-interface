@@ -64,6 +64,24 @@ function geoScoreClass(score){ return score>=90?"geo--exc":score>=75?"geo--good"
 function fmtD(iso){ if(!iso) return "—"; try { return new Date(iso).toLocaleDateString("fr-FR",{day:"2-digit",month:"2-digit",year:"numeric"}); } catch(e){ return "—"; } }
 function fmtDT(iso){ if(!iso) return "—"; try { return new Date(iso).toLocaleString("fr-FR",{day:"2-digit",month:"2-digit",year:"numeric",hour:"2-digit",minute:"2-digit"}); } catch(e){ return "—"; } }
 
+
+/* ---------- Territoire SAS / territoire de régulation (calculés depuis l'adresse) ---------- */
+const OS_REG = loadRegulation();
+function placeTerritory(p){ return resolveAddressTerritory(p.address || {}, OS_REG); }
+function offreRegCodes(o){ return [...new Set((o.places || []).flatMap(p => placeTerritory(p).regulation.map(t => t.code)))]; }
+function regBadges(o){
+  const codes = offreRegCodes(o);
+  return codes.length ? codes.map(c => `<span class="fr-badge fr-badge--sm os-badge-reg">${esc(c)}</span>`).join(" ")
+                      : `<span class="fr-badge fr-badge--sm fr-badge--error">territoire non rattaché</span>`;
+}
+function terrKv(p){
+  const r = placeTerritory(p);
+  if (!r.sas) return `<div class="os-kv"><span>Territoire SAS</span><strong><span class="fr-badge fr-badge--sm fr-badge--error">non rattaché</span> <span class="mock-note">${esc(RESOLVED_BY_LABEL.unassigned)}</span></strong></div>`;
+  const s = SAS_BY_CODE[r.sas];
+  return `<div class="os-kv"><span>Territoire SAS</span><strong>${esc(r.sas)} · ${esc(s.samu)} <span class="mock-note">— rattaché ${esc(RESOLVED_BY_LABEL[r.resolvedBy])}${r.approx ? ", approximatif" : ""}</span></strong></div>
+      <div class="os-kv"><span>Territoire de régulation</span><strong>${r.regulation.length ? r.regulation.map(t => esc(t.code + " · " + t.nom)).join(" ; ") : '<span class="mock-note">aucun</span>'}</strong></div>`;
+}
+
 function renderSidebar() {
   const nav = el("sidebar-nav");
   const lvl = osLevel();
@@ -89,6 +107,7 @@ function filteredOffres(){
   const q = state.search.trim().toLowerCase();
   let list = state.offres.slice();
   if (state.fKind) list = list.filter(o => o.kind === state.fKind);
+  if (state.fReg) list = list.filter(o => offreRegCodes(o).includes(state.fReg));
   if (q) list = list.filter(o => {
     const hay = o.kind === "ps"
       ? `${o.firstname} ${o.lastname} ${professionLabel(o.profession)} ${o.rpps}`
@@ -103,7 +122,7 @@ function offreRow(o){
       <div class="user-row__body">
         <div class="user-row__l1">
           <span class="user-row__name">${esc(offreTitle(o))}</span>
-          ${kindBadge(o)} ${participationBadge(o.participationSAS)}
+          ${kindBadge(o)} ${participationBadge(o.participationSAS)} ${regBadges(o)}
         </div>
         <div class="user-row__l2">${esc(offreSubtitle(o))}</div>
       </div>
@@ -114,6 +133,8 @@ function offreRow(o){
 }
 function renderList() {
   const list = filteredOffres();
+  const usedReg = new Set(state.offres.flatMap(offreRegCodes));
+  const regOpts = OS_REG.filter(t => usedReg.has(t.code)).map(t => `<option value="${esc(t.code)}" ${state.fReg===t.code?"selected":""}>${esc(t.code + " · " + t.nom)}</option>`).join("");
   const kindOpts = Object.keys(OS_KIND_LABEL).map(k => `<option value="${k}" ${state.fKind===k?"selected":""}>${esc(OS_KIND_LABEL[k])}</option>`).join("");
   el("os-view").innerHTML = `
     <h1 class="fr-h4" style="margin:0;">Offre de soins</h1>
@@ -127,6 +148,10 @@ function renderList() {
         <label class="fr-label" for="os-fkind">Type d'offre</label>
         <select class="fr-select" id="os-fkind"><option value="">Toutes</option>${kindOpts}</select>
       </div>
+      <div class="f-field">
+        <label class="fr-label" for="os-freg">Territoire de régulation</label>
+        <select class="fr-select" id="os-freg"><option value="">Tous</option>${regOpts}</select>
+      </div>
     </div>
     <p class="result-count">${list.length} offre${list.length>1?"s":""} de soins</p>
     <div class="user-list" id="os-list">${list.map(offreRow).join("") || `<p class="mock-note" style="padding:1rem 0;">Aucun résultat.</p>`}</div>`;
@@ -139,6 +164,7 @@ function renderList() {
   };
   el("os-q").oninput = (e) => { state.search = e.target.value; refresh(); };
   el("os-fkind").onchange = (e) => { state.fKind = e.target.value; refresh(); };
+  el("os-freg").onchange = (e) => { state.fReg = e.target.value; refresh(); };
   bindOffreRows();
 }
 function bindOffreRows(){
@@ -230,6 +256,7 @@ function addrPanel(o, p, idx, total){
       </div>
       ${lowGeo ? `<p class="os-geo-warn">Cette adresse n'est pas affichée dans les résultats de recherche du SAS (score de géolocalisation inférieur à ${OS_GEO_MIN_VISIBLE}/100).</p>` : ""}
       <div class="os-kv"><span>Adresse d'effection de soins</span><strong>${esc(p.address.full)}</strong></div>
+      ${terrKv(p)}
       ${p.modalite ? `<div class="os-kv"><span>Modalité de participation</span><strong>via ${esc(p.modalite)}${p.structureName ? " (" + esc(p.structureName) + ")" : ""}</strong></div>` : ""}
       <div class="os-kv"><span>Disponibilité</span>${dispoBadge(p.dispo)}</div>
       <div class="os-kv"><span>Téléphone</span><strong>${tel ? esc(tel) : '<span class="mock-note">non renseigné</span>'}</strong></div>

@@ -16,8 +16,8 @@
    Deux notions de territoire (spécification, section 2) :
    - territoire de RATTACHEMENT : calculé, jamais saisi — sert à la visibilité par les
      Gestionnaires de comptes = territoires de gestion (GC) + territoires des structures (GS)
-     + territoire du régulateur ;
-   - TERRITOIRE DU RÉGULATEUR : un seul, propre aux régulateurs (champ territoireOrientation).
+     + territoire de régulation ;
+   - TERRITOIRE DE RÉGULATION : un seul, propre aux régulateurs (champ territoireOrientation).
    territoire : "aucun" · "gestion" (GC, un ou plusieurs) · "structures" (déduit des structures)
                 · "orientation" (régulateur, exactement un). */
 const ROLES = [
@@ -55,8 +55,9 @@ const REGIONS = [
   "Pays de la Loire","Provence-Alpes-Côte d'Azur","Guadeloupe","Martinique","Guyane","La Réunion","Mayotte",
 ];
 function territoireRegion(code) {
-  const d = (typeof DEPARTEMENTS !== "undefined" ? DEPARTEMENTS : []).find(x => (x.territory||[]).some(t => t.name === code));
-  return d ? d.region : "";
+  const t = terrList().find(x => x.code === code);
+  const s = t && SAS_BY_CODE[(t.sas || [])[0]];
+  return s ? s.region : "";
 }
 /* Mode de connexion : choisi par l'utilisateur lors de l'activation (mail à deux options,
    RG-POST-02) — inconnu tant que le compte n'a jamais été utilisé. */
@@ -71,24 +72,10 @@ const STRUCTURE_LABEL = Object.fromEntries(STRUCTURE_TYPES.map(s => [s.value, s.
 /* Libellés courts pour la liste (SOS Médecins / CDS / CPTS-MSP) */
 const STRUCTURE_SHORT = { sos_medecins: "SOS Médecins", cds: "CDS", cpts_msp: "CPTS/MSP" };
 
-/* Territoires SAS — format « SAS-[n° département] ».
-   Un territoire peut couvrir PLUSIEURS départements et porte une liste de
-   codes INSEE (communes) — référentiel modifiable. */
-const SEED_TERRITOIRES = [
-  { code: "SAS-75", departements: ["Paris"],                              insee: ["75056"] },
-  { code: "SAS-92", departements: ["Hauts-de-Seine"],                     insee: ["92012","92050","92062"] },
-  { code: "SAS-93", departements: ["Seine-Saint-Denis"],                  insee: ["93048","93066","93070"] },
-  { code: "SAS-69", departements: ["Rhône", "Métropole de Lyon"],         insee: ["69123","69029","69264"] }, // multi-départements
-  { code: "SAS-13", departements: ["Bouches-du-Rhône"],                   insee: ["13055","13001"] },
-  { code: "SAS-33", departements: ["Gironde"],                            insee: ["33063","33281"] },
-  { code: "SAS-31", departements: ["Haute-Garonne"],                      insee: ["31555","31424"] },
-  { code: "SAS-59", departements: ["Nord"],                               insee: ["59350","59512"] },
-  { code: "SAS-44", departements: ["Loire-Atlantique"],                   insee: ["44109","44184"] },
-  { code: "SAS-35", departements: ["Ille-et-Vilaine"],                    insee: ["35238","35047"] },
-  { code: "SAS-67", departements: ["Bas-Rhin"],                           insee: ["67482"] },
-  { code: "SAS-34", departements: ["Hérault"],                            insee: ["34172","34301"] },
-  { code: "SAS-20", departements: ["Corse-du-Sud", "Haute-Corse"],        insee: ["2A004","2B033"] }, // multi-départements
-];
+/* Territoires de RÉGULATION (sas-referentiel.js) — par défaut un par territoire SAS (« SAS-75 »),
+   par exception un regroupement de plusieurs territoires SAS (ex. maquette : SAS-20 = SAS 2A + SAS 2B).
+   C'est ce code que portent les comptes (territoires de gestion, territoire de régulation). */
+const SEED_TERRITOIRES = buildRegulationSeed();
 
 /* Annuaire FINESS (mock) */
 const FINESS_DIRECTORY = [
@@ -156,7 +143,7 @@ function idNationalFromRpps(rpps) { return "8" + rpps; }
 
 /* Utilisateurs de démonstration.
    - roles : tableau (cumul autorisé, sauf Régulateur OSNP + Régulateur IOA) ;
-   - territoires (forme courte des seeds) : territoires de gestion (GC) / territoire du régulateur
+   - territoires (forme courte des seeds) : territoires de gestion (GC) / territoire de régulation
      (régulateur, le premier) — convertis par normalizeUser ; ceux des GS viennent de leurs structures ;
    - tags : ["referent_territorial"] le cas échéant ;
    - createdBy / updatedBy : auteur ({ userId } pour un compte de la plateforme — s'il est supprimé,
@@ -219,7 +206,7 @@ const SEED_USERS = [
   { id:"u-024", email:"antoine.simon@sas.gouv.fr", nom:"Simon", prenom:"Antoine", roles:["regulateur_osnp"], ville:"92100 Boulogne-Billancourt", territoires:["SAS-92"], actif:true,
     rpps:"10008901234", createdBy:{ userId:"u-023" } },
   // Gestionnaire de structure MULTI-TERRITOIRES (SAS-75 + SAS-92) ET Régulateur OSNP orienté SAS-75 :
-  // rattachement SAS-75 + SAS-92 (visible des GC des deux territoires), territoire du régulateur SAS-75 uniquement.
+  // rattachement SAS-75 + SAS-92 (visible des GC des deux territoires), territoire de régulation SAS-75 uniquement.
   { id:"u-025", email:"marc.richard@sas.gouv.fr", nom:"Richard", prenom:"Marc", roles:["gestionnaire_structure","regulateur_osnp"], tags:["referent_territorial"],
     ville:"75013 Paris", territoires:["SAS-75"], actif:true, rpps:"10006789012", createdBy:{ userId:"u-001" },
     structures:[ {type:"cpts_msp",finess:"750200091",nom:"CPTS Paris 13"}, {type:"cpts_msp",finess:"920200139",nom:"CPTS Boulogne-Billancourt"} ] },
@@ -286,7 +273,7 @@ const BANDEAU_SEED = [
 /* ---------------------------------------------------------------- *
  *  ÉTAT
  * ---------------------------------------------------------------- */
-const USERS_KEY = "bo-sas-users-v10";  // v10 : rattachement calculé + territoire du régulateur + tags
+const USERS_KEY = "bo-sas-users-v10";  // v10 : rattachement calculé + territoire de régulation + tags
 const LOG_KEY   = "bo-sas-journal-v1";
 const TERR_KEY  = "bo-sas-territoires-v2";
 const DEP_KEY   = "bo-sas-departements-v1";
@@ -327,7 +314,7 @@ function normalizeUser(u) {
   if (!u.roles) u.roles = u.role ? [u.role] : [];
   delete u.role;
   if (!Array.isArray(u.tags)) u.tags = [];
-  // Forme courte « territoires » → territoires de gestion (GC) et territoire du régulateur
+  // Forme courte « territoires » → territoires de gestion (GC) et territoire de régulation
   const legacy = Array.isArray(u.territoires) ? u.territoires : (u.territoire ? [u.territoire] : []);
   if (!Array.isArray(u.territoiresGestion)) u.territoiresGestion = u.roles.includes("gestionnaire_compte") ? [...legacy] : [];
   if (typeof u.territoireOrientation !== "string") u.territoireOrientation = u.roles.some(r => REGULATEUR_ROLES.includes(r)) ? (legacy[0] || "") : "";
@@ -345,18 +332,16 @@ function loadJournal() {
   return [];
 }
 function saveJournal() { try { localStorage.setItem(LOG_KEY, JSON.stringify(state.journal.slice(0, 500))); } catch (e) {} }
+/* Territoire de régulation : { code, nom, sas:[codes SAS] } + libellés dérivés (dep, departements) */
 function normalizeTerritoire(t) {
-  // Rétro-compatibilité : ancien modèle mono-département { code, dep }
-  if (!Array.isArray(t.departements)) t.departements = t.dep ? [t.dep] : [];
-  if (!Array.isArray(t.insee)) t.insee = [];
+  t.sas = (Array.isArray(t.sas) ? t.sas : []).filter(c => SAS_BY_CODE[c]);
+  if (!t.nom) t.nom = t.code;
+  t.departements = [...new Set(t.sas.map(c => sasShortLabel(SAS_BY_CODE[c])))];
   t.dep = t.departements.join(", ");   // libellé dérivé (affichage / options)
   return t;
 }
-function loadTerritoires() {
-  try { const raw = localStorage.getItem(TERR_KEY); if (raw) return JSON.parse(raw).map(normalizeTerritoire); } catch (e) {}
-  return SEED_TERRITOIRES.map(t => normalizeTerritoire({ ...t }));
-}
-function saveTerritoires() { try { localStorage.setItem(TERR_KEY, JSON.stringify(state.territoires)); } catch (e) {} }
+function loadTerritoires() { return loadRegulation().map(t => normalizeTerritoire({ ...t, sas: (t.sas || []).slice() })); }
+function saveTerritoires() { saveRegulation(state.territoires.map(t => ({ code: t.code, nom: t.nom, sas: t.sas.slice() }))); }
 function loadDepartements() {
   try { const raw = localStorage.getItem(DEP_KEY); if (raw) return JSON.parse(raw); } catch (e) {}
   return DEPARTEMENTS.map(d => ({ ...d }));
@@ -454,9 +439,9 @@ function terrList() { try { return state.territoires; } catch (e) { return SEED_
 function structureTerritoire(s) {
   const e = FINESS_BY_ID[s.finess];
   const ville = (e && e.ville) || s.ville || "";
-  const m = ville.match(/^(\d{2})/);
-  const code = m ? "SAS-" + m[1] : "";
-  return terrList().some(t => t.code === code) ? code : "";
+  const m = ville.match(/^(\d{4,5})\s+(.*)$/);
+  const r = resolveAddressTerritory({ postalCode: m ? m[1] : "", city: m ? m[2] : ville }, terrList());
+  return r.regulation.length ? r.regulation[0].code : "";
 }
 function hasRegulateur(roles) { return roles.some(r => REGULATEUR_ROLES.includes(r)); }
 /* Territoires de RATTACHEMENT (calculés, RG-TER-01) : gestion (GC) + structures (GS) + orientation (régulateur) */
@@ -527,7 +512,7 @@ function logAction(action, user, ok, detail) {
 /* Synchronisation des régulateurs avec les éditeurs via l'API Interop (RG-POST-04) :
    à la création, à la modification et à la suppression. Simulée ici. */
 function syncInterop(user, operation) {
-  logAction(`Synchronisation API Interop (${operation})`, user, true, "Éditeurs notifiés — territoire du régulateur " + (user.territoireOrientation || "—"));
+  logAction(`Synchronisation API Interop (${operation})`, user, true, "Éditeurs notifiés — territoire de régulation " + (user.territoireOrientation || "—"));
   return "Compte synchronisé avec les éditeurs via l'API Interop.";
 }
 /* Simulation d'un échec Keycloak : un email en « @echec-keycloak.test » fait échouer la création */
@@ -697,7 +682,7 @@ function userRow(u) {
   const region = u.region || territoireRegion(terrs[0]);
   const where = [u.ville,
     terrs.length ? "Rattachement : " + terrs.join(", ") : "Sans territoire (national)",
-    u.territoireOrientation ? "Territoire du régulateur : " + u.territoireOrientation : "",
+    u.territoireOrientation ? "Territoire de régulation : " + u.territoireOrientation : "",
     region].filter(Boolean).map(esc).join(" · ");
   return `
     <div class="user-row">
@@ -802,7 +787,7 @@ function showToast(msg) {
 
 /* Export CSV (RG-LIST-02) — même périmètre que la liste (filtres compris). */
 function exportUsersCsv(list) {
-  const cols = ["Email","Prénom","Nom","Identifiant national","RPPS","Rôle(s)","Tag(s)","Qualité d'effecteur","Région","Territoire(s) de rattachement","Territoire du régulateur","Ville",
+  const cols = ["Email","Prénom","Nom","Identifiant national","RPPS","Rôle(s)","Tag(s)","Qualité d'effecteur","Région","Territoire(s) de rattachement","Territoire de régulation","Ville",
                 "Structure(s)","Statut","Mode de connexion","Date de création","Créé par","Dernière modification","Modifié par","Dernière connexion"];
   const cell = (v) => {
     const s = String(v ?? "");
@@ -869,7 +854,7 @@ function bindListEvents() {
     if (confirm("Réinitialiser toutes les données de démonstration ?")) {
       state.users = SEED_USERS.map(u=>normalizeUser(JSON.parse(JSON.stringify(u))));
       state.journal = [];
-      state.territoires = SEED_TERRITOIRES.map(t=>normalizeTerritoire({...t}));
+      try { localStorage.removeItem(REG_KEY); } catch (e) {} state.territoires = buildRegulationSeed().map(normalizeTerritoire);
       state.departements = DEPARTEMENTS.map(d=>({...d}));
       state.support = JSON.parse(JSON.stringify(SUPPORT_REORIENTATIONS));
       state.cgu = JSON.parse(JSON.stringify(CGU_SEED));
@@ -996,15 +981,15 @@ function renderCreate() {
       ${err('structures')}
     </fieldset>` : "";
 
-  // Territoire du régulateur — un seul (RG-REG-01/02, RG-TER-04)
+  // Territoire de régulation — un seul (RG-REG-01/02, RG-TER-04)
   const orientOut = f.territoireOrientation && !options.includes(f.territoireOrientation);
   const orientationBlock = !isRegul ? "" : (orientOut ? `
-    <div class="fr-input-group"><label class="fr-label">Territoire du régulateur</label>
+    <div class="fr-input-group"><label class="fr-label">Territoire de régulation</label>
       <p style="margin:.2rem 0 0;"><strong>${esc(terrLabel(f.territoireOrientation))}</strong>${outNote}</p></div>` : single ? `
-    <div class="fr-input-group"><label class="fr-label">Territoire du régulateur</label>
+    <div class="fr-input-group"><label class="fr-label">Territoire de régulation</label>
       <p style="margin:.2rem 0 0;"><strong>${esc(terrLabel(options[0]))}</strong> <span class="readonly-note">(attribué d'office : votre unique territoire)</span></p>${err('territoireOrientation')}</div>` : `
     <div class="${grp('territoireOrientation')}">
-      <label class="fr-label" for="orientation">Territoire du régulateur${req}<span class="fr-hint-text">Un seul territoire${isStructure ? ", indépendamment des territoires de ses structures" : ""}.</span></label>
+      <label class="fr-label" for="orientation">Territoire de régulation${req}<span class="fr-hint-text">Un seul territoire${isStructure ? ", indépendamment des territoires de ses structures" : ""}.</span></label>
       <select class="fr-select" id="orientation" ${dis}><option value="">— Sélectionner —</option>
         ${options.map(c => `<option value="${esc(c)}" ${f.territoireOrientation===c?"selected":""}>${esc(terrLabel(c))}</option>`).join("")}
       </select>${err('territoireOrientation')}</div>`);
@@ -1020,7 +1005,7 @@ function renderCreate() {
            <p class="mock-note" style="margin:.2rem 0 0;">Le compte sera visible des Gestionnaires de comptes de ${ratt.length > 1 ? "ces territoires" : "ce territoire"}.</p>`
         : `<p class="mock-note" style="margin:.2rem 0 0;">${f.roles.every(r => (ROLE_BY_VALUE[r] || {}).territoire === "aucun")
             ? "Aucun : compte de portée nationale (SAS Administrateur / TestInterop)."
-            : "Aucun pour l'instant : il sera calculé à partir des territoires de gestion, des structures et du territoire du régulateur."}</p>`}
+            : "Aucun pour l'instant : il sera calculé à partir des territoires de gestion, des structures et du territoire de régulation."}</p>`}
       ${horsVue ? `<p class="rattachement-box__warn">Attention : aucun de ces territoires n'est l'un des vôtres. Après enregistrement, ce compte ne vous sera plus visible.</p>` : ""}
     </div>`;
 
@@ -1063,7 +1048,7 @@ function renderCreate() {
       </div>
       <dl class="account-info__grid">
         <dt>Rattachement</dt><dd>${esc(userTerritoires(u).join(", ") || "Aucun (national)")}</dd>
-        ${u.territoireOrientation ? `<dt>Territoire du régulateur</dt><dd>${esc(u.territoireOrientation)}</dd>` : ""}
+        ${u.territoireOrientation ? `<dt>Territoire de régulation</dt><dd>${esc(u.territoireOrientation)}</dd>` : ""}
         <dt>Création</dt><dd>${fmtDate(u.created_at)} — par ${esc(describeActor(u.createdBy))}</dd>
         <dt>Dernière modification</dt><dd>${u.updated_at ? `${fmtDate(u.updated_at)} — par ${esc(describeActor(u.updatedBy))}` : "Jamais modifié"}</dd>
         <dt>Dernière connexion</dt><dd>${u.derniereConnexion ? fmtDate(u.derniereConnexion) : "Jamais connecté"}</dd>
@@ -1301,9 +1286,9 @@ function submitForm() {
   if (isGC && f.territoiresGestion.length === 0) errors.territoiresGestion = "Au moins un territoire de gestion est requis.";
   if (f.territoiresGestion.some(t => !options.includes(t) && !keptOut(t))) errors.territoiresGestion = "Vous ne pouvez attribuer que vos territoires.";
   if (isStructure && f.structures.length === 0) errors.structures = "Ajoutez au moins une structure.";
-  if (isRegul && !f.territoireOrientation) errors.territoireOrientation = "Le territoire du régulateur est requis (un seul).";
+  if (isRegul && !f.territoireOrientation) errors.territoireOrientation = "Le territoire de régulation est requis (un seul).";
   if (isRegul && f.territoireOrientation && !options.includes(f.territoireOrientation) && !keptOut(f.territoireOrientation))
-    errors.territoireOrientation = "Le territoire du régulateur doit être l'un de vos territoires.";
+    errors.territoireOrientation = "Le territoire de régulation doit être l'un de vos territoires.";
   // Structures de tout territoire autorisées (RG-GS-04) : si le compte sort du périmètre du
   // Gestionnaire de comptes, il en est averti (formulaire) — l'enregistrement n'est pas bloqué.
   const ratt = formRattachement(f);
@@ -1340,7 +1325,7 @@ function submitForm() {
     if (!base.idNational && /^8\d{11}$/.test(u.idNational || "")) base.idNational = "SASN-" + Date.now().toString().slice(-6);
     Object.assign(u, base, { updated_at: new Date().toISOString(), updatedBy: currentActor() });
     saved = u;
-    logAction("Modification du compte", saved, true, `Rattachement : ${ratt.join(", ") || "aucun"}${base.territoireOrientation ? " · territoire du régulateur : " + base.territoireOrientation : ""}`);
+    logAction("Modification du compte", saved, true, `Rattachement : ${ratt.join(", ") || "aucun"}${base.territoireOrientation ? " · territoire de régulation : " + base.territoireOrientation : ""}`);
   } else {
     // Nouveau compte : créé dans Keycloak, statut « En attente de première connexion »
     saved = { id: "u-" + Math.random().toString(36).slice(2, 8), actif: true,
@@ -1394,132 +1379,343 @@ function renderJournal() {
  * ================================================================ */
 function usersInTerritoire(code) { return state.users.filter(u => userTerritoires(u).includes(code)).length; }
 
+/* ---------- Territoires SAS (référentiel, lecture) + territoires de régulation (édition) ---------- */
+function terrUi() {
+  if (!state.terrUi) state.terrUi = { tab: "sas", q: "", region: "", perimetre: "", open: null, rq: "", groupsOnly: false };
+  return state.terrUi;
+}
+function regOfSas(code) { return state.territoires.filter(t => (t.sas || []).includes(code)); }
+function uncoveredSas() { return SAS_REFERENTIEL.filter(s => !regOfSas(s.code).length); }
+function sasChip(code) {
+  const s = SAS_BY_CODE[code];
+  return `<span class="sas-chip" title="${esc(s ? s.samu + " · " + sasShortLabel(s) : code)}">${esc(code)}</span>`;
+}
+function regChip(t) {
+  const group = !isDefaultRegulation(t);
+  return `<span class="sas-chip ${group ? "sas-chip--group" : "sas-chip--reg"}">${esc(t.code)}</span>`;
+}
 function renderTerritoires() {
-  const t = state.terr;
-  const rows = state.territoires.map(x => {
-    const n = usersInTerritoire(x.code);
-    const deps = (x.departements || []).join(", ") || esc(x.dep);
-    const multi = (x.departements || []).length > 1;
-    const insee = x.insee || [];
-    return `<tr>
-      <td><strong>${esc(x.code)}</strong></td>
-      <td>${esc(deps)} ${multi ? `<span class="fr-badge fr-badge--sm badge-role" style="background:#e3e3fd;color:#000091;">multi-départements</span>` : ""}</td>
-      <td>${insee.length ? `<span class="terr-insee" title="${esc(insee.join(', '))}">${esc(insee.slice(0,3).join(', '))}${insee.length>3?` +${insee.length-3}`:""}</span>` : `<span class="mock-note">—</span>`}</td>
-      <td>${n}</td>
-      <td>
-        ${acWrite() ? `<button class="fr-link" data-terr-edit="${esc(x.code)}">Modifier</button>
-        <button class="fr-link" style="color:#ce0500" data-terr-del="${esc(x.code)}">Supprimer</button>` : `<span class="mock-note">—</span>`}
-      </td>
-    </tr>`;
-  }).join("");
+  const ui = terrUi();
+  const nbReg = state.territoires.length;
+  const nbGroups = state.territoires.filter(t => !isDefaultRegulation(t)).length;
+  const unc = uncoveredSas();
+  const covered = SAS_REFERENTIEL.length - unc.length;
+  const pct = Math.round(100 * covered / SAS_REFERENTIEL.length);
+  const alerts = SAS_REFERENTIEL.filter(s => s.alerte);
 
-  let formHtml = "";
-  if (t) {
-    const editing = t.mode === "edit";
-    const codePreview = t.num ? `SAS-${esc(t.num.trim())}` : "SAS-…";
-    formHtml = `
-      <div class="terr-form">
-        <h2 class="fr-h6" style="margin-top:0;">${editing ? "Modifier le territoire" : "Nouveau territoire"}</h2>
-        <div class="row">
-          <div class="fr-input-group ${t.error&&!t.num?'fr-input-group--error':''}" style="flex:0 0 150px;">
-            <label class="fr-label" for="terr-num">N° du territoire <span style="color:#ce0500">*</span></label>
-            <input class="fr-input" id="terr-num" inputmode="text" placeholder="Ex : 75, 2A, 20" value="${esc(t.num)}">
-          </div>
-          <div class="fr-input-group" style="flex:1 1 260px;">
-            <label class="fr-label" for="terr-dep">Département(s) <span style="color:#ce0500">*</span>
-              <span class="fr-hint-text">Un ou plusieurs, séparés par des virgules</span></label>
-            <input class="fr-input" id="terr-dep" placeholder="Ex : Corse-du-Sud, Haute-Corse" value="${esc(t.dep)}">
-          </div>
-        </div>
-        <div class="fr-input-group">
-          <label class="fr-label" for="terr-insee">Codes INSEE des communes
-            <span class="fr-hint-text">Liste séparée par des virgules (ex : 75056, 92012)</span></label>
-          <input class="fr-input" id="terr-insee" placeholder="Ex : 2A004, 2B033" value="${esc(t.insee)}">
-        </div>
-        <p class="terr-code-preview">Code du territoire : ${codePreview}</p>
-        ${t.error ? `<p class="fr-error-text">${esc(t.error)}</p>` : ""}
-        <div style="display:flex;gap:.5rem;margin-top:.5rem;">
-          <button class="fr-btn fr-btn--sm" id="terr-save">${editing ? "Enregistrer" : "Ajouter"}</button>
-          <button class="fr-btn fr-btn--sm fr-btn--secondary" id="terr-cancel">Annuler</button>
-        </div>
-      </div>`;
-  }
+  const tabs = `
+    <div class="terr-tabs" role="tablist">
+      <button role="tab" class="terr-tab ${ui.tab === "sas" ? "is-active" : ""}" data-terr-tab="sas" aria-selected="${ui.tab === "sas"}">Territoires SAS <span class="terr-tab__n">${SAS_REFERENTIEL.length}</span></button>
+      <button role="tab" class="terr-tab ${ui.tab === "reg" ? "is-active" : ""}" data-terr-tab="reg" aria-selected="${ui.tab === "reg"}">Territoires de régulation <span class="terr-tab__n">${nbReg}</span></button>
+    </div>`;
+
+  const kpis = `
+    <div class="terr-kpis">
+      <div class="terr-kpi"><strong>${SAS_REFERENTIEL.length}</strong><span>territoires SAS</span></div>
+      <div class="terr-kpi"><strong>${nbReg}</strong><span>territoires de régulation, dont ${nbGroups} regroupement${nbGroups > 1 ? "s" : ""}</span></div>
+      <div class="terr-kpi ${pct < 100 ? "terr-kpi--warn" : "terr-kpi--ok"}"><strong>${pct} %</strong><span>des territoires SAS couverts par un territoire de régulation</span></div>
+    </div>
+    ${unc.length ? `<div class="terr-alert terr-alert--warn">
+        <strong>${unc.length} territoire${unc.length > 1 ? "s" : ""} SAS sans territoire de régulation</strong> : ${unc.map(s => sasChip(s.code)).join(" ")}
+        ${acWrite() ? `<button class="fr-link" id="terr-fix-unc">Créer les territoires de régulation par défaut</button>` : ""}
+        <span class="mock-note">L'offre de soins de ces territoires ne remonte dans aucun territoire de régulation.</span>
+      </div>` : ""}`;
 
   el("view-territoires").innerHTML = `
-    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:1rem;">
-      <div>
-        <h1 class="fr-h4" style="margin:0;">Territoires SAS</h1>
-        <p class="page-sub">Référentiel des territoires — un territoire peut couvrir plusieurs départements et porte une liste de codes INSEE.</p>
-      </div>
-      ${(t || !acWrite()) ? "" : `<button class="fr-btn fr-btn--sm fr-btn--icon-left fr-icon-user-add-line" id="terr-add">Ajouter un territoire</button>`}
+    <div>
+      <h1 class="fr-h4" style="margin:0;">Territoires SAS</h1>
+      <p class="page-sub">Le <strong>territoire SAS</strong> rattache l'offre de soins (département entier ou liste de communes). Le <strong>territoire de régulation</strong> est celui qu'on retrouve sur les comptes utilisateurs et dans l'offre de soins : par défaut il correspond à un territoire SAS, par exception il regroupe plusieurs territoires SAS.</p>
     </div>
-    ${formHtml}
-    <table class="terr-table">
-      <thead><tr><th>Code</th><th>Département(s)</th><th>Codes INSEE</th><th>Utilisateurs</th><th>Actions</th></tr></thead>
-      <tbody>${rows}</tbody>
-    </table>`;
-
+    ${kpis}
+    ${tabs}
+    <div id="terr-panel">${ui.tab === "sas" ? sasPanelHtml(alerts) : regPanelHtml()}</div>`;
   bindTerritoiresEvents();
+}
+
+function filteredSas() {
+  const ui = terrUi();
+  const q = ui.q.trim().toLowerCase();
+  return SAS_REFERENTIEL.filter(s => {
+    if (ui.region && s.region !== ui.region) return false;
+    if (ui.perimetre && s.perimetre !== ui.perimetre) return false;
+    if (!q) return true;
+    const hay = [s.code, s.samu, s.dep, s.depLabel, s.region, s.villeRef || "", regOfSas(s.code).map(t => t.code + " " + t.nom).join(" ")].join(" ").toLowerCase();
+    return hay.includes(q);
+  });
+}
+function sasRowsHtml() {
+  const ui = terrUi();
+  return filteredSas().map(s => {
+    const regs = regOfSas(s.code);
+    const per = s.perimetre === "communes"
+      ? `<button class="fr-link terr-toggle" data-sas-open="${esc(s.code)}" aria-expanded="${ui.open === s.code}">${s.communes.length} commune${s.communes.length > 1 ? "s" : ""} listée${s.communes.length > 1 ? "s" : ""} ${ui.open === s.code ? "▴" : "▾"}</button>`
+      : `<span>Département entier</span>`;
+    const regCell = regs.length
+      ? regs.map(regChip).join(" ") + (regs.length > 1 ? ` <span class="fr-badge fr-badge--sm fr-badge--warning">dans ${regs.length} territoires</span>` : "")
+      : `<span class="fr-badge fr-badge--sm fr-badge--error">aucun</span>`;
+    const detail = ui.open === s.code ? `
+      <tr class="terr-detail"><td colspan="6">
+        ${s.communes.length
+          ? `<div class="terr-communes">${s.communes.map(([i, n]) => `<span class="terr-commune"><code>${esc(i)}</code> ${esc(n)}</span>`).join("")}</div>`
+          : `<p class="mock-note" style="margin:0;">Liste des communes non fournie : aucune offre de soins ne peut être rattachée à ce territoire SAS.</p>`}
+      </td></tr>` : "";
+    return `<tr class="${s.alerte ? "terr-row--alert" : ""}">
+      <td><strong>${esc(s.code)}</strong>${s.alerte ? `<br><span class="terr-alert-txt">${esc(s.alerte)}</span>` : ""}</td>
+      <td><code>${esc(s.samu)}</code></td>
+      <td>${esc(s.dep)} · ${esc(s.depLabel)}${s.villeRef ? `<br><span class="mock-note">secteur ${esc(s.villeRef)}</span>` : ""}</td>
+      <td>${esc(s.region)}</td>
+      <td>${per}</td>
+      <td>${regCell}</td>
+    </tr>${detail}`;
+  }).join("") || `<tr><td colspan="6" class="mock-note">Aucun territoire SAS ne correspond.</td></tr>`;
+}
+function sasPanelHtml(alerts) {
+  const ui = terrUi();
+  const regions = [...new Set(SAS_REFERENTIEL.map(s => s.region))].sort((a, b) => a.localeCompare(b, "fr"));
+  return `
+    <p class="mock-note" style="margin:.75rem 0;">Référentiel national en lecture : ${SAS_REFERENTIEL.length} territoires SAS, chacun associé à son SAMU. ${alerts.length} ligne${alerts.length > 1 ? "s" : ""} à compléter ou vérifier (surlignées).</p>
+    <div class="filters">
+      <div class="f-search">
+        <label class="fr-label" for="terr-q">Rechercher</label>
+        <input class="fr-input" type="search" id="terr-q" placeholder="Code SAS, code SAMU, département…" value="${esc(ui.q)}">
+      </div>
+      <div class="f-field">
+        <label class="fr-label" for="terr-region">Région</label>
+        <select class="fr-select" id="terr-region"><option value="">Toutes</option>${regions.map(r => `<option ${ui.region === r ? "selected" : ""}>${esc(r)}</option>`).join("")}</select>
+      </div>
+      <div class="f-field">
+        <label class="fr-label" for="terr-per">Périmètre</label>
+        <select class="fr-select" id="terr-per">
+          <option value="">Tous</option>
+          <option value="departement" ${ui.perimetre === "departement" ? "selected" : ""}>Département entier</option>
+          <option value="communes" ${ui.perimetre === "communes" ? "selected" : ""}>Liste de communes</option>
+        </select>
+      </div>
+    </div>
+    <p class="result-count" id="terr-count">${filteredSas().length} territoire${filteredSas().length > 1 ? "s" : ""} SAS</p>
+    <div class="terr-scroll"><table class="terr-table">
+      <thead><tr><th>Territoire SAS</th><th>Code SAMU</th><th>Département</th><th>Région</th><th>Périmètre</th><th>Territoire(s) de régulation</th></tr></thead>
+      <tbody id="terr-sas-body">${sasRowsHtml()}</tbody>
+    </table></div>`;
+}
+
+function regPanelHtml() {
+  const ui = terrUi();
+  const f = state.terr;
+  const q = ui.rq.trim().toLowerCase();
+  const list = state.territoires.filter(t => {
+    if (ui.groupsOnly && isDefaultRegulation(t)) return false;
+    if (!q) return true;
+    return [t.code, t.nom, (t.sas || []).join(" "), t.dep].join(" ").toLowerCase().includes(q);
+  });
+  const rows = list.map(t => {
+    const n = usersInTerritoire(t.code);
+    const group = !isDefaultRegulation(t);
+    return `<tr>
+      <td><strong>${esc(t.code)}</strong></td>
+      <td>${esc(t.nom)}</td>
+      <td>${(t.sas || []).map(sasChip).join(" ")}</td>
+      <td>${group ? `<span class="fr-badge fr-badge--sm fr-badge--info">Regroupement · ${t.sas.length} SAS</span>` : `<span class="mock-note">= territoire SAS</span>`}</td>
+      <td>${n}</td>
+      <td>${acWrite() ? `<button class="fr-link" data-terr-edit="${esc(t.code)}">Modifier</button>
+        ${group ? `<button class="fr-link" style="color:#ce0500" data-terr-del="${esc(t.code)}">Supprimer</button>` : ""}` : `<span class="mock-note">—</span>`}</td>
+    </tr>`;
+  }).join("") || `<tr><td colspan="6" class="mock-note">Aucun territoire de régulation ne correspond.</td></tr>`;
+
+  return `
+    <div class="terr-reg-head">
+      <p class="mock-note" style="margin:.75rem 0;max-width:60rem;">Par défaut, chaque territoire SAS a son territoire de régulation (même code). Un <strong>regroupement</strong> remplace les territoires par défaut de plusieurs territoires SAS par un seul territoire de régulation : les comptes et l'offre de soins de ces SAS lui sont alors rattachés.</p>
+      ${(f || !acWrite()) ? "" : `<button class="fr-btn fr-btn--sm fr-btn--icon-left fr-icon-add-line" id="terr-add">Créer un regroupement</button>`}
+    </div>
+    ${f ? regFormHtml(f) : ""}
+    <div class="filters">
+      <div class="f-search">
+        <label class="fr-label" for="terr-rq">Rechercher</label>
+        <input class="fr-input" type="search" id="terr-rq" placeholder="Code, nom, territoire SAS…" value="${esc(ui.rq)}">
+      </div>
+      <div class="f-field" style="align-self:flex-end;">
+        <div class="fr-checkbox-group">
+          <input type="checkbox" id="terr-groups" ${ui.groupsOnly ? "checked" : ""}>
+          <label class="fr-label" for="terr-groups">Regroupements uniquement</label>
+        </div>
+      </div>
+    </div>
+    <p class="result-count">${list.length} territoire${list.length > 1 ? "s" : ""} de régulation</p>
+    <div class="terr-scroll"><table class="terr-table">
+      <thead><tr><th>Code</th><th>Nom</th><th>Territoires SAS</th><th>Type</th><th>Utilisateurs</th><th>Actions</th></tr></thead>
+      <tbody>${rows}</tbody>
+    </table></div>`;
+}
+
+function regFormHtml(f) {
+  const editing = f.mode === "edit";
+  const q = (f.sq || "").trim().toLowerCase();
+  const opts = SAS_REFERENTIEL.filter(s => !q || [s.code, s.samu, s.dep, s.depLabel, s.villeRef || ""].join(" ").toLowerCase().includes(q));
+  const impact = regFormImpact(f);
+  return `
+    <div class="terr-form">
+      <h2 class="fr-h6" style="margin-top:0;">${editing ? "Modifier le territoire de régulation " + esc(f.orig) : "Nouveau regroupement"}</h2>
+      <div class="row">
+        <div class="fr-input-group ${f.error && !f.code.trim() ? "fr-input-group--error" : ""}" style="flex:0 0 170px;">
+          <label class="fr-label" for="reg-code">Code <span style="color:#ce0500">*</span></label>
+          <input class="fr-input" id="reg-code" placeholder="Ex : SAS-20" value="${esc(f.code)}">
+        </div>
+        <div class="fr-input-group ${f.error && !f.nom.trim() ? "fr-input-group--error" : ""}" style="flex:1 1 280px;">
+          <label class="fr-label" for="reg-nom">Nom <span style="color:#ce0500">*</span></label>
+          <input class="fr-input" id="reg-nom" placeholder="Ex : SAS 20 · Corse" value="${esc(f.nom)}">
+        </div>
+      </div>
+      <div class="fr-input-group" style="margin-top:.75rem;">
+        <label class="fr-label">Territoires SAS <span style="color:#ce0500">*</span>
+          <span class="fr-hint-text">Au moins un. Les territoires de régulation par défaut des SAS ajoutés seront remplacés par ce territoire.</span></label>
+        <div class="reg-selected">${f.sas.length ? f.sas.map(c => `<span class="sas-chip sas-chip--sel">${esc(c)} <button class="sas-chip__x" data-reg-rm="${esc(c)}" aria-label="Retirer ${esc(c)}">×</button></span>`).join(" ") : `<span class="mock-note">Aucun territoire SAS sélectionné.</span>`}</div>
+        <input class="fr-input" type="search" id="reg-sq" placeholder="Filtrer : code SAS, SAMU, département…" value="${esc(f.sq || "")}" style="margin-top:.5rem;">
+        <div class="reg-opts">${opts.map(s => {
+          const others = regOfSas(s.code).filter(t => t.code !== f.orig);
+          return `<label class="reg-opt"><input type="checkbox" data-reg-sas="${esc(s.code)}" ${f.sas.includes(s.code) ? "checked" : ""}>
+            <strong>${esc(s.code)}</strong> <span class="mock-note">${esc(s.samu)} · ${esc(sasShortLabel(s))}</span>
+            ${others.length ? `<span class="reg-opt__now">actuellement : ${others.map(t => esc(t.code)).join(", ")}</span>` : ""}</label>`;
+        }).join("") || `<p class="mock-note" style="margin:.5rem;">Aucun territoire SAS ne correspond.</p>`}</div>
+      </div>
+      ${impact.length ? `<div class="terr-alert terr-alert--info"><strong>À l'enregistrement :</strong><ul>${impact.map(i => `<li>${i}</li>`).join("")}</ul></div>` : ""}
+      ${f.error ? `<p class="fr-error-text">${esc(f.error)}</p>` : ""}
+      <div style="display:flex;gap:.5rem;margin-top:.75rem;">
+        <button class="fr-btn fr-btn--sm" id="terr-save">${editing ? "Enregistrer" : "Créer le regroupement"}</button>
+        <button class="fr-btn fr-btn--sm fr-btn--secondary" id="terr-cancel">Annuler</button>
+      </div>
+    </div>`;
+}
+
+/* Effets d'un enregistrement (aperçu d'impact) */
+function regFormPlan(f) {
+  const code = f.code.trim().toUpperCase();
+  const absorbed = [];      // territoires par défaut remplacés
+  f.sas.forEach(c => regOfSas(c).forEach(t => {
+    if (t.code !== f.orig && isDefaultRegulation(t) && !absorbed.includes(t)) absorbed.push(t);
+  }));
+  const orig = f.orig ? state.territoires.find(t => t.code === f.orig) : null;
+  const released = orig ? (orig.sas || []).filter(c => !f.sas.includes(c)) : [];
+  const restore = released.filter(c => !regOfSas(c).some(t => t.code !== f.orig));
+  return { code, absorbed, released, restore };
+}
+function regFormImpact(f) {
+  const p = regFormPlan(f), out = [];
+  p.absorbed.forEach(t => {
+    const n = usersInTerritoire(t.code);
+    out.push(`le territoire de régulation par défaut <strong>${esc(t.code)}</strong> est remplacé par ce territoire${n ? ` — ${n} compte${n > 1 ? "s" : ""} rattaché${n > 1 ? "s" : ""} y ser${n > 1 ? "ont" : "a"} reporté${n > 1 ? "s" : ""}` : ""}`);
+  });
+  p.restore.forEach(c => out.push(`<strong>${esc(c)}</strong> retrouve son territoire de régulation par défaut <strong>${esc(defaultRegCode(c))}</strong>`));
+  return out;
 }
 
 function bindTerritoiresEvents() {
   const root = el("view-territoires");
-  const add = root.querySelector("#terr-add");
-  if (add) add.onclick = () => { state.terr = { mode:"create", code:null, num:"", dep:"", insee:"", error:"" }; render(); };
+  const ui = terrUi();
+  root.querySelectorAll("[data-terr-tab]").forEach(b => b.onclick = () => { ui.tab = b.dataset.terrTab; render(); });
+  const fix = root.querySelector("#terr-fix-unc");
+  if (fix) fix.onclick = () => {
+    uncoveredSas().forEach(s => state.territoires.push(normalizeTerritoire({ code: defaultRegCode(s.code), nom: s.code + " · " + sasShortLabel(s), sas: [s.code] })));
+    sortTerritoires(); saveTerritoires(); render(); showToast("Territoires de régulation par défaut créés.");
+  };
 
-  root.querySelectorAll("[data-terr-edit]").forEach(b => b.onclick = () => {
-    const x = state.territoires.find(v => v.code === b.dataset.terrEdit);
-    if (x) { state.terr = { mode:"edit", code:x.code, num:x.code.replace(/^SAS-/,""),
-                            dep:(x.departements||[]).join(", "), insee:(x.insee||[]).join(", "), error:"" }; render(); }
-  });
-  root.querySelectorAll("[data-terr-del]").forEach(b => b.onclick = () => {
-    const code = b.dataset.terrDel;
-    const n = usersInTerritoire(code);
-    const msg = n ? `Le territoire ${code} est rattaché à ${n} utilisateur(s). Le supprimer quand même ?` : `Supprimer le territoire ${code} ?`;
-    if (confirm(msg)) { state.territoires = state.territoires.filter(v => v.code !== code); saveTerritoires(); render(); }
-  });
-
-  const t = state.terr;
-  if (t) {
-    const numI = root.querySelector("#terr-num");
-    const depI = root.querySelector("#terr-dep");
-    const insI = root.querySelector("#terr-insee");
-    numI.oninput = () => { t.num = numI.value; root.querySelector(".terr-code-preview").textContent = "Code du territoire : SAS-" + (t.num.trim() || "…"); };
-    depI.oninput = () => { t.dep = depI.value; };
-    if (insI) insI.oninput = () => { t.insee = insI.value; };
-    root.querySelector("#terr-cancel").onclick = () => { state.terr = null; render(); };
-    root.querySelector("#terr-save").onclick = () => saveTerritoireForm();
+  if (ui.tab === "sas") {
+    const refresh = () => {
+      el("terr-sas-body").innerHTML = sasRowsHtml();
+      const n = filteredSas().length;
+      el("terr-count").textContent = `${n} territoire${n > 1 ? "s" : ""} SAS`;
+      bindSasToggles();
+    };
+    const bindSasToggles = () => root.querySelectorAll("[data-sas-open]").forEach(b => b.onclick = () => {
+      ui.open = ui.open === b.dataset.sasOpen ? null : b.dataset.sasOpen; refresh();
+    });
+    root.querySelector("#terr-q").oninput = (e) => { ui.q = e.target.value; refresh(); };
+    root.querySelector("#terr-region").onchange = (e) => { ui.region = e.target.value; refresh(); };
+    root.querySelector("#terr-per").onchange = (e) => { ui.perimetre = e.target.value; refresh(); };
+    bindSasToggles();
+    return;
   }
+
+  const rq = root.querySelector("#terr-rq");
+  if (rq) rq.onchange = (e) => { ui.rq = e.target.value; render(); };
+  const go = root.querySelector("#terr-groups");
+  if (go) go.onchange = (e) => { ui.groupsOnly = e.target.checked; render(); };
+  const add = root.querySelector("#terr-add");
+  if (add) add.onclick = () => { state.terr = { mode: "create", orig: null, code: "", nom: "", sas: [], sq: "", error: "" }; render(); };
+  root.querySelectorAll("[data-terr-edit]").forEach(b => b.onclick = () => {
+    const t = state.territoires.find(v => v.code === b.dataset.terrEdit);
+    if (t) { state.terr = { mode: "edit", orig: t.code, code: t.code, nom: t.nom, sas: (t.sas || []).slice(), sq: "", error: "" }; render(); }
+  });
+  root.querySelectorAll("[data-terr-del]").forEach(b => b.onclick = () => deleteRegulation(b.dataset.terrDel));
+
+  const f = state.terr;
+  if (!f) return;
+  const codeI = root.querySelector("#reg-code"), nomI = root.querySelector("#reg-nom"), sq = root.querySelector("#reg-sq");
+  codeI.oninput = () => { f.code = codeI.value; };
+  nomI.oninput = () => { f.nom = nomI.value; };
+  sq.oninput = () => { f.sq = sq.value; const pos = sq.selectionStart; render(); const n = el("reg-sq"); if (n) { n.focus(); n.setSelectionRange(pos, pos); } };
+  root.querySelectorAll("[data-reg-sas]").forEach(cb => cb.onchange = () => {
+    const c = cb.dataset.regSas;
+    f.sas = cb.checked ? [...new Set([...f.sas, c])] : f.sas.filter(x => x !== c);
+    f.sas.sort((a, b) => SAS_REFERENTIEL.findIndex(s => s.code === a) - SAS_REFERENTIEL.findIndex(s => s.code === b));
+    render();
+  });
+  root.querySelectorAll("[data-reg-rm]").forEach(b => b.onclick = () => { f.sas = f.sas.filter(x => x !== b.dataset.regRm); render(); });
+  root.querySelector("#terr-cancel").onclick = () => { state.terr = null; render(); };
+  root.querySelector("#terr-save").onclick = () => saveTerritoireForm();
 }
 
+function sortTerritoires() {
+  const rank = (t) => SAS_REFERENTIEL.findIndex(s => s.code === (t.sas || [])[0]);
+  state.territoires.sort((a, b) => rank(a) - rank(b) || a.code.localeCompare(b.code, "fr"));
+}
+/* Reporte un code de territoire sur les comptes (gestion + régulateur) */
+function remapUserTerritoire(from, to) {
+  state.users.forEach(u => {
+    u.territoiresGestion = [...new Set((u.territoiresGestion || []).map(t => t === from ? to : t))];
+    if (u.territoireOrientation === from) u.territoireOrientation = to;
+    u.territoire = userTerritoires(u)[0] || "";
+  });
+}
 function saveTerritoireForm() {
-  const t = state.terr;
-  const num = t.num.trim().toUpperCase();
-  const departements = t.dep.split(",").map(s => s.trim()).filter(Boolean);
-  const insee = (t.insee || "").split(",").map(s => s.trim()).filter(Boolean);
-  if (!num || !departements.length) { t.error = "Renseignez le numéro et au moins un département."; render(); return; }
-  const code = "SAS-" + num;
-  const clash = state.territoires.find(x => x.code === code && code !== t.code);
-  if (clash) { t.error = `Le territoire ${code} existe déjà.`; render(); return; }
-
-  if (t.mode === "edit") {
-    const x = state.territoires.find(v => v.code === t.code);
-    const oldCode = x.code;
-    x.code = code; x.departements = departements; x.insee = insee; x.dep = departements.join(", ");
-    // Répercuter le changement de code sur les utilisateurs rattachés
-    if (oldCode !== code) state.users.forEach(u => {
-      u.territoiresGestion = (u.territoiresGestion || []).map(t => t === oldCode ? code : t);
-      if (u.territoireOrientation === oldCode) u.territoireOrientation = code;
-      u.territoire = userTerritoires(u)[0] || "";
-    });
-    saveUsers();
+  const f = state.terr;
+  const code = f.code.trim().toUpperCase(), nom = f.nom.trim();
+  if (!code || !nom || !f.sas.length) { f.error = "Renseignez le code, le nom et au moins un territoire SAS."; render(); return; }
+  if (state.territoires.some(t => t.code === code && t.code !== f.orig)) { f.error = `Le territoire de régulation ${code} existe déjà.`; render(); return; }
+  const plan = regFormPlan(f);
+  // 1. Les territoires par défaut absorbés disparaissent, leurs comptes passent sur ce territoire
+  plan.absorbed.forEach(t => {
+    remapUserTerritoire(t.code, code);
+    state.territoires = state.territoires.filter(x => x !== t);
+  });
+  // 2. Enregistrement du territoire
+  if (f.mode === "edit") {
+    const t = state.territoires.find(v => v.code === f.orig);
+    if (f.orig !== code) remapUserTerritoire(f.orig, code);
+    t.code = code; t.nom = nom; t.sas = f.sas.slice(); normalizeTerritoire(t);
   } else {
-    state.territoires.push({ code, departements, insee, dep: departements.join(", ") });
+    state.territoires.push(normalizeTerritoire({ code, nom, sas: f.sas.slice() }));
   }
-  state.territoires.sort((a,b) => a.code.localeCompare(b.code, "fr", { numeric:true }));
-  saveTerritoires();
+  // 3. Les SAS retirés et désormais orphelins retrouvent leur territoire par défaut
+  plan.restore.forEach(c => {
+    const s = SAS_BY_CODE[c];
+    if (!state.territoires.some(t => t.code === defaultRegCode(c)))
+      state.territoires.push(normalizeTerritoire({ code: defaultRegCode(c), nom: c + " · " + sasShortLabel(s), sas: [c] }));
+  });
+  sortTerritoires(); saveTerritoires(); saveUsers();
   state.terr = null;
   render();
+  showToast(f.mode === "edit" ? `Territoire de régulation ${code} enregistré.` : `Regroupement ${code} créé.`);
+}
+function deleteRegulation(code) {
+  const t = state.territoires.find(v => v.code === code);
+  if (!t) return;
+  const n = usersInTerritoire(code);
+  if (n) { alert(`Le territoire de régulation ${code} est rattaché à ${n} compte(s). Réaffectez-les avant de le supprimer.`); return; }
+  const back = (t.sas || []).filter(c => !regOfSas(c).some(x => x.code !== code));
+  if (!confirm(`Supprimer le regroupement ${code} ?` + (back.length ? `\n${back.join(", ")} retrouve${back.length > 1 ? "nt" : ""} leur territoire de régulation par défaut.` : ""))) return;
+  state.territoires = state.territoires.filter(v => v !== t);
+  back.forEach(c => state.territoires.push(normalizeTerritoire({ code: defaultRegCode(c), nom: c + " · " + sasShortLabel(SAS_BY_CODE[c]), sas: [c] })));
+  sortTerritoires(); saveTerritoires(); render();
 }
 
 /* ================================================================ *

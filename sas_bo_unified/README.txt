@@ -46,11 +46,11 @@ CE QUE FAIT LA MAQUETTE
    - DEUX NOTIONS DE TERRITOIRE :
        * territoire de RATTACHEMENT — calculé, jamais saisi, sert à la visibilité :
          territoires de gestion (Gestionnaire de comptes) + territoires des
-         structures (Gestionnaire de structure) + territoire du régulateur
+         structures (Gestionnaire de structure) + territoire de régulation
          (régulateur) ;
-       * TERRITOIRE DU RÉGULATEUR — un seul, propre aux régulateurs.
+       * TERRITOIRE DE RÉGULATION — un seul, propre aux régulateurs.
      Exemple : Marc Richard gère une CPTS du SAS-75 et une du SAS-92 et régule
-     au SAS-75 → rattachement SAS-75 + SAS-92, territoire du régulateur SAS-75.
+     au SAS-75 → rattachement SAS-75 + SAS-92, territoire de régulation SAS-75.
    - VISIBILITÉ : le SAS Administrateur voit tous les comptes ; le Gestionnaire de
      comptes voit les comptes dont au moins un territoire de rattachement est
      l'un des siens (essayez « Gestionnaire de comptes — SAS-92 + SAS-93 »). Les
@@ -76,10 +76,10 @@ CE QUE FAIT LA MAQUETTE
      TestInterop ; il peut créer un autre Gestionnaire de comptes, sur ses
      territoires uniquement.
    - TERRITOIRES SAISIS : territoires de gestion (Gestionnaire de comptes, un ou
-     plusieurs) et territoire du régulateur (un seul). Le
+     plusieurs) et territoire de régulation (un seul). Le
      Gestionnaire de structure n'a aucun territoire à saisir : ce sont ceux de
      ses structures. Le rattachement calculé est affiché en direct.
-     Territoires de gestion et territoire du régulateur proposés : tous
+     Territoires de gestion et territoire de régulation proposés : tous
      (administrateur) ou ceux du créateur ; créateur rattaché à un seul
      territoire : ce territoire est attribué d'office. Les STRUCTURES, elles,
      sont toutes proposées, quel que soit leur territoire : si le compte n'est
@@ -139,12 +139,30 @@ CE QUE FAIT LA MAQUETTE
    - Bouton « Enregistrer » désactivé sans changement + modale « Publier ».
 
 6. TERRITOIRES SAS (menu « Territoires SAS », administrateur uniquement)
-   - Affichage, création, modification et suppression des territoires.
-   - Format SAS-[n°] ; un territoire peut couvrir PLUSIEURS DÉPARTEMENTS
-     (ex. SAS-69 : Rhône + Métropole de Lyon ; SAS-20 : Corse-du-Sud +
-     Haute-Corse) et porte une LISTE DE CODES INSEE (communes).
-   - Le nombre d'utilisateurs rattachés est indiqué. Renommer un code
-     répercute le changement sur les utilisateurs.
+   Deux onglets (référentiel : sas-referentiel.js, généré depuis referentiel_sas.xlsx).
+   - TERRITOIRES SAS (lecture) : affiche par défaut les 107 territoires SAS,
+     chacun avec son code SAMU (ex. SAS 76A ↔ FR76A), son département, sa
+     région et son périmètre : département entier, ou liste de communes
+     (codes INSEE) pour les départements découpés (64A/64B, 76A/76B ; 42A/42B
+     à compléter). Filtres : recherche, région, périmètre. Indicateur de
+     couverture : % de territoires SAS rattachés à un territoire de régulation.
+   - TERRITOIRES DE RÉGULATION (édition) : ceux que l'on retrouve sur les
+     comptes (territoires de gestion, territoire de régulation) et sur l'offre
+     de soins. Par défaut, un territoire de régulation = un territoire SAS
+     (même code, ex. SAS-75). Par exception, un REGROUPEMENT = une liste de
+     territoires SAS (exemple maquette : SAS-20 = SAS 2A + SAS 2B).
+       * Créer un regroupement remplace les territoires par défaut des SAS
+         choisis ; les comptes qui y étaient rattachés sont reportés sur le
+         regroupement (aperçu d'impact avant enregistrement).
+       * Retirer un SAS d'un regroupement, ou supprimer le regroupement, lui
+         rend son territoire par défaut. Suppression impossible tant que des
+         comptes y sont rattachés.
+   - OFFRE DE SOINS (Open-Search) : chaque adresse affiche son territoire SAS
+     (code SAMU, mode de rattachement) et son territoire de régulation ; la
+     liste se filtre par territoire de régulation. Règle de rattachement :
+     code INSEE dans une liste → SAS de la liste ; sinon département du code
+     INSEE ; sans code INSEE (cas de la maquette), département du code postal
+     ou nom de commune pour les départements découpés (approximatif).
 
 7. DÉPARTEMENTS (menu « Départements »)
    - Accessible aux administrateurs (tous les territoires SAS) et aux
