@@ -504,3 +504,15 @@ body { margin: 0; background: #fff; color: #1a1a1a; font-size: 14px; line-height
 .reg-opt__now { font-size: .75rem; color: #b34000; margin-left: auto; }
 @media (max-width: 640px) { .terr-tab { padding: .45rem .6rem; font-size: .82rem; } }
 .os-badge-reg { background:#e3e3fd; color:#000091; }
+.test-modes { display: flex; gap: .4rem; flex-wrap: wrap; margin: .5rem 0; }
+.test-mode { border: 1px solid #000091; background: #fff; color: #000091; padding: .35rem .8rem; border-radius: 16px; font-size: .86rem; font-weight: 700; cursor: pointer; }
+.test-mode.is-active { background: #000091; color: #fff; }
+.test-struct-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: .4rem; margin: .4rem 0; }
+.test-struct { text-align: left; border: 1px solid #dddddd; background: #fff; padding: .45rem .6rem; border-radius: 4px; font-size: .84rem; cursor: pointer; }
+.test-struct:hover { border-color: #000091; background: #f5f5fe; }
+.test-card { border: 1px solid #dddddd; border-radius: 4px; padding: .8rem 1rem; margin: 1rem 0; }
+.test-card__head { display: flex; justify-content: space-between; gap: 1rem; flex-wrap: wrap; margin-bottom: .5rem; }
+.test-card__terr { display: flex; flex-direction: column; gap: .2rem; align-items: flex-end; text-align: right; }
+.test-card__lbl { font-size: .75rem; font-weight: 700; text-transform: uppercase; color: #3a3a3a; }
+.test-row--ecart td { background: #fff4e5; }
+@media (max-width: 640px) { .test-card__terr { align-items: flex-start; text-align: left; } }

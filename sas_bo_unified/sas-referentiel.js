@@ -194,13 +194,14 @@ function isSplitDepartment(dep) { return SAS_REFERENTIEL.some(s => s.dep === dep
 
 /* Retourne { sas, regulation[], resolvedBy, approx } */
 function resolveAddressTerritory(addr, regList) {
-  const insee = addr && addr.insee;
+  const insee = normalizeInsee(addr && addr.insee);
   let sas = null, resolvedBy = "unassigned", approx = false;
   if (insee && SAS_COMMUNE_INDEX.byInsee[insee]) {
     sas = SAS_COMMUNE_INDEX.byInsee[insee]; resolvedBy = "commune";
   } else if (insee) {
     const s = sasOfDepartment(depFromInsee(insee));
     if (s) { sas = s.code; resolvedBy = "department"; }
+    else if (isSplitDepartment(depFromInsee(insee))) resolvedBy = "unknown_insee";
   } else {
     const dep = depFromPostalCode(addr && addr.postalCode);
     if (dep && isSplitDepartment(dep)) {
@@ -218,5 +219,44 @@ const RESOLVED_BY_LABEL = {
   department: "par département du code INSEE",
   commune_name: "par nom de commune (pas de code INSEE dans l'index)",
   postal_code: "par département du code postal (pas de code INSEE dans l'index)",
+  unknown_insee: "code commune absent de la liste du département découpé (commune fusionnée ou code erroné) : à corriger dans la liste",
   unassigned: "non rattaché",
 };
+
+/* Code commune : zéros de tête restaurés, arrondissements de Paris / Lyon / Marseille ramenés à la commune */
+function normalizeInsee(code) {
+  let c = String(code ?? "").trim().toUpperCase();
+  if (!c) return "";
+  if (/^\d{4}$/.test(c)) c = "0" + c;
+  if (/^751(0[1-9]|1\d|20)$/.test(c)) return "75056";
+  if (/^6938[1-9]$/.test(c)) return "69123";
+  if (/^132(0[1-9]|1[0-6])$/.test(c)) return "13055";
+  return c;
+}
+
+/* ------------------------------------------------------------------
+   Script Power BI « territory_department_num », reproduit à l'identique
+   (pour comparaison avec la règle corrigée). Nécessite DAX_SPLITTED_LIST.
+   ------------------------------------------------------------------ */
+function daxTerritory(codePostal, codeCommune) {
+  const list = (typeof DAX_SPLITTED_LIST !== "undefined") ? DAX_SPLITTED_LIST : [];
+  const cp = String(codePostal ?? "").trim();
+  const cc = String(codeCommune ?? "").trim();
+  if (cp.length === 5) {
+    if (cp.slice(0, 2).includes("97")) return { value: cp.slice(0, 3), branch: "Code postal 97x : 3 premiers caractères" };
+    const byInsee = list.find(r => r[0] === cc);
+    if (byInsee) return { value: byInsee[2], branch: "Code commune trouvé dans splitted_department_list" };
+    const byCp = list.filter(r => r[1] === cp).map(r => r[2]).filter(Boolean).sort();
+    if (byCp.length) return { value: byCp[0], branch: "Code postal trouvé dans splitted_department_list (FIRSTNONBLANK)" + (new Set(byCp).size > 1 ? " — code postal partagé entre " + [...new Set(byCp)].join(" et ") : "") };
+    return { value: cp.slice(0, 2), branch: "2 premiers caractères du code postal" };
+  }
+  if (cp.length === 4) return { value: "0" + cp.slice(0, 1), branch: "Code postal sur 4 chiffres : « 0 » + 1er caractère" };
+  return { value: "", branch: "Code postal absent ou invalide : vide" };
+}
+/* Sortie DAX → code SAS du référentiel (20A/20B = 2A/2B) */
+function daxToSas(v) {
+  if (!v) return "";
+  const map = { "20A": "2A", "20B": "2B" };
+  const code = "SAS " + (map[v] || v);
+  return SAS_BY_CODE[code] ? code : "";
+}

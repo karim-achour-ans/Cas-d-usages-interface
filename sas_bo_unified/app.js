@@ -436,13 +436,33 @@ function rolesOf(u) { return u.roles || []; }
 /* Liste des territoires SAS (référentiel courant ; seed tant que l'état n'est pas initialisé) */
 function terrList() { try { return state.territoires; } catch (e) { return SEED_TERRITOIRES; } }
 /* Territoire d'une structure = territoire de sa commune d'implantation FINESS (RG-TER-02) */
-function structureTerritoire(s) {
+function structureResolution(s) {
   const e = FINESS_BY_ID[s.finess];
   const ville = (e && e.ville) || s.ville || "";
   const m = ville.match(/^(\d{4,5})\s+(.*)$/);
-  const r = resolveAddressTerritory({ postalCode: m ? m[1] : "", city: m ? m[2] : ville }, terrList());
+  return resolveAddressTerritory({ postalCode: m ? m[1] : "", city: m ? m[2] : ville }, terrList());
+}
+/* Territoire SAS d'une structure (calculé depuis son adresse) — affiché pour les gestionnaires de structure */
+function structureSas(s) { return structureResolution(s).sas || ""; }
+/* Territoire de régulation correspondant (sert au calcul de visibilité par les gestionnaires de comptes) */
+function structureTerritoire(s) {
+  const r = structureResolution(s);
   return r.regulation.length ? r.regulation[0].code : "";
 }
+/* Territoires AFFICHÉS d'un compte : territoires de régulation (gestion, régulation),
+   sauf pour le gestionnaire de structure, qui porte les territoires SAS de ses structures. */
+function territoryParts(roles, gestion, orientation, structures) {
+  const parts = [];
+  if (roles.includes("gestionnaire_compte") && (gestion || []).length) parts.push({ label: "Territoires de gestion", values: gestion.slice() });
+  if (hasRegulateur(roles) && orientation) parts.push({ label: "Territoire de régulation", values: [orientation] });
+  if (roles.includes("gestionnaire_structure")) {
+    const sas = [...new Set((structures || []).map(structureSas).filter(Boolean))];
+    if (sas.length) parts.push({ label: "Territoires SAS (structures)", values: sas });
+  }
+  return parts;
+}
+function userTerritoryParts(u) { return territoryParts(rolesOf(u), u.territoiresGestion, u.territoireOrientation, u.structures); }
+function partsText(parts) { return parts.map(p => p.label + " : " + p.values.join(", ")).join(" · "); }
 function hasRegulateur(roles) { return roles.some(r => REGULATEUR_ROLES.includes(r)); }
 /* Territoires de RATTACHEMENT (calculés, RG-TER-01) : gestion (GC) + structures (GS) + orientation (régulateur) */
 function rattachementOf(roles, gestion, orientation, structures) {
@@ -681,8 +701,7 @@ function userRow(u) {
   const terrs = userTerritoires(u);
   const region = u.region || territoireRegion(terrs[0]);
   const where = [u.ville,
-    terrs.length ? "Rattachement : " + terrs.join(", ") : "Sans territoire (national)",
-    u.territoireOrientation ? "Territoire de régulation : " + u.territoireOrientation : "",
+    userTerritoryParts(u).length ? partsText(userTerritoryParts(u)) : "Sans territoire (national)",
     region].filter(Boolean).map(esc).join(" · ");
   return `
     <div class="user-row">
@@ -949,10 +968,10 @@ function renderCreate() {
 
   // Structures (gestionnaire de structure) — FINESS juridique, sans doublon, filtrées par périmètre (RG-GS-01/02/04)
   const addedItems = f.structures.map((s, i) => {
-    const t = structureTerritoire(s);
+    const sasCode = structureSas(s), t = structureTerritoire(s);
     return `
     <div class="struct-item">
-      <div><strong>${esc(STRUCTURE_SHORT[s.type])}</strong> — ${esc(s.nom)} <span class="mock-note">FINESS ${esc(s.finess)} · ${esc(t || "territoire inconnu")}</span></div>
+      <div><strong>${esc(STRUCTURE_SHORT[s.type])}</strong> — ${esc(s.nom)} <span class="mock-note">FINESS ${esc(s.finess)} · ${sasCode ? `territoire SAS <strong>${esc(sasCode)}</strong>${t ? ` (régulation ${esc(t)})` : ""}` : "territoire SAS inconnu"}</span></div>
       ${readOnly ? "" : `<button type="button" class="fr-link" data-struct-remove="${i}">Retirer</button>`}
     </div>`; }).join("");
   const typeOpts = STRUCTURE_TYPES.map(s => `<option value="${s.value}" ${f.draftType===s.value?"selected":""}>${esc(s.label)}</option>`).join("");
@@ -999,10 +1018,10 @@ function renderCreate() {
   const horsVue = !isAdminCreator() && ratt.length > 0 && !ratt.some(t => options.includes(t));
   const rattachementBlock = !hasRoles ? "" : `
     <div class="rattachement-box ${horsVue ? 'has-warn' : ''}">
-      <span class="rattachement-box__title">Territoire(s) de rattachement — calculé(s)</span>
+      <span class="rattachement-box__title">Territoires du compte</span>
       ${ratt.length
-        ? `<p style="margin:.2rem 0 0;"><strong>${esc(ratt.join(", "))}</strong></p>
-           <p class="mock-note" style="margin:.2rem 0 0;">Le compte sera visible des Gestionnaires de comptes de ${ratt.length > 1 ? "ces territoires" : "ce territoire"}.</p>`
+        ? `${territoryParts(f.roles, f.territoiresGestion, f.territoireOrientation, f.structures).map(p => `<p style="margin:.2rem 0 0;">${esc(p.label)} : <strong>${esc(p.values.join(", "))}</strong></p>`).join("")}
+           <p class="mock-note" style="margin:.2rem 0 0;">Visible des Gestionnaires de comptes des territoires de régulation : ${esc(ratt.join(", "))}.</p>`
         : `<p class="mock-note" style="margin:.2rem 0 0;">${f.roles.every(r => (ROLE_BY_VALUE[r] || {}).territoire === "aucun")
             ? "Aucun : compte de portée nationale (SAS Administrateur / TestInterop)."
             : "Aucun pour l'instant : il sera calculé à partir des territoires de gestion, des structures et du territoire de régulation."}</p>`}
@@ -1047,8 +1066,7 @@ function renderCreate() {
         <span class="mock-note">Identifiant national : ${esc(u.idNational || "—")}</span>
       </div>
       <dl class="account-info__grid">
-        <dt>Rattachement</dt><dd>${esc(userTerritoires(u).join(", ") || "Aucun (national)")}</dd>
-        ${u.territoireOrientation ? `<dt>Territoire de régulation</dt><dd>${esc(u.territoireOrientation)}</dd>` : ""}
+        ${userTerritoryParts(u).length ? userTerritoryParts(u).map(p => `<dt>${esc(p.label)}</dt><dd>${esc(p.values.join(", "))}</dd>`).join("") : `<dt>Territoires</dt><dd>Aucun (national)</dd>`}
         <dt>Création</dt><dd>${fmtDate(u.created_at)} — par ${esc(describeActor(u.createdBy))}</dd>
         <dt>Dernière modification</dt><dd>${u.updated_at ? `${fmtDate(u.updated_at)} — par ${esc(describeActor(u.updatedBy))}` : "Jamais modifié"}</dd>
         <dt>Dernière connexion</dt><dd>${u.derniereConnexion ? fmtDate(u.derniereConnexion) : "Jamais connecté"}</dd>
@@ -1407,6 +1425,7 @@ function renderTerritoires() {
     <div class="terr-tabs" role="tablist">
       <button role="tab" class="terr-tab ${ui.tab === "sas" ? "is-active" : ""}" data-terr-tab="sas" aria-selected="${ui.tab === "sas"}">Territoires SAS <span class="terr-tab__n">${SAS_REFERENTIEL.length}</span></button>
       <button role="tab" class="terr-tab ${ui.tab === "reg" ? "is-active" : ""}" data-terr-tab="reg" aria-selected="${ui.tab === "reg"}">Territoires de régulation <span class="terr-tab__n">${nbReg}</span></button>
+      <button role="tab" class="terr-tab ${ui.tab === "test" ? "is-active" : ""}" data-terr-tab="test" aria-selected="${ui.tab === "test"}">Tester une offre</button>
     </div>`;
 
   const kpis = `
@@ -1428,8 +1447,200 @@ function renderTerritoires() {
     </div>
     ${kpis}
     ${tabs}
-    <div id="terr-panel">${ui.tab === "sas" ? sasPanelHtml(alerts) : regPanelHtml()}</div>`;
+    <div id="terr-panel">${ui.tab === "sas" ? sasPanelHtml(alerts) : ui.tab === "test" ? testPanelHtml() : regPanelHtml()}</div>`;
   bindTerritoiresEvents();
+}
+
+
+/* ---------- Onglet « Tester une offre » : lieux d'exercice → territoire(s), script DAX vs règle corrigée ---------- */
+const PS_RESOURCE_ID = "fffda7e9-0ea2-4c35-bba0-4496f3af935d";   // Annuaire Santé — PS_LibreAcces_Personne_activite (data.gouv.fr)
+const TABULAR_API = "https://tabular-api.data.gouv.fr/api/resources/";
+let PS_COLS = null;
+function normKey(k) { return String(k).normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, " ").trim(); }
+function testUi() {
+  const ui = terrUi();
+  if (!ui.test) ui.test = { mode: "ps", q: "", prenom: "", structQ: "", cp: "", insee: "", commune: "", loading: false, error: "", note: "", results: [] };
+  return ui.test;
+}
+async function psColumns() {
+  if (PS_COLS) return PS_COLS;
+  const r = await fetch(TABULAR_API + PS_RESOURCE_ID + "/data/?page_size=1");
+  if (!r.ok) throw new Error("l'API a répondu " + r.status);
+  const j = await r.json();
+  const keys = Object.keys(((j.data || [])[0]) || {});
+  const find = (re) => keys.find(k => re.test(normKey(k)));
+  PS_COLS = {
+    rpps: find(/^identifiant pp$/), idnat: find(/^identification nationale pp$/),
+    nom: find(/^nom d exercice$/), prenom: find(/^prenom d exercice$/),
+    profession: find(/^libelle profession$/), savoir: find(/^libelle savoir faire$/),
+    raison: find(/^raison sociale site$/), enseigne: find(/^enseigne commerciale site$/),
+    num: find(/^numero voie coord structure$/), typevoie: find(/^libelle type de voie coord structure$/),
+    voie: find(/^libelle voie coord structure$/), cp: find(/^code postal coord structure$/),
+    cc: find(/^code commune coord structure$/), commune: find(/^libelle commune coord structure$/),
+  };
+  if (!(PS_COLS.rpps || PS_COLS.idnat) || !PS_COLS.cp) {
+    const found = keys.slice(0, 6).join(", ");
+    PS_COLS = null;
+    throw new Error("colonnes attendues introuvables (reçu : " + found + "…)");
+  }
+  return PS_COLS;
+}
+async function psSearch(q, prenom) {
+  const c = await psColumns();
+  const v = q.trim();
+  let col, val;
+  if (/^\d{11}$/.test(v)) { col = c.rpps || c.idnat; val = c.rpps ? v : "8" + v; }
+  else if (/^\d{12}$/.test(v)) { col = c.idnat || c.rpps; val = c.idnat ? v : v.slice(1); }
+  else { col = c.nom; val = v.toUpperCase(); }
+  if (!col) throw new Error("colonne de recherche introuvable");
+  const url = TABULAR_API + PS_RESOURCE_ID + "/data/?" + encodeURIComponent(col + "__exact") + "=" + encodeURIComponent(val) + "&page_size=50";
+  const r = await fetch(url);
+  if (!r.ok) throw new Error("l'API a répondu " + r.status);
+  const j = await r.json();
+  let rows = j.data || [];
+  if (prenom && c.prenom) rows = rows.filter(x => normKey(x[c.prenom]).includes(normKey(prenom)));
+  const total = (j.meta && j.meta.total) || rows.length;
+  const byPs = new Map();
+  rows.forEach(x => {
+    const id = String(x[c.rpps] ?? x[c.idnat] ?? "");
+    if (!byPs.has(id)) byPs.set(id, {
+      title: [x[c.prenom], x[c.nom]].filter(Boolean).join(" ") || id,
+      sub: ["RPPS " + id, x[c.profession], x[c.savoir]].filter(Boolean).join(" · "),
+      lieux: [], seen: new Set() });
+    const ps = byPs.get(id);
+    const adresse = [x[c.num], x[c.typevoie], x[c.voie]].filter(v => v != null && v !== "").join(" ");
+    const lieu = { label: x[c.raison] || x[c.enseigne] || "Lieu d'exercice", adresse,
+      cp: x[c.cp] == null ? "" : String(x[c.cp]), cc: x[c.cc] == null ? "" : String(x[c.cc]), commune: x[c.commune] || "" };
+    const key = [lieu.cp, lieu.cc, lieu.adresse, lieu.label].join("|");
+    if (!ps.seen.has(key) && (lieu.cp || lieu.cc)) { ps.seen.add(key); ps.lieux.push(lieu); }
+  });
+  return { offres: [...byPs.values()], total, truncated: total > rows.length };
+}
+const TEST_DEMO = [{ title: "Louis CARVIN (exemple hors ligne)", sub: "RPPS 10102223202 · Médecin · Médecine générale — lieux repris de l'index sas_consultation_place",
+  lieux: [{ label: "CARVIN", adresse: "56 RUE SAINT JEAN DU DESERT", cp: "13012", cc: "", commune: "Marseille" },
+          { label: "CARVIN", adresse: "170 BIS BOULEVARD BARA", cp: "13013", cc: "", commune: "Marseille" }] }];
+
+function evalLieu(l) {
+  const dax = daxTerritory(l.cp, l.cc);
+  const daxSas = daxToSas(dax.value);
+  const cor = resolveAddressTerritory({ insee: l.cc, postalCode: l.cp, city: l.commune }, state.territoires);
+  return { dax, daxSas, cor, ecart: (daxSas || "") !== (cor.sas || "") };
+}
+function offreResultHtml(o) {
+  const evals = o.lieux.map(evalLieu);
+  const regs = [...new Set(evals.flatMap(e => e.cor.regulation.map(t => t.code)))];
+  const sas = [...new Set(evals.map(e => e.cor.sas).filter(Boolean))];
+  const nEcart = evals.filter(e => e.ecart).length;
+  const rows = o.lieux.map((l, i) => {
+    const e = evals[i];
+    return `<tr class="${e.ecart ? "test-row--ecart" : ""}">
+      <td><strong>${esc(l.label)}</strong><br><span class="mock-note">${esc([l.adresse, l.cp, l.commune].filter(Boolean).join(" "))}</span></td>
+      <td><code>${esc(l.cp || "—")}</code></td>
+      <td><code>${esc(l.cc || "—")}</code></td>
+      <td>${e.dax.value ? `<strong>${esc(e.dax.value)}</strong>${e.daxSas ? ` → ${sasChip(e.daxSas)}` : ` <span class="fr-badge fr-badge--sm fr-badge--error">aucun SAS</span>`}` : `<span class="fr-badge fr-badge--sm fr-badge--error">vide</span>`}<br><span class="mock-note">${esc(e.dax.branch)}</span></td>
+      <td>${e.cor.sas ? sasChip(e.cor.sas) : `<span class="fr-badge fr-badge--sm fr-badge--error">non rattaché</span>`}<br><span class="mock-note">${esc(RESOLVED_BY_LABEL[e.cor.resolvedBy])}${e.cor.approx ? " — approximatif" : ""}</span></td>
+      <td>${e.cor.regulation.length ? e.cor.regulation.map(regChip).join(" ") : `<span class="mock-note">—</span>`}</td>
+      <td>${e.ecart ? `<span class="fr-badge fr-badge--sm fr-badge--warning">écart</span>` : `<span class="fr-badge fr-badge--sm fr-badge--success">identique</span>`}</td>
+    </tr>`;
+  }).join("");
+  return `
+    <section class="test-card">
+      <div class="test-card__head">
+        <div><h3 class="fr-h6" style="margin:0;">${esc(o.title)}</h3><p class="mock-note" style="margin:.1rem 0 0;">${esc(o.sub || "")}</p></div>
+        <div class="test-card__terr">
+          <span class="test-card__lbl">Territoire${regs.length > 1 ? "s" : ""} de régulation de l'offre</span>
+          <div>${regs.length ? regs.map(c => regChip(state.territoires.find(t => t.code === c) || { code: c, sas: [] })).join(" ") : `<span class="fr-badge fr-badge--sm fr-badge--error">aucun</span>`}</div>
+          <span class="mock-note">Territoire${sas.length > 1 ? "s" : ""} SAS : ${sas.length ? sas.map(esc).join(", ") : "—"} · ${o.lieux.length} lieu${o.lieux.length > 1 ? "x" : ""} d'exercice${nEcart ? ` · <strong style="color:#b34000">${nEcart} écart${nEcart > 1 ? "s" : ""} avec le script DAX</strong>` : ""}</span>
+        </div>
+      </div>
+      ${o.lieux.length ? `<div class="terr-scroll"><table class="terr-table">
+        <thead><tr><th>Lieu d'exercice</th><th>Code postal</th><th>Code commune</th><th>Script DAX (Power BI)</th><th>Règle corrigée</th><th>Territoire de régulation</th><th>Comparaison</th></tr></thead>
+        <tbody>${rows}</tbody></table></div>` : `<p class="mock-note">Aucun lieu d'exercice avec une adresse exploitable.</p>`}
+    </section>`;
+}
+function structMatches(q) {
+  const n = normKey(q);
+  if (n.length < 2) return [];
+  return STRUCTURES_EGE.filter(s => normKey([s.finess, s.nom, s.ej, s.commune, s.cp].join(" ")).includes(n)).slice(0, 12);
+}
+function structListHtml(q) {
+  const m = structMatches(q);
+  if (!q || normKey(q).length < 2) return `<p class="mock-note" style="margin:.4rem 0;">Saisissez au moins 2 caractères : nom, FINESS, commune ou code postal (${STRUCTURES_EGE.length} structures chargées).</p>`;
+  return m.length ? m.map(s => `<button class="test-struct" data-struct="${esc(s.finess)}"><strong>${esc(s.nom)}</strong> <span class="fr-badge fr-badge--sm">${esc(s.cat)}</span><br><span class="mock-note">FINESS ${esc(s.finess)} · ${esc(s.commune)} (${esc(s.cp)})</span></button>`).join("")
+    : `<p class="mock-note" style="margin:.4rem 0;">Aucune structure ne correspond.</p>`;
+}
+function testPanelHtml() {
+  const t = testUi();
+  const modeBtn = (m, l) => `<button class="test-mode ${t.mode === m ? "is-active" : ""}" data-test-mode="${m}">${l}</button>`;
+  let form = "";
+  if (t.mode === "ps") form = `
+    <div class="filters">
+      <div class="f-search"><label class="fr-label" for="test-q">RPPS ou nom d'exercice</label>
+        <input class="fr-input" id="test-q" placeholder="Ex : 10102223202 ou CARVIN" value="${esc(t.q)}"></div>
+      <div class="f-field"><label class="fr-label" for="test-prenom">Prénom (facultatif)</label>
+        <input class="fr-input" id="test-prenom" value="${esc(t.prenom)}"></div>
+      <div class="f-field" style="display:flex;gap:.5rem;align-items:flex-end;">
+        <button class="fr-btn fr-btn--sm" id="test-go" ${t.loading ? "disabled" : ""}>${t.loading ? "Recherche…" : "Récupérer les lieux d'exercice"}</button>
+        <button class="fr-btn fr-btn--sm fr-btn--tertiary" id="test-demo">Exemple hors ligne</button>
+      </div>
+    </div>
+    <p class="mock-note">Source : Annuaire Santé, fichier des professionnels et de leurs activités en libre accès sur data.gouv.fr, interrogé via l'API tabulaire. Un lieu d'exercice = une activité avec une adresse de structure.</p>`;
+  else if (t.mode === "structure") form = `
+    <div class="filters"><div class="f-search"><label class="fr-label" for="test-sq">Rechercher une structure (centre de santé, maison de santé)</label>
+      <input class="fr-input" type="search" id="test-sq" placeholder="Nom, FINESS, commune, code postal…" value="${esc(t.structQ)}"></div></div>
+    <div id="test-struct-list" class="test-struct-list">${structListHtml(t.structQ)}</div>
+    <p class="mock-note">Source : exports FINESS du 29/10/2026 (300 centres de santé, 300 maisons de santé). L'export ne donne pas le code commune : seul le code postal est disponible.</p>`;
+  else form = `
+    <div class="filters">
+      <div class="f-field"><label class="fr-label" for="test-cp">Code postal</label><input class="fr-input" id="test-cp" placeholder="Ex : 76190" value="${esc(t.cp)}"></div>
+      <div class="f-field"><label class="fr-label" for="test-insee">Code commune INSEE</label><input class="fr-input" id="test-insee" placeholder="Ex : 76078 (facultatif)" value="${esc(t.insee)}"></div>
+      <div class="f-search"><label class="fr-label" for="test-commune">Commune</label><input class="fr-input" id="test-commune" placeholder="Ex : Yvetot" value="${esc(t.commune)}"></div>
+      <div class="f-field" style="align-self:flex-end;"><button class="fr-btn fr-btn--sm" id="test-addr">Calculer le territoire</button></div>
+    </div>
+    <p class="mock-note">Pour éprouver le script : laissez le code commune vide, saisissez un code commune absent des listes, ou un code postal partagé (76190, 76450, 76460, 76560).</p>`;
+  return `
+    <p class="mock-note" style="margin:.75rem 0;">Renseignez une offre de soins : ses lieux d'exercice sont récupérés et chacun est rattaché à un territoire SAS, d'une part avec le script Power BI actuel (DAX), d'autre part avec la règle corrigée. Les territoires de régulation de l'offre sont ceux de l'onglet précédent.</p>
+    <div class="test-modes">${modeBtn("ps", "Professionnel de santé")}${modeBtn("structure", "Structure (FINESS)")}${modeBtn("adresse", "Adresse saisie")}</div>
+    ${form}
+    ${t.error ? `<div class="terr-alert terr-alert--warn"><strong>Recherche impossible :</strong> ${esc(t.error)}. Utilisez « Exemple hors ligne » ou l'onglet « Adresse saisie ».</div>` : ""}
+    ${t.note ? `<p class="mock-note">${esc(t.note)}</p>` : ""}
+    <div id="test-results">${t.results.map(offreResultHtml).join("")}</div>`;
+}
+function bindTestEvents(root) {
+  const t = testUi();
+  root.querySelectorAll("[data-test-mode]").forEach(b => b.onclick = () => { t.mode = b.dataset.testMode; t.results = []; t.error = ""; t.note = ""; render(); });
+  const val = (id, k) => { const i = root.querySelector("#" + id); if (i) i.oninput = () => { t[k] = i.value; }; return i; };
+  const q = val("test-q", "q"); val("test-prenom", "prenom"); val("test-cp", "cp"); val("test-insee", "insee"); val("test-commune", "commune");
+  const go = root.querySelector("#test-go");
+  const run = async () => {
+    if (!t.q.trim()) { t.error = "saisissez un RPPS ou un nom"; render(); return; }
+    t.loading = true; t.error = ""; t.note = ""; t.results = []; render();
+    try {
+      const r = await psSearch(t.q, t.prenom);
+      t.results = r.offres;
+      t.note = r.offres.length ? `${r.offres.length} professionnel${r.offres.length > 1 ? "s" : ""} trouvé${r.offres.length > 1 ? "s" : ""}${r.truncated ? ` — ${r.total} activités au total, seules les 50 premières sont affichées : précisez le prénom ou le RPPS` : ""}.` : "Aucun professionnel trouvé.";
+    } catch (e) {
+      t.error = "l'API tabulaire de data.gouv.fr n'a pas pu être interrogée depuis ce navigateur (" + (e && e.message ? e.message : e) + ")";
+    }
+    t.loading = false; render();
+  };
+  if (go) go.onclick = run;
+  if (q) q.onkeydown = (e) => { if (e.key === "Enter") run(); };
+  const demo = root.querySelector("#test-demo");
+  if (demo) demo.onclick = () => { t.results = TEST_DEMO; t.error = ""; t.note = "Exemple sans appel réseau."; render(); };
+  const sq = root.querySelector("#test-sq");
+  const bindStruct = () => root.querySelectorAll("[data-struct]").forEach(b => b.onclick = () => {
+    const s = STRUCTURES_EGE.find(x => x.finess === b.dataset.struct);
+    t.results = [{ title: s.nom, sub: `${s.categorie} · FINESS ${s.finess} · ${s.dep}`, lieux: [{ label: s.nom, adresse: s.voie, cp: s.cp, cc: "", commune: s.commune }] }];
+    render();
+  });
+  if (sq) sq.oninput = () => { t.structQ = sq.value; el("test-struct-list").innerHTML = structListHtml(t.structQ); bindStruct(); };
+  bindStruct();
+  const addr = root.querySelector("#test-addr");
+  if (addr) addr.onclick = () => {
+    t.results = [{ title: "Adresse saisie", sub: "", lieux: [{ label: "Adresse saisie", adresse: "", cp: t.cp.trim(), cc: t.insee.trim(), commune: t.commune.trim() }] }];
+    render();
+  };
 }
 
 function filteredSas() {
@@ -1617,6 +1828,7 @@ function bindTerritoiresEvents() {
     uncoveredSas().forEach(s => state.territoires.push(normalizeTerritoire({ code: defaultRegCode(s.code), nom: s.code + " · " + sasShortLabel(s), sas: [s.code] })));
     sortTerritoires(); saveTerritoires(); render(); showToast("Territoires de régulation par défaut créés.");
   };
+  if (ui.tab === "test") { bindTestEvents(root); return; }
 
   if (ui.tab === "sas") {
     const refresh = () => {
