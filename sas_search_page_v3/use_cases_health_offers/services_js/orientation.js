@@ -3,7 +3,7 @@
  * Simulation de l'orientation d'un patient depuis la page de résultats
  * (epic SAS-13182, stories SAS-13637 à SAS-13641).
  *
- *  - SAS-13637 : orienter sur une plage horaire (heure + 1 patient)
+ *  - SAS-13637 : orienter sur une plage horaire (heure pré-sélectionnée, patient ajouté par défaut)
  *  - SAS-13638 : orienter sur un créneau (aucune saisie)
  *  - SAS-13639 : orienter hors disponibilité (date + heure libres)
  *  - SAS-13640 : récapitulatif, confirmation, contrôle à la persistance
@@ -119,10 +119,19 @@ function offerFromCard(card) {
   try { p = JSON.parse(card.dataset.panel || '{}'); } catch { /* données absentes */ }
   return {
     name:      p.name || card.querySelector('.fr-card__title')?.textContent.trim() || '—',
-    specialty: p.specialty || '',
+    specialty: speOrProfession(p.specialty || ''),
     phone:     p.phone || '',
     comment:   p.comment || '',
   };
+}
+
+/**
+ * « Médecin — Médecine générale » → « Médecine générale » (spécialité si médecin) ;
+ * « Infirmier » → « Infirmier » (profession sinon).
+ */
+function speOrProfession(label) {
+  const [profession, specialty] = label.split(' — ').map(x => x.trim());
+  return profession === 'Médecin' && specialty ? specialty : (profession || '');
 }
 
 // ─── Dialog ────────────────────────────────────────────────────────────────
@@ -193,7 +202,9 @@ function renderPlageForm() {
   const { offer, start, end, state } = ctx;
   const hours = plageHours(start, end);
   const def = nextAvailableIndex(hours);
-  ctx.added = false;
+  // Le patient est ajouté par défaut : 1 patient par orientation, pas de +/−.
+  ctx.added = true;
+  const hint = `Veuillez indiquer l'heure du rendez-vous entre ${hhmm(hours[0])} et ${hhmm(hours.at(-1))} le ${ddmmyyyy(start)}`;
 
   setTitle(TXT.title);
   body.innerHTML = `
@@ -202,45 +213,28 @@ function renderPlageForm() {
     <p class="sas-orient-when"><strong>${capitalize(weekday(start))} ${ddmmyyyy(start)}</strong> - ${hhmm(start)} - ${hhmm(end)}</p>
     <div class="sas-orient-hour">
       <label class="sas-orient-hour-label" for="sas-orient-hour">${TXT.hour}</label>
-      <select class="fr-select sas-orient-hour-select" id="sas-orient-hour">
+      <select class="fr-select sas-orient-hour-select" id="sas-orient-hour" aria-describedby="sas-orient-hour-hint">
         ${hours.map((h, i) => `<option value="${h.toISOString()}"${i === def ? ' selected' : ''}>${hhmm(h)}</option>`).join('')}
       </select>
     </div>
+    <p class="fr-hint-text sas-orient-hint" id="sas-orient-hour-hint">${hint}</p>
     <div class="sas-orient-counter" role="group" aria-labelledby="sas-orient-counter-label">
       <span id="sas-orient-counter-label">${TXT.patients}</span>
-      <div class="sas-orient-counter-row">
-        <button type="button" class="sas-orient-round" data-orient-minus aria-label="Retirer le patient" hidden>−</button>
-        <output class="sas-orient-count" aria-live="polite">${state.booked} / ${state.quota}</output>
-        <button type="button" class="sas-orient-round" data-orient-plus aria-label="Ajouter un patient">+</button>
-      </div>
+      <output class="sas-orient-count">${state.booked + 1} / ${state.quota}</output>
     </div>
     ${consent()}
     <div class="sas-orient-actions">
       <button type="button" class="fr-btn fr-btn--secondary" data-orient-cancel>Annuler</button>
-      <button type="button" class="fr-btn" data-orient-save disabled>Enregistrer</button>
+      <button type="button" class="fr-btn" data-orient-save>Enregistrer</button>
     </div>`;
 
+  // Liste sans option vide : l'heure est toujours renseignée, Enregistrer toujours actif.
   const select = body.querySelector('#sas-orient-hour');
-  const plus   = body.querySelector('[data-orient-plus]');
-  const minus  = body.querySelector('[data-orient-minus]');
-  const out    = body.querySelector('.sas-orient-count');
-  const save   = body.querySelector('[data-orient-save]');
-
-  const refresh = () => {
-    out.textContent = `${state.booked + (ctx.added ? 1 : 0)} / ${state.quota}`;
-    plus.hidden  = ctx.added;   // 1 patient maximum par orientation
-    minus.hidden = !ctx.added;
-    save.disabled = !(select.value && ctx.added);
-  };
-  plus.addEventListener('click',  () => { ctx.added = true;  refresh(); minus.focus(); });
-  minus.addEventListener('click', () => { ctx.added = false; refresh(); plus.focus(); });
-  select.addEventListener('change', refresh);
-  save.addEventListener('click', () => {
+  body.querySelector('[data-orient-save]').addEventListener('click', () => {
     ctx.rdvDate = new Date(select.value);
     renderRecap();
   });
   bindCommon();
-  refresh();
 }
 
 function renderCreneauForm() {
@@ -278,7 +272,8 @@ function renderHdForm() {
     <div class="sas-orient-hd-fields">
       <div class="fr-input-group fr-mb-0">
         <label class="fr-label" for="sas-orient-date">Date :</label>
-        <input class="fr-input" type="date" id="sas-orient-date" value="${isoDate(def)}">
+        <input class="fr-input" type="date" id="sas-orient-date" value="${isoDate(def)}" aria-describedby="sas-orient-date-error">
+        <p class="fr-error-text" id="sas-orient-date-error" hidden>Veuillez indiquer la date du rendez-vous</p>
       </div>
       <div class="fr-select-group fr-mb-0">
         <label class="fr-label" for="sas-orient-hd-hour">à :</label>
@@ -291,23 +286,27 @@ function renderHdForm() {
       <button type="button" class="fr-btn" data-orient-save>Enregistrer</button>
     </div>`;
 
-  const date = body.querySelector('#sas-orient-date');
-  const hour = body.querySelector('#sas-orient-hd-hour');
-  const save = body.querySelector('[data-orient-save]');
-  const refresh = () => {
-    hour.disabled = !date.value;
-    save.disabled = !(date.value && hour.value);
+  const date  = body.querySelector('#sas-orient-date');
+  const hour  = body.querySelector('#sas-orient-hd-hour');
+  const save  = body.querySelector('[data-orient-save]');
+  const group = date.closest('.fr-input-group');
+  const err   = body.querySelector('#sas-orient-date-error');
+  const showError = on => {
+    group.classList.toggle('fr-input-group--error', on);
+    date.classList.toggle('fr-input--error', on);
+    date.setAttribute('aria-invalid', String(on));
+    err.hidden = !on;
   };
-  date.addEventListener('input', refresh);
-  hour.addEventListener('change', refresh);
+  date.addEventListener('input', () => { if (date.value) showError(false); });
+  // Enregistrer toujours actif : contrôle au clic.
   save.addEventListener('click', () => {
+    if (!date.value) { showError(true); date.focus(); return; }
     const [y, mo, d] = date.value.split('-').map(Number);
     const [h, mi] = hour.value.split(':').map(Number);
     ctx.rdvDate = new Date(y, mo - 1, d, h, mi);
     renderRecap();
   });
   bindCommon();
-  refresh();
 }
 
 function renderForm() {
