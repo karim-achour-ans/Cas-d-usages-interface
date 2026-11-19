@@ -202,9 +202,10 @@ function renderOrgCard(offer) {
               <button type="button" class="sas-more-slots-link js-open-panel">
                 Voir plus de créneaux
               </button>
-              <button class="fr-btn fr-btn--sm fr-mt-1w sas-btn-full">
+              ${offer.sasOk === true ? `
+              <button type="button" class="fr-btn fr-btn--sm fr-mt-1w sas-btn-full js-orient-hd">
                 Orientation hors disponibilité
-              </button>
+              </button>` : ''}
               <button class="fr-btn fr-btn--secondary fr-btn--sm fr-mt-1w sas-btn-full">
                 Demande de prise en charge
               </button>

@@ -55,12 +55,24 @@ export function renderSlotButton(slot) {
   const endLabel   = slot.end ? formatSlotTime(slot.end) : null;
   const timeRange  = endLabel ? `${startLabel}–${endLabel}` : startLabel;
 
+  // Plage = Slot avec quota de patients ; sinon créneau (quelle que soit sa durée).
+  const isPlage   = Number.isInteger(slot.quota);
+  const booked    = slot.booked ?? 0;
+  const ariaLabel = isPlage
+    ? `Plage ${timeRange}, ${booked} patient${booked > 1 ? 's' : ''} sur ${slot.quota}, adresser un patient`
+    : `Créneau ${timeRange}, adresser un patient`;
+
+  // Clic → modale d'orientation (orientation.js), plus le panneau latéral.
   return `
-    <button class="sas-slot-btn js-open-panel" type="button"
-            aria-label="Créneau ${timeRange}">
+    <button class="sas-slot-btn js-orient-slot" type="button"
+            data-slot-id="${slot.id ?? ''}"
+            data-start="${slot.start}"
+            data-end="${slot.end ?? ''}"
+            ${isPlage ? `data-quota="${slot.quota}" data-booked="${booked}"` : ''}
+            aria-label="${ariaLabel}">
       <span class="sas-slot-time">${timeRange}</span>
       <div class="sas-slot-footer">
-        <span class="sas-slot-counter" aria-label="0 réservation sur 3">0/3</span>
+        ${isPlage ? `<span class="sas-slot-counter" aria-hidden="true">${booked}/${slot.quota}</span>` : ''}
         <span class="sas-slot-icon" aria-label="Téléconsultation">T</span>
         <span class="sas-slot-icon" aria-label="Consultation">C</span>
         <span class="sas-slot-icon" aria-label="Visite">V</span>
@@ -150,7 +162,8 @@ export function renderSlotColumns(slots) {
     }
 
     return `
-    <div class="sas-slot-day${i === 0 ? ' sas-slot-day--today' : ''}">
+    <div class="sas-slot-day${i === 0 ? ' sas-slot-day--today' : ''}"
+         role="group" aria-label="Tableau des créneaux disponibles — ${col.label}">
       <p class="sas-slot-day-label">${col.label}</p>
       <div class="sas-slot-day-list">
         ${body}
@@ -408,7 +421,7 @@ function renderCard(offer) {
                 Voir plus de créneaux
               </button>
               ${offer.sasOk === true ? `
-              <button class="fr-btn fr-btn--sm fr-mt-1w sas-btn-full">
+              <button type="button" class="fr-btn fr-btn--sm fr-mt-1w sas-btn-full js-orient-hd">
                 Orientation hors disponibilité
               </button>
               <button class="fr-btn fr-btn--secondary fr-btn--sm fr-mt-1w sas-btn-full">

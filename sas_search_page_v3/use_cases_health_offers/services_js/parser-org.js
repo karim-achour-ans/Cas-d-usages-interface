@@ -120,14 +120,40 @@ function extractSlotStarts(slots) {
  * simple absence of slot data.
  *
  * @param {object[]} slots - FHIR Slot resources
- * @returns {{ start: string, end: string|null, status: string|null }[]}
+ * @returns {{ id: string|null, start: string, end: string|null, status: string|null, quota: number|null, booked: number }[]}
  */
 function extractSlots(slots) {
   if (!Array.isArray(slots) || slots.length === 0) return [];
   return slots
     .filter(s => s.start)
     .sort((a, b) => new Date(a.start) - new Date(b.start))
-    .map(s => ({ start: s.start, end: s.end ?? null, status: s.status ?? null }));
+    .map(s => ({
+      id:     s.id ?? null,
+      start:  s.start,
+      end:    s.end ?? null,
+      status: s.status ?? null,
+      ...extractPatientQuota(s),
+    }));
+}
+
+/**
+ * Quota de patients d'une plage horaire (mock).
+ * Un Slot portant l'extension sas-slot-patient-quota est une PLAGE :
+ * capacité "max" et nombre de patients déjà orientés "booked".
+ * Sans l'extension, le Slot est un CRÉNEAU, quelle que soit sa durée
+ * (arbitrage du 19/11/2026 : la « plage sans quota » n'existe pas).
+ *
+ * @param {object} slot - FHIR Slot
+ * @returns {{ quota: number|null, booked: number }}
+ */
+function extractPatientQuota(slot) {
+  const ext = slot.extension?.find(
+    e => e.url === 'https://mock.sas.fr/fhir/StructureDefinition/sas-slot-patient-quota'
+  );
+  if (!ext) return { quota: null, booked: 0 };
+  const max    = ext.extension?.find(e => e.url === 'max')?.valueInteger ?? null;
+  const booked = ext.extension?.find(e => e.url === 'booked')?.valueInteger ?? 0;
+  return { quota: max, booked };
 }
 
 /**
