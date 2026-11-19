@@ -7,7 +7,7 @@
  *  - SAS-13638 : orienter sur un créneau (aucune saisie)
  *  - SAS-13639 : orienter hors disponibilité (date + heure libres)
  *  - SAS-13640 : récapitulatif, confirmation, contrôle à la persistance
- *  - SAS-13641 : mise à jour de la carte sans rechargement
+ *  - SAS-13641 : mise à jour de la carte sans rechargement + message de succès dans la carte
  *
  * Mock : la « persistance » est un store en mémoire. Une case à cocher
  * [Simulation] dans le récapitulatif permet de jouer le cas où la
@@ -136,7 +136,7 @@ function speOrProfession(label) {
 
 // ─── Dialog ────────────────────────────────────────────────────────────────
 
-let dialog, body, live;
+let dialog, body;
 let ctx = null;         // contexte de l'orientation en cours
 let returnFocus = null; // élément à refocaliser à la fermeture
 
@@ -154,10 +154,6 @@ function ensureDom() {
   document.body.appendChild(dialog);
   body = dialog.querySelector('.sas-orient-body');
 
-  live = document.createElement('p');
-  live.className = 'fr-sr-only';
-  live.setAttribute('aria-live', 'polite');
-  document.body.appendChild(live);
 
   dialog.querySelector('[data-orient-close]').addEventListener('click', close);
   // Échap : fermeture native, sans enregistrer.
@@ -382,8 +378,6 @@ function renderRecap(error = null) {
 // ─── Étape 3 : mise à jour de la carte (SAS-13641) ─────────────────────────
 
 function applyToCard(done) {
-  const msg = `Orientation enregistrée vers ${done.offer.name}, ${recapLineFor(done)}.`;
-
   if (done.kind !== 'hd' && done.btn?.isConnected) {
     const st = store.get(done.slotId);
     const list = done.btn.closest('.sas-slot-day-list');
@@ -396,18 +390,44 @@ function applyToCard(done) {
       done.btn.setAttribute('aria-label',
         done.btn.getAttribute('aria-label').replace(/\d+ patients? sur/, `${st.booked} patient${st.booked > 1 ? 's' : ''} sur`));
       done.btn.classList.add('sas-slot-btn--updated');
-      returnFocus = done.btn;
     } else {
       // Plage pleine ou créneau : n'est plus affiché.
-      returnFocus = done.card.querySelector('.fr-card__title');
       done.btn.remove();
       if (list && !list.querySelector('.sas-slot-btn')) {
         list.innerHTML = `<span class="sas-slot-empty">${TXT.dayEmpty}</span>`;
       }
     }
   }
-  if (returnFocus?.isConnected) returnFocus.focus();
-  live.textContent = msg;
+  showSuccessInCard(done);
+}
+
+/**
+ * Message de succès dans la carte de l'offre (remplace la modale de succès Drupal,
+ * économise le clic « Fermer »). Reste affiché jusqu'à fermeture par l'utilisateur
+ * ou jusqu'à une nouvelle orientation. Une seule alerte de succès sur la page.
+ */
+function showSuccessInCard(done) {
+  document.querySelectorAll('.sas-orient-success').forEach(el => el.remove());
+
+  const who = [done.offer.name, done.offer.specialty].filter(Boolean).join(', ');
+  const alert = document.createElement('div');
+  alert.className = 'fr-alert fr-alert--success fr-alert--sm sas-orient-success';
+  alert.setAttribute('role', 'status');
+  alert.tabIndex = -1;
+  alert.innerHTML = `
+    <p>Vous avez adressé un patient ${recapLineFor(done)} à ${who}</p>
+    <button type="button" class="fr-btn--close fr-btn" title="Masquer le message">Masquer le message</button>`;
+  alert.querySelector('button').addEventListener('click', () => {
+    alert.remove();
+    (done.card.querySelector('.fr-card__title :is(a, button)') ?? done.card.querySelector('.fr-card__title'))?.focus();
+  });
+
+  const slots = done.card.querySelector('.sas-card-slots');
+  if (slots) slots.prepend(alert); else done.card.prepend(alert);
+
+  // Focus sur l'alerte : la disponibilité cliquée a parfois disparu.
+  returnFocus = alert;
+  alert.focus();
 }
 
 function recapLineFor(c) {

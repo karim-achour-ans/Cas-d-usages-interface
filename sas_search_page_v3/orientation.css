@@ -154,3 +154,14 @@
 
 /* Texte d'aide sous la liste Heure (plage) */
 .sas-orient-hint { margin: -0.75rem 0 0; }
+
+/* Message de succès affiché dans la carte après confirmation */
+.sas-orient-success {
+  margin-bottom: 0.75rem;
+  font-size: 0.875rem;
+}
+.sas-orient-success p { margin: 0; }
+.sas-orient-success:focus-visible {
+  outline: 2px solid var(--border-action-high-blue-france, #000091);
+  outline-offset: 2px;
+}
